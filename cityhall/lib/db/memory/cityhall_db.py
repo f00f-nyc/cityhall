@@ -17,7 +17,7 @@ class CityHallDb(db.Db):
         self.valsTable = None
 
     def __str__(self):
-        return "(City Hall Db): Values: {}, Authorizations: {}".format(
+        return "(In-Memory Db): Values: {}, Authorizations: {}".format(
             len(self.valsTable) if self.valsTable else 'None',
             len(self.authTable) if self.authTable else 'None'
         )
@@ -238,3 +238,19 @@ class CityHallDb(db.Db):
             if val['active'] and val['id'] == index),
             None
         )
+
+    def get_history(self, index):
+        return [value for value in self.valsTable if value['id'] == index]
+
+    def get_value_for(self, parent_index, name, override):
+        value_with_no_override = None
+
+        for val in self.valsTable:
+            if val['parent'] == parent_index and val['name'] == name and \
+                    val['active']:
+                if val['override'] == override:
+                    return val['value']
+                elif val['override'] == '':
+                    value_with_no_override = val['value']
+
+        return value_with_no_override

@@ -77,6 +77,9 @@ class Env(object):
         override = '' if override is None else override
 
         if isinstance(path, basestring):
+            if path == '/':
+                return self.root_id
+
             path = sanitize_path(path)
             cache_key = "{}:{}".format(path, override)
             index = self._index_from_cache(cache_key)
@@ -167,6 +170,47 @@ class Env(object):
 
         return True
 
-    def get(self, path, override=None):
+    def get_explicit(self, path, override=None):
         index = self._get_index_of(path, override)
         return self.db.get_value(index)
+
+    def get(self, path):
+        if path == '/':
+            return self.get_value(self.root_id)
+
+        path = sanitize_path(path)
+        parent_id = self._get_parent_id(path)
+        value_name = get_name_of_value(path)
+        return self.db.get_value_for(parent_id, value_name, self.name)
+
+    def get_children(self, path):
+        index = self._get_index_of(path)
+
+        if index:
+            return [
+                {
+                    'name': child['name'],
+                    'id': child['id'],
+                    'override': child['override'],
+                }
+                for child in self.db.get_children_of(index)
+            ]
+        return []
+
+    def get_history(self, path, override=None):
+        if self.permissions < Rights.ReadProtected:
+            return []
+
+        index = self._get_index_of(path, override)
+        return [
+            {
+                'id': item['id'],
+                'name': item['name'],
+                'value': item['value'],
+                'author': item['author'],
+                'datetime': item['datetime'],
+                'active': item['active'],
+                'protect': item['protect']
+            }
+            for item in self.db.get_history(index)
+        ]

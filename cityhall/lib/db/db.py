@@ -63,6 +63,10 @@ class Db(object):
         pass
 
     @abstractmethod
+    def get_value_for(self, parent_index, name, override):
+        pass
+
+    @abstractmethod
     def get_rights(self, env, user):
         pass
 
@@ -80,4 +84,12 @@ class Db(object):
 
     @abstractmethod
     def get_env_root(self, env):
+        pass
+
+    @abstractmethod
+    def get_value(self, parent_id, name, override):
+        pass
+
+    @abstractmethod
+    def get_history(self, index):
         pass

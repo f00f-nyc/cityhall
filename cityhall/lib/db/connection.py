@@ -32,3 +32,4 @@ class Connection(object):
     def get_auth(self, user, passhash):
         if self._ensure_open() and self.db.authenticate(user, passhash):
             return Auth(self.db, user)
+        return None
