@@ -5,13 +5,19 @@ class Auth(object):
     def __init__(self, db, name):
         self.db = db
         self.name = name
+        self.roots_cache = {}
 
     def create_env(self, env):
         self.db.create_env(self.name, env)
         return self.get_env(env)
 
     def get_env(self, env):
-        rights = self.db.get_rights(env, self.name)
+        if env in self.roots_cache:
+            rights = self.roots_cache[env]
+        else:
+            rights = self.db.get_rights(env, self.name)
+            self.roots_cache[env] = rights
+            
         if rights:
             return Env(self.db, env, rights, self.name)
         return None
