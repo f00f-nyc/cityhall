@@ -176,7 +176,7 @@ class Env(object):
 
     def get(self, path):
         if path == '/':
-            return self.get_value(self.root_id)
+            return self.db.get_value(self.root_id)
 
         path = sanitize_path(path)
         parent_id = self._get_parent_id(path)
