@@ -125,6 +125,7 @@ class Env(object):
 
     def set(self, path, value, override=None):
         override = '' if override is None else override
+        value = '' if value is None else value
 
         if self.permissions < Rights.Write:
             return False

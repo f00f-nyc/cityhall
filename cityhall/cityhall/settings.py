@@ -110,5 +110,10 @@ ENV_CACHE = {
     'MULTI_THREAD_POLL_SEC': 60
 }
 
-from lib.db.memory.cityhall_db import CityHallDb
-CITY_HALL_DATABASE = CityHallDb
+# in memory db
+# from lib.db.memory.cityhall_db import CityHallDb
+# CITY_HALL_DATABASE = CityHallDb()
+
+# sqlite3 db
+from lib.db.sqllite.sqlite_db import SqliteDb
+CITY_HALL_DATABASE = SqliteDb('db.sqlite3')

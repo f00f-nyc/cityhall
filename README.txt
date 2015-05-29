@@ -36,7 +36,7 @@ class Db in lib.db.db.  The current options are:
 
 
 
-ENVIROMENTS AND VALUES
+ENVIRONMENTS AND VALUES
 
 City Hall supports key-value through paths and values, and it also
 supports environments.  The idea behind this is to have the same 
@@ -119,7 +119,7 @@ This sets gives the current user Grant permissions on that environment
 Create user:
 	POST	http://localhost:5000/api/auth/create/user/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
-	{"user": "guest", passhash: ""}
+	{"user": "guest", "passhash": ""}
 Returns: {"Response": "Ok"}
 This creates a user with None permissions on auto environment
 

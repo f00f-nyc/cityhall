@@ -12,7 +12,7 @@ CACHE = LRUCacheDict(
     thread_clear_min_check=settings.ENV_CACHE['MULTI_THREAD_POLL_SEC'],
     concurrent=settings.ENV_CACHE['MULTI_THREAD'],
 )
-DB = settings.CITY_HALL_DATABASE()
+DB = settings.CITY_HALL_DATABASE
 CONN = Connection(DB)
 CONN.connect()
 
