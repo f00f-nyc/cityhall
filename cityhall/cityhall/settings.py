@@ -111,9 +111,9 @@ ENV_CACHE = {
 }
 
 # in memory db
-# from lib.db.memory.cityhall_db import CityHallDb
-# CITY_HALL_DATABASE = CityHallDb()
+# from lib.db.memory.cityhall_db_factory import CityHallDbFactory
+# CITY_HALL_DATABASE = CityHallDbFactory()
 
 # sqlite3 db
-from lib.db.sqllite.sqlite_db import SqliteDb
-CITY_HALL_DATABASE = SqliteDb('db.sqlite3')
+from lib.db.sqllite.sqlite_db_factory import SqliteDbFactory
+CITY_HALL_DATABASE = SqliteDbFactory('db.sqlite3')

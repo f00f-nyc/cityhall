@@ -1,28 +1,12 @@
 from lib.db import db
-from lib.db.db import DbState, Rights
+from lib.db.db import Rights
 from datetime import datetime
 import calendar
-import apsw
 
 
 class SqliteDb(db.Db):
-    def __init__(self, filename):
-        self.filename = filename
-        self.connection = None
-        self.cursor = None
-
-    def __str__(self):
-        if not self.is_open():
-            return "(Sqlite Db): Not connected"
-        else:
-            return "(Sqlite Db) Connected"
-
-    def open(self):
-        self.connection = apsw.Connection(self.filename)
-        self.cursor= self.connection.cursor()
-
-    def is_open(self):
-        return self.connection is not None
+    def __init__(self, cursor):
+        self.cursor = cursor
 
     @staticmethod
     def _datetime_now_to_unixtime():
@@ -125,7 +109,7 @@ class SqliteDb(db.Db):
     def get_value(self, index):
         return self._first_value(
             'select value from cityhall_vals '
-            'where id = :index and active = :active;',
+            'where id = :id and active = :active;',
             {'active': True, 'id': index, }
         )
 
@@ -176,21 +160,6 @@ class SqliteDb(db.Db):
                 }
             )
 
-    def authenticate(self, user, passhash, env=None):
-        if env is None:
-            return 0 < self._first_value(
-                'select count(*) from cityhall_auth '
-                'where active = :active and user = :user and pass = "";',
-                {'active': 1, 'user': user, 'pass': passhash, }
-            )
-        else:
-            return 0 < self._first_value(
-                'select count(*) from cityhall_auth where '
-                'active > 0 and user = :user and pass = :passhash '
-                'and env = :env;',
-                {'active': 1, 'user': user, 'pass': passhash, 'env': env, }
-            )
-
     def create(self, user, env, parent, name, value, override=''):
         self.cursor.execute(
             'begin;'
@@ -219,8 +188,8 @@ class SqliteDb(db.Db):
     def update(self, user, index, value):
         first_row = self._first_row(
             'select rowid, env, parent, name, override '
-            'from cityhall_vals where id = :index and active = :active;',
-            {'index': index, 'active': True, }
+            'from cityhall_vals where id = :val_id and active = :active;',
+            {'val_id': index, 'active': True, }
         )
 
         if not first_row:
@@ -229,13 +198,15 @@ class SqliteDb(db.Db):
         self.cursor.execute(
             'begin;'
             ' '
+            '  update cityhall_vals set active = :false '
+            '  where  id = :id and active = :true'
+            ' '
             '  insert into cityhall_vals ( '
             '  id, env, parent, active, name, override, '
             '  author, datetime, value, protect) '
             '  values (:id, :env, :parent, :true, :name, :override, '
             '  :author, :datetime, :value, :protect); '
             ' '
-            ' update cityhall_vals set active = :false where rowid = :rowid; '
             'end;',
             {
                 'id': index,
@@ -249,7 +220,6 @@ class SqliteDb(db.Db):
                 'value': value,
                 'protect': False,
                 'false': False,
-                'rowid': first_row[0],
             })
 
     def update_rights(self, author, env, user, rights):
@@ -263,7 +233,7 @@ class SqliteDb(db.Db):
             self.cursor.execute(
                 'update cityhall_auth '
                 'set active = :inactive '
-                'where rowid = :rowid; '
+                'where user = :user and active = :active; '
                 ' '
                 'insert into cityhall_auth '
                 '(active, datetime, env, author, user, pass, rights) '
@@ -271,7 +241,6 @@ class SqliteDb(db.Db):
                 '(:active, :datetime, :env, :author, :user, :pass, :rights);',
                 {
                     'inactive': False,
-                    'rowid': current[0],
                     'active': True,
                     'datetime': self._datetime_now_to_unixtime(),
                     'env': env,
@@ -279,78 +248,6 @@ class SqliteDb(db.Db):
                     'user': user,
                     'pass': current[1],
                     'rights': rights
-                }
-            )
-
-    def create_default_tables(self):
-        exists = False
-        for row in self.cursor.execute(
-                "SELECT name FROM sqlite_master WHERE "
-                "type='table' and name = :authTable;",
-                {'authTable': 'cityhall_auth'}):
-            exists = True
-
-        if not exists:
-            self.cursor.execute(
-                'begin;'
-                ' '
-                ' create table cityhall_auth('
-                '   active INT,'
-                '   datetime INT,'
-                '   env TEXT,'
-                '   author TEXT,'
-                '   user TEXT,'
-                '   pass TEXT,'
-                '   rights INT);'
-                ' '
-                ' insert into cityhall_auth'
-                ' (active, datetime, env, author, user, pass, rights)'
-                ' values '
-                ' (:active, :datetime, :env, :author, :user, :pass, :rights);'
-                ' '
-                ' create table cityhall_vals('
-                '   id INT,'
-                '   env TEXT,'
-                '   parent INT,'
-                '   active INT,'
-                '   name TEXT,'
-                '   override TEXT,'
-                '   author TEXT,'
-                '   datetime INT,'
-                '   value TEXT,'
-                '   protect INT);'
-                ' '
-                ' insert into cityhall_vals'
-                ' (id, env, parent, active, name, override, author, datetime,'
-                '  value, protect)'
-                ' values '
-                ' (:val_id, :env, :val_id, :active, :val_name, :val_override,'
-                '  :user, :datetime, :value, :protect);'
-                ' '
-                ' create index cityhall_auth_user_env_active on '
-                '   cityhall_auth (user, env, active); '
-                ' '
-                ' create index cityhall_vals_active_id on '
-                '   cityhall_vals (active, id); '
-                ' create index cityhall_vals_active_parent_id on '
-                '   cityhall_vals (active, parent, id); '
-                ' create index cityhall_vals_active_parent_name_override on '
-                '   cityhall_vals (active, parent, name, override); '
-                ' '
-                'end;',
-                {
-                    'active': True,
-                    'datetime': calendar.timegm(datetime.now().timetuple()),
-                    'env': 'auto',
-                    'author': 'cityhall',
-                    'user': 'cityhall',
-                    'pass': '',
-                    'rights': Rights.Grant,
-                    'val_id': 1,
-                    'val_name': '/',
-                    'val_override': '',
-                    'value': '',
-                    'protect': 0
                 }
             )
 
@@ -376,8 +273,8 @@ class SqliteDb(db.Db):
         ret = []
         for row in self.cursor.execute(
                 'select env, name, override, author, datetime, value, protect, '
-                'active from cityhall_vals where id = :index;',
-                {'id': index}):
+                'active from cityhall_vals where id = :val_id;',
+                {'val_id': index}):
             ret.append({
                 'env': row[0],
                 'name': row[1],

@@ -1,23 +1,23 @@
 from django.test import TestCase
-from lib.db.memory.cityhall_db import CityHallDb
+from lib.db.memory.cityhall_db_factory import CityHallDbFactory
 from lib.db.connection import Connection
 
 
 class TestConnection(TestCase):
     def __init__(self, obj):
         super(TestCase, self).__init__(obj)
-        self.db = None
+        self.db_conn = None
         self.conn = None
 
     def setUp(self):
-        self.conn = Connection(CityHallDb())
-        self.db = self.conn.db
+        self.conn = Connection(CityHallDbFactory())
+        self.db_conn = self.conn.db_connection
 
     def test_create_env(self):
         self.conn.connect()
         self.conn.create_default_env()
-        self.assertIsInstance(self.db.valsTable, list)
-        self.assertIsInstance(self.db.authTable, list)
+        self.assertIsInstance(self.db_conn.valsTable, list)
+        self.assertIsInstance(self.db_conn.authTable, list)
 
     def test_open_required(self):
         authenticate = self.conn.authenticate('cityhall', '')
@@ -36,9 +36,10 @@ class TestConnection(TestCase):
     def test_cannot_get_env_if_not_granted_rights(self):
         self.conn.connect()
         self.conn.create_default_env()
+        db = self.db_conn.get_db()
 
-        self.db.create_user('cityhall', 'test', '')
-        self.db.create_env('test', 'dev')
+        db.create_user('cityhall', 'test', '')
+        db.create_env('test', 'dev')
 
         self.assertTrue(self.conn.get_env('cityhall', '', 'dev') is None)
         self.assertTrue(self.conn.get_env('test', '', 'dev') is not None)

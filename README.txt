@@ -69,6 +69,8 @@ GETTING STARTED
     You will see that we now have data in the database.
 5. The call to create_default has installed a default user named
    'cityhall' with no password, and a default environment named auto.
+   It will also create a user named guest with no password with
+   Read permissions for the auto environment.
 
 
 
@@ -119,14 +121,14 @@ This sets gives the current user Grant permissions on that environment
 Create user:
 	POST	http://localhost:5000/api/auth/create/user/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
-	{"user": "guest", "passhash": ""}
+	{"user": "alex", "passhash": ""}
 Returns: {"Response": "Ok"}
 This creates a user with None permissions on auto environment
 
 Grant permissions:
 	POST	http://localhost:5000/api/auth/grant/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
-	{"env": "dev", "user": "guest", "rights": 1}
+	{"env": "dev", "user": "alex", "rights": 1}
 Returns: {"Response": "Ok"}
 
 
@@ -169,12 +171,16 @@ API - GUEST USER
 You can use GET to retrieve values without specifying an Auth-Token
 headers, but an account named 'guest' must be created and be granted
 permissions to that environment.
+
+The guest account was already created in the GETTING STARTED section
+so we first have to give it access to the dev environment
+	POST	http://localhost:5000/api/auth/grant/
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+	{"env": "dev", "user": "guest", "rights": 1}
+
+Then, you should be able to call without specifying an Auth-Token:
 	GET		http://localhost:5000/api/env/view/auto/some_app/value1
-The initial call in GETTING STARTED, step 4, created a guest account 
-and granted it read access to the auto environment.  But we added the
-guest privileges to the dev environment in the API - AUTHORIZATION 
-section, which means that the call above will return: {"Response": 
-"Ok", "value": "abc"}
+The call above will return: {"Response": "Ok", "value": "abc"}
 
 Note here that the response at the same URL has returned two different
 values.  When we used the cityhall authorization, City Hall preferred

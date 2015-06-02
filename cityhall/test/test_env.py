@@ -1,5 +1,5 @@
 from django.test import TestCase
-from lib.db.memory.cityhall_db import CityHallDb
+from lib.db.memory.cityhall_db_factory import CityHallDbFactory
 from lib.db.db import Rights
 from lib.db.connection import Connection
 
@@ -12,8 +12,8 @@ class TestEnvironment(TestCase):
         self.env = None
 
     def setUp(self):
-        self.conn = Connection(CityHallDb())
-        self.db = self.conn.db
+        self.conn = Connection(CityHallDbFactory())
+        self.db = self.conn.db_connection
         self.conn.connect()
         self.conn.create_default_env()
         self.env = self.conn.get_env('cityhall', '', 'auto')
