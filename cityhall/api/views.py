@@ -1,4 +1,4 @@
-from restless.views import Endpoint
+from restless.views import Endpoint, HttpResponse
 from lib.db.connection import Connection
 from django.conf import settings
 from lru import LRUCacheDict
@@ -15,6 +15,17 @@ CACHE = LRUCacheDict(
 DB = settings.CITY_HALL_DATABASE
 CONN = Connection(DB)
 CONN.connect()
+
+
+def auth_token_in_cache(request):
+    cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
+
+    if CACHE.has_key(cache_key):
+        return None
+
+    if cache_key is None:
+        return HttpResponse('Must specify Auth-Token in headers')
+    return HttpResponse('Auth-Token specified is invalid/expired')
 
 
 class Info(Endpoint):

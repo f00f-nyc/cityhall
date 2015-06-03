@@ -27,6 +27,9 @@ class Auth(object):
             self.db.create_user(self.name, user, passhash)
 
     def get_permissions(self, env):
+        if env in self.roots_cache:
+            return self.roots_cache[env]
+
         return self.db.get_rights(env, self.name)
 
     def grant(self, env, user, rights):

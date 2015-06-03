@@ -1,9 +1,18 @@
 from restless.views import Endpoint
-from .views import CONN, CACHE
+from .views import CONN, CACHE, auth_token_in_cache
 import shortuuid
 
 
 class Authenticate(Endpoint):
+    def authenticate(self, request):
+        """
+        This method always returns true, since it's the authenticate endpoint.
+
+        :param request: The method is expected to take this, but it is unused
+        :return: True
+        """
+        return None
+
     def post(self, request):
         if 'username' in request.data and \
                 'passhash' in request.data:
@@ -29,16 +38,13 @@ class Authenticate(Endpoint):
 
 
 class CreateEnvironment(Endpoint):
+    def authenticate(self, request):
+        return auth_token_in_cache(request)
+
     def post(self, request):
         name = request.data.get('name', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key] if CACHE.has_key(cache_key) else None
-
-        if cache_key is None:
-            return {
-                'Response': 'Failure',
-                'Message': 'Expected Auth-Token header'
-            }
+        auth = CACHE[cache_key]
 
         if name is None:
             return {
@@ -58,17 +64,14 @@ class CreateEnvironment(Endpoint):
 
 
 class CreateUser(Endpoint):
+    def authenticate(self, request):
+        return auth_token_in_cache(request)
+
     def post(self, request):
         user = request.data.get('user', None)
         passhash = request.data.get('passhash', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key] if CACHE.has_key(cache_key) else None
-
-        if cache_key is None:
-            return {
-                'Response': 'Failure',
-                'Message': 'Expected Auth-Token header'
-            }
+        auth = CACHE[cache_key]
 
         if (user is None) or (passhash is None):
             return {
@@ -88,18 +91,15 @@ class CreateUser(Endpoint):
 
 
 class GrantRights(Endpoint):
+    def authenticate(self, request):
+        return auth_token_in_cache(request)
+
     def post(self, request):
         env = request.data.get('env', None)
         user = request.data.get('user', None)
         rights = request.data.get('rights', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key] if CACHE.has_key(cache_key) else None
-
-        if cache_key is None:
-            return {
-                'Response': 'Failure',
-                'Message': 'Expected Auth-Token header'
-            }
+        auth = CACHE[cache_key]
 
         if (user is None) or (env is None) or (rights is None):
             return {
