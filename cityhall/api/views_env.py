@@ -35,7 +35,9 @@ def authenticate_for_get(request):
 
 def get_auth_from_request(request, env):
     cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-    auth = CACHE['guest'] if cache_key is None else CACHE[cache_key]
+    auth = CACHE['guest'] \
+        if (cache_key is None) and ensure_guest_exists() \
+        else CACHE[cache_key]
 
     if auth.get_permissions(env) < Rights.Read:
         return [
@@ -109,7 +111,7 @@ class EnvView(Endpoint):
     def get_value_for(auth, env, path):
         return {
             'Response': 'Ok',
-            'value': auth[1].get_env(env).get(path)
+            'value': auth.get_env(env).get(path)
         }
 
     @staticmethod
