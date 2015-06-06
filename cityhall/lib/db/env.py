@@ -186,6 +186,7 @@ class Env(object):
 
     def get_children(self, path):
         index = self._get_index_of(path)
+        path = sanitize_path(path)
 
         if index:
             return [
@@ -193,6 +194,8 @@ class Env(object):
                     'name': child['name'],
                     'id': child['id'],
                     'override': child['override'],
+                    'path': path + child['name'] + '/',
+                    'value': child['value'],
                 }
                 for child in self.db.get_children_of(index)
             ]

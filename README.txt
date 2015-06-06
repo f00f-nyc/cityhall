@@ -163,9 +163,9 @@ Get a value:
 	GET		http://localhost:5000/api/env/view/dev/some_app/value1/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 Returns: {"Response": "Ok", "value": "def"}
-
-
-
+	
+	
+	
 API - GUEST USER
 
 You can use GET to retrieve values without specifying an Auth-Token
@@ -186,4 +186,36 @@ Note here that the response at the same URL has returned two different
 values.  When we used the cityhall authorization, City Hall preferred
 the override that matched its name.  When we used guest, it defaulted
 to the no override value.
- 
+
+
+
+API - ENVIRONMENT OTHER
+
+These are here for extended functionality of City Hall.  For example,
+all of these end points are used by the Viewer app, but they're not
+meant to be part of the day-to-day usage of City Hall (the intent is to
+use a graphical user interface to set/create values, and then consume
+it using a library).
+
+View children:
+	GET		http://localhost:5000/api/env/view/dev/some_app/?viewchildren=true
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {
+	"Response": "Ok", 
+	"path": "/dev/some_app/", 
+	"children": [
+		{
+			"override": "", 
+			"path": "/dev/some_app/value1", 
+			"name": "value1", 
+			"value": "abc", 
+			"id": 6
+		},
+		{
+			"override": "cityhall", 
+			"path": "/dev/some_app/value1", 
+			"name": "value1", 
+			"value": "def", 
+			"id": 7
+		},
+	]}

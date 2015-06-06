@@ -48,6 +48,7 @@ def get_auth_from_request(request, env):
 
     return [True, auth]
 
+
 class EnvCreate(Endpoint):
     def authenticate(self, request):
         return auth_token_in_cache(request)
@@ -97,9 +98,32 @@ class EnvView(Endpoint):
         auth = get_auth_from_request(request, env)
 
         if auth[0]:
-            return {
-                'Response': 'Ok',
-                'value': auth[1].get_env(env).get(path)
-            }
+            if 'viewchildren' in request.GET:
+                return EnvView.get_children_for(auth[1], env, path)
+            else:
+                return EnvView.get_value_for(auth[1], env, path)
 
         return auth[1]
+
+    @staticmethod
+    def get_value_for(auth, env, path):
+        return {
+            'Response': 'Ok',
+            'value': auth[1].get_env(env).get(path)
+        }
+
+    @staticmethod
+    def _sanitize(env, path):
+        ret = '/' + env + path
+        return ret if ret[-1] == '/' else ret + '/'
+
+    @staticmethod
+    def get_children_for(auth, env, path):
+        sanitized_path = EnvView._sanitize(env, path)
+        children = auth.get_env(env).get_children(path)
+
+        return {
+            'Response': 'Ok',
+            'path': sanitized_path,
+            'children': children
+        }

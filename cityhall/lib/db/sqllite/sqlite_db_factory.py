@@ -116,13 +116,13 @@ class SqliteDbFactory(db.Db):
         if env is None:
             return 0 < self._first_value(
                 'select count(*) from cityhall_auth '
-                'where active = :active and user = :user and pass = "";',
+                'where active = :active and user = :user and pass = :pass;',
                 {'active': 1, 'user': user, 'pass': passhash, }
             )
         else:
             return 0 < self._first_value(
                 'select count(*) from cityhall_auth where '
-                'active > 0 and user = :user and pass = :passhash '
+                'active > 0 and user = :user and pass = :pass '
                 'and env = :env;',
                 {'active': 1, 'user': user, 'pass': passhash, 'env': env, }
             )
