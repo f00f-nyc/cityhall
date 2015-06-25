@@ -63,6 +63,8 @@ class EnvCreate(Endpoint):
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
         auth = CACHE[cache_key]
 
+        print "{}/{} [{}] -> {}".format(env, name, override, value)
+
         if (name is None) or (value is None) or (env is None):
             return {
                 'Response': 'Failure',
@@ -77,8 +79,11 @@ class EnvCreate(Endpoint):
             }
 
         env = auth.get_env(env)
-        env.set(name, value, override)
-        return {'Response': 'Ok'}
+        try:
+            env.set(name, value, override)
+            return {'Response': 'Ok'}
+        except Exception as e:
+            return {'Response': 'Failure', 'Message': e.message}
 
 
 class EnvView(Endpoint):
@@ -98,20 +103,38 @@ class EnvView(Endpoint):
         env = env_path[:first_slash]
         path = env_path[first_slash:]
         auth = get_auth_from_request(request, env)
+        override = request.GET.get('override', None)
 
         if auth[0]:
             if 'viewchildren' in request.GET:
                 return EnvView.get_children_for(auth[1], env, path)
+            elif 'viewhistory' in request.GET:
+                return EnvView.get_history_for(auth[1], env, path, override)
             else:
-                return EnvView.get_value_for(auth[1], env, path)
+                return EnvView.get_value_for(auth[1], env, path, override)
 
         return auth[1]
 
     @staticmethod
-    def get_value_for(auth, env, path):
+    def get_value_for(auth, env, path, override):
+        if override is None:
+            return {
+                'Response': 'Ok',
+                'value': auth.get_env(env).get(path)
+            }
+        else:
+            return {
+                'Response': 'Ok',
+                'value': auth.get_env(env).get_explicit(path, override)
+            }
+
+
+    @staticmethod
+    def get_history_for(auth, env, path, override):
+        override = '' if not override else override
         return {
             'Response': 'Ok',
-            'value': auth.get_env(env).get(path)
+            'History': auth.get_env(env).get_history(path, override)
         }
 
     @staticmethod

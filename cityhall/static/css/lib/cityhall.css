@@ -1,0 +1,16 @@
+.test_style1 {
+    font-weight: bold;
+    font-size: 5;
+}
+
+.city_hall_style {
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  border: none;
+  font: normal 16px/1 "Lucida Console", Monaco, monospace;
+  color: rgba(190,220,190,1);
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  background: rgba(140,140,140,1);
+}

@@ -144,8 +144,6 @@ Create a value:
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 	{"env": "dev", "name": "/some_app", "value": ""}
 Returns: {"Response": "Ok"}
-Note that the environment wasn't specified, that is implicit in the
-authentication token
 
 Create a child value:
 	POST	http://localhost:5000/api/env/create/
@@ -219,3 +217,20 @@ Returns: {
 			"id": 7
 		},
 	]}
+	
+View history:
+	GET 	http://localhost:5000/api/env/view/auto/some_app/value1?override=cityhall&viewhistory=true
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {
+	"Response": "Ok", 
+	"History": [
+		{
+			"protect": 0, 
+			"name": "value1", 
+			"author": "cityhall", 
+			"value": "val1", 
+			"datetime": "2015-06-02T14:13:03", 
+			"active": 1, 
+			"id": 4
+		}
+	]

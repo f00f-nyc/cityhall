@@ -206,6 +206,7 @@ class Env(object):
             return []
 
         index = self._get_index_of(path, override)
+
         return [
             {
                 'id': item['id'],
@@ -214,7 +215,8 @@ class Env(object):
                 'author': item['author'],
                 'datetime': item['datetime'],
                 'active': item['active'],
-                'protect': item['protect']
+                'protect': item['protect'],
+                'override': item['override'],
             }
             for item in self.db.get_history(index)
         ]

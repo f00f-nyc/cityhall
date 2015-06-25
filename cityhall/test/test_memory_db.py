@@ -119,6 +119,20 @@ class TestMemoryDbWithEnv(TestCase):
         self.assertEqual(vals_before+1, vals_after)
         self.assertEqual(auth_before+1, auth_after)
 
+    def test_create_env_returns_status(self):
+        self.assertTrue(
+            self.conn.get_db().create_env('cityhall', 'dev'),
+            "If the env is created, create_env returns true"
+        )
+        self.assertIsNot(
+            self.conn.get_db().create_env('cityhall', 'dev'),
+            "If creating the env fails, create_env returns false"
+        )
+        self.assertIsNot(
+            self.conn.get_db().create_env('non_existant_user', 'dev'),
+            "If creating the env fails, create_env returns false"
+        )
+
     def test_create_same_env_is_noop(self):
         db = self.conn.get_db()
         db.create_env('cityhall', 'dev')

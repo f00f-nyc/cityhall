@@ -81,6 +81,8 @@ class SqliteDb(db.Db):
                     'protect': False,
                 }
             )
+            return True
+        return False
 
     def get_children_of(self, index):
         ret = []
@@ -172,7 +174,7 @@ class SqliteDb(db.Db):
             ' '
             '  update cityhall_vals set id = rowid '
             '  where rowid = last_insert_rowid(); '
-            'end',
+            'end;',
             {
                 'env': env,
                 'parent': parent,
@@ -199,7 +201,7 @@ class SqliteDb(db.Db):
             'begin;'
             ' '
             '  update cityhall_vals set active = :false '
-            '  where  id = :id and active = :true'
+            '  where  id = :id and active = :true; '
             ' '
             '  insert into cityhall_vals ( '
             '  id, env, parent, active, name, override, '
@@ -276,6 +278,7 @@ class SqliteDb(db.Db):
                 'active from cityhall_vals where id = :val_id;',
                 {'val_id': index}):
             ret.append({
+                'id': index,
                 'env': row[0],
                 'name': row[1],
                 'override': row[2],

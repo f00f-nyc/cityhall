@@ -1,0 +1,1 @@
+var app = angular.module('CityHallApp', ['angular-md5', 'treeControl']);

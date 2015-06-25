@@ -8,8 +8,9 @@ class Auth(object):
         self.roots_cache = {}
 
     def create_env(self, env):
-        self.db.create_env(self.name, env)
-        return self.get_env(env)
+        if self.db.create_env(self.name, env):
+            return self.get_env(env)
+        return False
 
     def get_env(self, env):
         if env in self.roots_cache:

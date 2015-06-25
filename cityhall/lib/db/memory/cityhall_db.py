@@ -130,6 +130,8 @@ class CityHallDb(Db):
                 'value': '',
                 'protect': False,
             })
+            return True
+        return False
 
     def get_env_root(self, env):
         return next(

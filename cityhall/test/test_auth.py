@@ -26,6 +26,12 @@ class TestAuthentication(TestCase):
         env = self.auth.create_env('dev')
         self.assertTrue(env is not None)
 
+    def test_create_env_returns_false_if_env_exists(self):
+        self.auth.create_env('dev')
+        create = self.auth.create_env('dev')
+        self.assertIsInstance(create, bool)
+        self.assertFalse(create)
+
     def test_create_user(self):
         self.auth.create_user('test', '')
         test_auth = self.conn.get_auth('test', '')

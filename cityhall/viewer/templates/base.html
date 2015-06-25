@@ -1,0 +1,33 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en-US">
+    {% block before_head %}{% endblock %}
+    <head>
+        <title>{% block title %}City Hall Base Template{% endblock %}</title>
+        <link rel="stylesheet" type="text/css" href="{% static "css/lib/cityhall.css" %}" />
+
+        {% block styles %}{% endblock %}
+    </head>
+    <body class="city_hall_style">
+        <section id="navbar">
+            {% block navbar %}{% endblock %}
+        </section>
+
+        <header>
+            {% block header_container %}{% endblock %}
+        </header>
+
+        <section id="content">
+            <div id="non-base-content">
+                {% block content %}{% endblock %}
+            </div>
+        </section>
+
+        <footer>
+            {% block copyright %}
+                &copy; 2015-{% now "Y" %} Digital Borderlands, Inc. All rights reserved.
+            {% endblock %}
+        </footer>
+    </body>
+</html>

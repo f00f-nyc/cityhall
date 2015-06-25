@@ -59,8 +59,16 @@ class CreateEnvironment(Endpoint):
                            '" could not be found in cache'
             }
 
-        auth.create_env(name)
-        return {'Response': 'Ok'}
+        created = auth.create_env(name)
+        if not created:
+            return {
+                'Response': 'Failure',
+                'Message': 'Environment "'+name+'" already exists',
+            }
+        return {
+            'Response': 'Ok',
+            'Message': 'Environment "'+name+'" created successfully',
+        }
 
 
 class CreateUser(Endpoint):
