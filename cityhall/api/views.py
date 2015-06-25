@@ -1,11 +1,25 @@
+# Copyright 2015 Digital Borderlands Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License, version 3,
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from restless.views import Endpoint, HttpResponse
 from lib.db.connection import Connection
 from django.conf import settings
-from lru import LRUCacheDict
 from lib.db.db import Rights
+from .cache import CacheDict
 
 
-CACHE = LRUCacheDict(
+CACHE = CacheDict(
     max_size=settings.ENV_CACHE['SIZE'],
     expiration=settings.ENV_CACHE['EXPIRATION_SEC'],
     thread_clear=settings.ENV_CACHE['MULTI_THREAD'],
@@ -20,7 +34,7 @@ CONN.connect()
 def auth_token_in_cache(request):
     cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
 
-    if CACHE.has_key(cache_key):
+    if cache_key in CACHE:
         return None
 
     if cache_key is None:

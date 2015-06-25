@@ -1,3 +1,17 @@
+# Copyright 2015 Digital Borderlands Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License, version 3,
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from django.test import TestCase
 from lib.db.memory.cityhall_db_factory import CityHallDbFactory
 from lib.db.db import Rights
@@ -51,7 +65,10 @@ class TestEnvironment(TestCase):
         self.assertTrue(global_val['active'])
         self.assertTrue(global_val['name'], override_val['name'])
         self.assertNotEqual(global_val['id'], override_val['id'])
-        self.assertEqual(override_val['value'], self.env.get_explicit('/value', override_name))
+        self.assertEqual(
+            override_val['value'],
+            self.env.get_explicit('/value', override_name)
+        )
 
     def test_can_add_overrides_to_children(self):
         global_val = 'global_val'
@@ -62,7 +79,10 @@ class TestEnvironment(TestCase):
         self.env.set('/parent1/parent2/child', global_val)
         self.env.set('/parent1/parent2/child', override_val, 'cityhall')
 
-        self.assertEqual(global_val, self.env.get_explicit('/parent1/parent2/child'))
+        self.assertEqual(
+            global_val,
+            self.env.get_explicit('/parent1/parent2/child')
+        )
         self.assertEqual(
             override_val,
             self.env.get_explicit('/parent1/parent2/child', 'cityhall')
@@ -100,7 +120,10 @@ class TestEnvironment(TestCase):
         self.env.set('/value', value_global)
         self.env.set('/value', value_override, 'cityhall')
         self.assertEqual(value_global, self.env.get_explicit('/value'))
-        self.assertEqual(value_override, self.env.get_explicit('/value', 'cityhall'))
+        self.assertEqual(
+            value_override,
+            self.env.get_explicit('/value', 'cityhall')
+        )
 
     def test_adding_a_new_value_makes_old_one_inactive(self):
         self.env.set('/value', 'old value')

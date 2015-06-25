@@ -227,6 +227,7 @@ Returns: {
 		{
 			"protect": 0, 
 			"name": "value1", 
+			"override": "cityhall",
 			"author": "cityhall", 
 			"value": "val1", 
 			"datetime": "2015-06-02T14:13:03", 
@@ -234,3 +235,9 @@ Returns: {
 			"id": 4
 		}
 	]
+
+
+
+LICENSE
+
+  City Hall source files are made available under the terms of the GNU Affero General Public License (AGPL).

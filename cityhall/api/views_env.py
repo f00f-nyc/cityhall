@@ -1,10 +1,24 @@
+# Copyright 2015 Digital Borderlands Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License, version 3,
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from restless.views import Endpoint, HttpResponse
 from .views import CACHE, CONN, auth_token_in_cache
 from lib.db.db import Rights
 
 
 def ensure_guest_exists():
-    if CACHE.has_key('guest'):
+    if 'guest' in CACHE:
         return True
 
     guest_auth = CONN.get_auth('guest', '')
@@ -22,7 +36,7 @@ def authenticate_for_get(request):
     if cache_key is None:
         auth = CACHE['guest'] if ensure_guest_exists() else None
     else:
-        auth = CACHE[cache_key] if CACHE.has_key(cache_key) else None
+        auth = CACHE[cache_key] if cache_key in CACHE else None
 
     if auth is None:
         if cache_key is None:
@@ -127,7 +141,6 @@ class EnvView(Endpoint):
                 'Response': 'Ok',
                 'value': auth.get_env(env).get_explicit(path, override)
             }
-
 
     @staticmethod
     def get_history_for(auth, env, path, override):

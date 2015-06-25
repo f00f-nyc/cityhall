@@ -1,8 +1,22 @@
 from django.conf.urls import patterns, url
 from .views import (Info, Create)
-from .views_auth import Authenticate, CreateEnvironment, CreateUser, GrantRights
+from .views_auth import \
+    Authenticate, CreateEnvironment, CreateUser, GrantRights
 from .views_env import EnvCreate, EnvView
 
+# Copyright 2015 Digital Borderlands Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License, version 3,
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 urlpatterns = patterns("",  # noqa
     url(r"^info/$", Info.as_view(), name="info_home"),

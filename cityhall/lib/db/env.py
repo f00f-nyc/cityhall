@@ -1,4 +1,18 @@
-from lru import LRUCacheDict
+# Copyright 2015 Digital Borderlands Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License, version 3,
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from api.cache import CacheDict
 from django.conf import settings
 from .db import Rights
 
@@ -22,7 +36,7 @@ def path_split(path):
 class Env(object):
     def __init__(self, db, env, permissions, name):
         self.db = db
-        self.cache = LRUCacheDict(
+        self.cache = CacheDict(
             max_size=settings.ENV_CACHE['SIZE'],
             expiration=settings.ENV_CACHE['EXPIRATION_SEC'],
             thread_clear=settings.ENV_CACHE['MULTI_THREAD'],
@@ -49,23 +63,23 @@ class Env(object):
         """
         Attempts to retrieve the index of this path from cache
 
-        :param cache_key: The string representation of the cahce key in the form
-         of /fully/sanatized/path/:override
+        :param cache_key: The string representation of the cahce key in
+         the form of /fully/sanatized/path/:override
         :return: the int() index_id or None
         """
-        return self.cache[cache_key] if self.cache.has_key(cache_key) else None
+        return self.cache[cache_key] if cache_key in self.cache else None
 
     def _get_index_of(self, path, override=None,
                       parent_id=None, parent_path=None):
         """
         Returns the index of the given path.
 
-        It searches out from /, recursively calling itself with the next item in
-        the path.  As it searches, it greedily caches all paths it finds.
+        It searches out from /, recursively calling itself with the next item
+        in the path.  As it searches, it greedily caches all paths it finds.
 
-        :param path: This should be a string.  When _get_index_of() calls itself
-         it is an array of strings (broken up by '/'). which must be walked.
-         When len(path) == 1, we're at the end of the search
+        :param path: This should be a string.  When _get_index_of() calls
+         itself it is an array of strings (broken up by '/'). which must be
+         walked. When len(path) == 1, we're at the end of the search
         :param override: This should be a string. Only override == '' may have
          children, so this override only applies to the last item in the path
         :param parent_id: the current parent id to search from.  Starts out
