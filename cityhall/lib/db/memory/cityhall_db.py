@@ -142,6 +142,7 @@ class CityHallDb(Db):
                 'author': user,
                 'datetime': datetime.now(),
                 'value': '',
+                'first_last': True,
                 'protect': False,
             })
             return True
@@ -172,6 +173,7 @@ class CityHallDb(Db):
             'author': user,
             'datetime': datetime.now(),
             'value': value,
+            'first_last': True,
             'protect': False,
         })
 
@@ -194,7 +196,31 @@ class CityHallDb(Db):
                 'author': user,
                 'datetime': datetime.now(),
                 'value': value,
+                'first_last': False,
                 'protect': False,
+            })
+
+    def delete(self, user, index):
+        original = next((
+            val for val in self.db.valsTable
+            if val['active'] and val['id'] == index),
+            None
+        )
+
+        if original:
+            original['active'] = False
+            self.db.valsTable.append({
+                'id': index,
+                'env': original['env'],
+                'parent': original['parent'],
+                'active': False,
+                'name': original['name'],
+                'override': original['override'],
+                'author': user,
+                'datetime': datetime.now(),
+                'value': original['value'],
+                'first_last': True,
+                'protect': original['protect']
             })
 
     def get_value(self, index):
@@ -205,7 +231,12 @@ class CityHallDb(Db):
         )
 
     def get_history(self, index):
-        return [value for value in self.db.valsTable if value['id'] == index]
+        return [
+            value
+            for value in self.db.valsTable
+            if ((value['id'] == index) or
+                (value['parent'] == index and value['first_last']))
+        ]
 
     def get_value_for(self, parent_index, name, override):
         value_with_no_override = None

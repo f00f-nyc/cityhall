@@ -185,6 +185,11 @@ class Env(object):
 
         return True
 
+    def delete(self, path, override=None):
+        index = self._get_index_of(path, override)
+        if index:
+            self.db.delete(self.name, index)
+
     def get_explicit(self, path, override=None):
         index = self._get_index_of(path, override)
         return self.db.get_value(index)

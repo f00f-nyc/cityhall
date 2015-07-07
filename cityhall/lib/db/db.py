@@ -121,3 +121,7 @@ class Db(object):
     @abstractmethod
     def get_history(self, index):
         pass
+
+    @abstractmethod
+    def delete(self, author, index):
+        pass

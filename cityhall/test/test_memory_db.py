@@ -168,6 +168,7 @@ class TestMemoryDbWithEnv(TestCase):
         self.assertEqual('cityhall', val['author'])
         self.assertEqual('', val['override'])
         self.assertTrue(val['active'])
+        self.assertTrue(val['first_last'])
 
     def test_create_env_creates_authentications(self):
         self.conn.get_db().create_env('cityhall', 'dev')
@@ -219,7 +220,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         before = len(self.conn.valsTable)
         self.db.create('test', 'dev', dev_root, 'value1', 'some value')
         after = len(self.conn.valsTable)
-        val = self.conn.valsTable[before]
+        val = self.conn.valsTable[-1]
 
         self.assertEqual(before+1, after)
         self.assertTrue(val['active'])
@@ -227,6 +228,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         self.assertEqual(dev_root, val['parent'])
         self.assertEqual('some value', val['value'])
         self.assertNotEqual(dev_root, val['id'])
+        self.assertTrue(val['first_last'])
 
     def test_child_value_is_returned(self):
         dev_root = self.db.get_env_root('dev')
@@ -245,13 +247,14 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         before = len(self.conn.valsTable)
         self.db.update('test', original_value['id'], 'another value')
         after = len(self.conn.valsTable)
-        new_value = self.conn.valsTable[before]
+        new_value = self.conn.valsTable[-1]
 
         self.assertEqual(before+1, after)
         self.assertEqual(original_value['id'], new_value['id'])
         self.assertFalse(original_value['active'])
         self.assertTrue(new_value['id'])
         self.assertEqual('another value', new_value['value'])
+        self.assertFalse(new_value['first_last'])
 
     def test_create_override(self):
         dev_root = self.db.get_env_root('dev')
@@ -280,3 +283,16 @@ class TestMemoryDbWithEnvAndUser(TestCase):
     def test_get_value_of_nonexistant_returns_none(self):
         val = self.db.get_value(1000)
         self.assertTrue(val is None)
+
+    def test_delete(self):
+        dev_root = self.db.get_env_root('dev')
+        self.db.create('test', 'dev', dev_root, 'value1', 'abc')
+        before = len(self.conn.valsTable)
+        val_id = self.conn.valsTable[-1]['id']
+        self.db.delete('test', val_id)
+        after = len(self.conn.valsTable)
+        entry = self.conn.valsTable[-1]
+
+        self.assertEqual(before+1, after)
+        self.assertFalse(entry['active'])
+        self.assertTrue(entry['first_last'])

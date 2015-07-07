@@ -161,6 +161,11 @@ Get a value:
 	GET		http://localhost:5000/api/env/view/dev/some_app/value1/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 Returns: {"Response": "Ok", "value": "def"}
+
+Delete a value:
+	DEL		http://localhost:5000/api/env/delete/
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {"Response": "Ok"}
 	
 	
 	

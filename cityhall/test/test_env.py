@@ -219,3 +219,32 @@ class TestEnvironment(TestCase):
 
         self.assertEqual(1, len(hist_global))
         self.assertEqual(2, len(hist_override))
+
+    def test_delete(self):
+        self.env.set('/value1', 'abc')
+        self.env.delete('value1')
+        children = self.env.get_children('/')
+        self.assertEqual(0, len(children))
+
+    def test_children_created_show_up_in_history(self):
+        self.env.set('/value1', '')
+        hist_before = self.env.get_history('/value1')
+        self.env.set('/value1/child', 'abc')
+        hist_after = self.env.get_history('/value1')
+        self.assertEqual(len(hist_before)+1, len(hist_after))
+
+    def test_children_deleted_show_up_in_history(self):
+        self.env.set('/value1', '')
+        self.env.set('/value1/child', 'abc')
+        hist_before = self.env.get_history('/value1')
+        self.env.delete('/value1/child')
+        hist_after = self.env.get_history('/value1')
+        self.assertEqual(len(hist_before)+1, len(hist_after))
+
+    def test_children_value_do_not_show_up_in_history(self):
+        self.env.set('/value1', '')
+        self.env.set('/value1/child', 'abc')
+        hist_before = self.env.get_history('/value1')
+        self.env.set('/value1/child', 'def')
+        hist_after = self.env.get_history('/value1')
+        self.assertEqual(len(hist_before), len(hist_after))
