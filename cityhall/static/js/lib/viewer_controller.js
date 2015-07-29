@@ -312,24 +312,16 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
 
                 $http(req).success(function (data) {
                     var current = $scope.selected_node;
-                    console.log('attempting to delete: '+ current.real_name + ' - ' + current.override);
-
 
                     var should_delete = function(node) {
-                        console.log('checking: ' + node.real_name + ' - ' + node.override);
                         if (current.real_name == node.real_name) {
                             if (current.override == '') {
-                                console.log('  returning true');
                                 return true;
                             } else if (current.override == node.override) {
-                                console.log('  returning true');
                                 return true;
-                            } else {
-                                console.log('names match, but override is: ' + node.override)
                             }
                         }
-                        
-                        console.log('  returning false.');
+
                         return false;
                     };
 
