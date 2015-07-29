@@ -62,6 +62,18 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         $scope.status = 'Ready.';
         $scope.token = '';
 
+        $scope.urlForPath = function(path, override) {
+            var url = cityhall_url + 'env/' + $scope.selected_env + path;
+            if (override == undefined) {
+                return url;
+            }
+            return url + '?override=' + override;
+        };
+
+        $scope.urlForNode = function(node) {
+            return $scope.urlForPath(node.path);
+        };
+
         $scope.Login = function() {
             var hash = '';
             if ($scope.pass.length > 0) {
@@ -104,7 +116,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
             if (node.valid && $scope.token && !node.complete) {
                 node.complete = true;
 
-                var url = cityhall_url + 'env/view/' + $scope.selected_env + node.path + '?viewchildren=true';
+                var url = $scope.urlForNode(node) + '?viewchildren=true';
 
                 var req = {
                     method: 'GET',
@@ -130,23 +142,27 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
 
                         node.children.push({
                             "name": node_name,
+                            "real_name": child.name,
                             "override": child.override,
                             "valid": true,
                             "complete": child.override.length != 0,     // non-default overrides can't have children
                             "value": child.value,
                             "path": child.path,
-                            "children": []
+                            "children": [],
+                            "parent": node
                         });
                     }
                 }).error(function (data) {
                     node.children.push({
                         "name": "[ERROR]",
+                        "real_name": "",
                         "override": "",
                         "valid": false,
                         "complete": true,
                         "value": "error with: " + url + ": " + data.toString(),
                         "path": "/",
-                        "children": []
+                        "children": [],
+                        "parent": node
                     });
                 });
             }
@@ -163,14 +179,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
             var diff = value != node.value;
 
             if ($scope.token && diff) {
-
-                var create_data = {
-                    env: $scope.selected_env,
-                    name: node.path,
-                    value: value,
-                    override: node.override
-                };
-                $http.post(cityhall_url+'env/create/', create_data, {headers: {'Auth-Token': $scope.token}})
+                var url = $scope.urlForNode(node) + '?override=' + node.override;
+                $http.post(url, {value: value}, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
                         node.value = value;
                     });
@@ -197,27 +207,17 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 return;
             }
 
-            var create_data = {
-                env: $scope.selected_env,
-                name: $scope.selected_node.path + $scope.create_name,
-                value: '',
-                override: $scope.create_override
-            };
+            var url = $scope.urlForPath($scope.selected_node.path + $scope.create_name, $scope.create_override);
 
-            console.log('Create()     in create');
-            console.log(create_data);
+            console.log('Create()     in create for: ' + url);
 
-            $http.post(cityhall_url+'env/create/', create_data, {headers: {'Auth-Token': $scope.token}})
+            $http.post(url, {value: ''}, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
                         console.log('Create()     created!');
                         $scope.selected_node.complete = false;
                         $scope.selected_node.children = [];
                         $scope.Selected($scope.selected_node, false);
                     });
-
-            /* $scope.selected_node.children.push({
-
-            });*/
         };
 
         $scope.UnsavedContent = function() {
@@ -229,8 +229,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
 
         $scope.GetHistory = function() {
             if ($scope.token) {
-                var url = cityhall_url+'env/view/'+$scope.selected_env+$scope.selected_node.path+
-                    '?viewhistory=true&override='+$scope.selected_node.override;
+                var url = $scope.urlForPath($scope.selected_node.path, $scope.selected_node.override);
+                url = url + '&viewhistory=true';
 
                 var req = {
                     method: 'GET',
@@ -241,10 +241,112 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 };
 
                 $http(req).success(function (data){
-                    $scope.selected_history = data.History;
+                    var first = data.History[0];
+                    $scope.selected_history = [
+                        {
+                            datetime: first.datetime,
+                            author: first.author,
+                            type: "Created: " + first.name,
+                            value: first.value,
+                            public: (first.protected > 0) ? "N" : "Y"
+                        }
+                    ];
+                    var exists = new Array();
+                    var last_name = first.name;
+                    var last_parent = first.parent;
+                    var key_id = first.id;
+
+                    for (var i=1; i<data.History.length; i++) {
+                        var current = data.History[i];
+                        var type = "Value changed";
+
+                        if (current.id == key_id) {
+                            if (current.name != last_name) {
+                                type = "Renamed: " + current.name;
+                                last_name = current.name;
+                            }
+                            else if (current.parent != last_parent) {
+                                type = "Key moved";
+                                last_parent = current.parent;
+                            }
+                        }
+                        else {
+                            var id = "id" + current.id;
+                            var child_name = current.name;
+                            if (current.override != "") {
+                                child_name = current.name + " [" + current.override + "]";
+                            }
+
+                            if (exists[id] == undefined) {
+                                type = "Created: " + child_name;
+                                exists[id] = true;
+                            } else {
+                                type = "Deleted: " + child_name;
+                                delete exists[id];
+                            }
+                        }
+
+                        $scope.selected_history.push({
+                                datetime: current.datetime,
+                                author: current.author,
+                                type: type,
+                                value: current.value,
+                                public: (current.protected > 0) ? "N" : "Y"
+                            })
+                    }
                 });
             }
         };
 
+        $scope.Delete = function() {
+            if ($scope.token) {
+                var url = $scope.urlForPath($scope.selected_node.path, $scope.selected_node.override);
+
+                var req = {
+                    method: 'DELETE',
+                    url: url,
+                    headers: {
+                        'Auth-Token': $scope.token
+                    }
+                };
+
+                $http(req).success(function (data) {
+                    var current = $scope.selected_node;
+                    console.log('attempting to delete: '+ current.real_name + ' - ' + current.override);
+
+
+                    var should_delete = function(node) {
+                        console.log('checking: ' + node.real_name + ' - ' + node.override);
+                        if (current.real_name == node.real_name) {
+                            if (current.override == '') {
+                                console.log('  returning true');
+                                return true;
+                            } else if (current.override == node.override) {
+                                console.log('  returning true');
+                                return true;
+                            } else {
+                                console.log('names match, but override is: ' + node.override)
+                            }
+                        }
+                        
+                        console.log('  returning false.');
+                        return false;
+                    };
+
+                    var parent = current.parent;
+                    var i=0;
+
+                    while (i < parent.children.length) {
+                        if (should_delete(parent.children[i])) {
+                            parent.children.splice(i, 1);
+                        } else {
+                            i++;
+                        }
+                    }
+
+                    $scope.Selected(parent);
+                });
+            }
+        };
     }
 ]);

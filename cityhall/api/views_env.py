@@ -36,7 +36,7 @@ def authenticate_for_get(request):
     if cache_key is None:
         auth = CACHE['guest'] if ensure_guest_exists() else None
     else:
-        auth = CACHE[cache_key] if cache_key in CACHE else None
+        auth = CACHE.get(cache_key, None)
 
     if auth is None:
         if cache_key is None:
@@ -65,69 +65,96 @@ def get_auth_from_request(request, env):
     return [True, auth]
 
 
-class EnvCreate(Endpoint):
+class EnvView(Endpoint):
+    class RequestInfo(object):
+        def __init__(self, request, *args, **kwargs):
+            self.env_path = kwargs.get('env_path', None)
+            if not self.env_path:
+                self.valid = False
+                self.error_message = {
+                    'Response': 'Failure',
+                    'Message': 'Expected environment and path to be included'
+                }
+                return
+
+            first_slash = self.env_path.find('/')
+            if first_slash < 1:
+                self.valid = False
+                self.error_message = {
+                    'Response': 'Failure',
+                    'Message': 'Expected the path to include environment name'
+                }
+                return
+
+            self.env = self.env_path[:first_slash]
+            self.path = self.env_path[first_slash:]
+            auth = get_auth_from_request(request, self.env)
+            self.override = request.GET.get('override', None)
+
+            if not auth[0]:
+                self.valid = False
+                self.error_message = auth[1]
+            else:
+                self.auth = auth[1]
+                self.valid = True
+
     def authenticate(self, request):
-        return auth_token_in_cache(request)
+        if (request.method == 'POST') or (request.method == 'DELETE'):
+            return auth_token_in_cache(request)
+        elif request.method == 'GET':
+            return authenticate_for_get(request)
+        raise HttpResponse("Unsupported method type")
+
+    def delete(self, request, *args, **kwargs):
+        info = EnvView.RequestInfo(request, *args, **kwargs)
+        if not info.valid:
+            return info.error_message
+
+        env = info.auth.get_env(info.env)
+        try:
+            env.delete(info.path, info.override)
+            return {'Response': 'Ok'}
+        except Exception as e:
+            return {'Response': 'Failure', 'Message': e.message}
 
     def post(self, request, *args, **kwargs):
-        env = request.data.get('env', None)
-        name = request.data.get('name', None)
+        info = EnvView.RequestInfo(request, *args, **kwargs)
+        if not info.valid:
+            return info.error_message
+
         value = request.data.get('value', None)
-        override = request.data.get('override', '')
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
 
-        print "{}/{} [{}] -> {}".format(env, name, override, value)
-
-        if (name is None) or (value is None) or (env is None):
+        if (info.path is None) or (value is None) or (info.env is None):
             return {
                 'Response': 'Failure',
                 'Message': 'Expected an environment, name and value to create'
             }
 
-        if auth is None:
-            return {
-                'Response': 'Failure',
-                'Message': 'Given token "' + cache_key +
-                           '" could not be found in cache'
-            }
-
-        env = auth.get_env(env)
+        env = info.auth.get_env(info.env)
         try:
-            env.set(name, value, override)
+            env.set(info.path, value, info.override)
             return {'Response': 'Ok'}
         except Exception as e:
             return {'Response': 'Failure', 'Message': e.message}
 
-
-class EnvView(Endpoint):
-    def authenticate(self, request):
-        return authenticate_for_get(request)
-
     def get(self, request, *args, **kwargs):
-        env_path = kwargs.get('env_path', None)
+        info = EnvView.RequestInfo(request, *args, **kwargs)
+        if not info.valid:
+            return info.error_message
 
-        first_slash = env_path.find('/')
-        if first_slash < 1:
-            return {
-                'Response': 'Failure',
-                'Message': 'Expected the path to include environment name'
-            }
+        call_args = [info.auth, info.env, info.path, info.override]
 
-        env = env_path[:first_slash]
-        path = env_path[first_slash:]
-        auth = get_auth_from_request(request, env)
-        override = request.GET.get('override', None)
+        if 'viewchildren' in request.GET:
+            return EnvView.get_children_for(*call_args)
+        elif 'viewhistory' in request.GET:
+            return EnvView.get_history_for(*call_args)
 
-        if auth[0]:
-            if 'viewchildren' in request.GET:
-                return EnvView.get_children_for(auth[1], env, path)
-            elif 'viewhistory' in request.GET:
-                return EnvView.get_history_for(auth[1], env, path, override)
-            else:
-                return EnvView.get_value_for(auth[1], env, path, override)
+        return EnvView.get_value_for(*call_args)
 
-        return auth[1]
+    @staticmethod
+    def _sanitize(env, path):
+        ret = '/' + env + path
+        return ret if ret[-1] == '/' else ret + '/'
 
     @staticmethod
     def get_value_for(auth, env, path, override):
@@ -151,12 +178,13 @@ class EnvView(Endpoint):
         }
 
     @staticmethod
-    def _sanitize(env, path):
-        ret = '/' + env + path
-        return ret if ret[-1] == '/' else ret + '/'
+    def get_children_for(auth, env, path, override=None):
+        if override:
+            return {
+                'Response': 'Failure',
+                'Message': 'Cannot get children for an override',
+            }
 
-    @staticmethod
-    def get_children_for(auth, env, path):
         sanitized_path = EnvView._sanitize(env, path)
         children = auth.get_env(env).get_children(path)
 

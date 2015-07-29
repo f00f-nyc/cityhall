@@ -52,12 +52,18 @@ class Env(object):
         from .auth import Auth
         return Auth(self.db, self.name)
 
-    def _get_parent_id(self, sanitized_path):
+    @staticmethod
+    def _get_parent_path(sanitized_path):
         prev_slash = sanitized_path[:-1].rindex('/')
         if prev_slash:
-            parent_path = sanitized_path[:prev_slash]
-            return self._get_index_of(parent_path)
-        return self.root_id
+            return sanitized_path[:prev_slash]
+        return '/'
+
+    def _get_parent_id(self, sanitized_path):
+        parent_path = Env._get_parent_path(sanitized_path)
+        if parent_path == '/':
+            return self.root_id
+        return self._get_index_of(parent_path)
 
     def _index_from_cache(self, cache_key):
         """
@@ -186,13 +192,27 @@ class Env(object):
         return True
 
     def delete(self, path, override=None):
-        index = self._get_index_of(path, override)
-        if index:
-            self.db.delete(self.name, index)
+        sanitized_path = sanitize_path(path)
+        if sanitized_path == '/':
+            return
+
+        if not override:
+            parent_path = Env._get_parent_path(sanitized_path)
+            children = self.get_children(parent_path)
+            name = get_name_of_value(sanitized_path)
+
+            for child in children:
+                if child['name'] == name:
+                    self.db.delete(self.name, child['id'])
+        else:
+            index = self._get_index_of(path, override)
+            if index >= 0:
+                self.db.delete(self.name, index)
 
     def get_explicit(self, path, override=None):
         index = self._get_index_of(path, override)
-        return self.db.get_value(index)
+        if index >= 0:
+            return self.db.get_value(index)
 
     def get(self, path):
         if path == '/':
@@ -201,7 +221,8 @@ class Env(object):
         path = sanitize_path(path)
         parent_id = self._get_parent_id(path)
         value_name = get_name_of_value(path)
-        return self.db.get_value_for(parent_id, value_name, self.name)
+        if parent_id >= 0:
+            return self.db.get_value_for(parent_id, value_name, self.name)
 
     def get_children(self, path):
         index = self._get_index_of(path)

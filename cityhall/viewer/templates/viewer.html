@@ -84,6 +84,12 @@
                             <input type="submit" value="Create">
                         </form>
                     </div>
+                    <br>
+                    <div>
+                        <form ng-submit="Delete()">
+                            <input type="submit" value="Delete">
+                        </form>
+                    </div>
                 </td>
                 <td>
                     <form ng-submit="GetHistory()">
@@ -91,16 +97,18 @@
                     </form>
                     <table>
                         <tr class="row_odd">
-                            <th width="25%">Date</th>
-                            <th width="15%">Author</th>
-                            <th width="50%">Value</th>
-                            <th width="10%">Protected</th>
+                            <th width="20%">Date</th>
+                            <th width="10%">Author</th>
+                            <th width="28%">Type</th>
+                            <th width="37%">Value</th>
+                            <th width="5%">Public</th>
                         </tr>
                         <tr ng-repeat="history in selected_history" ng-class="{row_odd: ($index % 2 == 1)}">
-                            <td>{{ history.datetime }}</td>
-                            <td>{{ history.author }}</td>
-                            <td>{{ history.value }}</td>
-                            <td>{{ history.protect }}</td>
+                            <td class="history_text">{{ history.datetime }}</td>
+                            <td class="history_text">{{ history.author }}</td>
+                            <td class="history_text">{{ history.type }}</td>
+                            <td class="history_text">{{ history.value }}</td>
+                            <td class="history_text">{{ history.public }}</td>
                         </tr>
                     </table>
                 </td>

@@ -16,3 +16,7 @@
 .row_odd {
     background: rgba(100,100,100,1);
 }
+
+.history {
+    font: normal 9px/1 "Lucida Console", Monaco, monospace;
+}

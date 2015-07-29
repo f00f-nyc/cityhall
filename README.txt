@@ -77,7 +77,7 @@ GETTING STARTED
 API
 
 The API calls in this guide will be written like this:
-	POST	http://localhost:5000/api/auth/create/env/
+	POST	http://localhost:5000/api/auth/create/
 	Auth-Token: [Authenticate Token]
 	{"name": "dev"}
 The first line is the verb and URL, the second line is the extra
@@ -85,7 +85,7 @@ headers that have to be passed in, the third line is the sample JSON
 to follow along with the guide. The idea is to translate these to a
 call from the program that will be using City Hall or, for the purposes
 of this guide, a curl call from the command line:
-	curl -X POST -H "Content-Type: application/json" -H "Auth-Token: [Authenticate Token]" -d '{"name": "dev"}' http://localhost:5000/api/auth/create/env/
+	curl -X POST -H "Content-Type: application/json" -H "Auth-Token: [Authenticate Token]" -d '{"name": "dev"}' http://localhost:5000/api/auth/create/
 	
 	
 	
@@ -137,35 +137,48 @@ API - ENVIRONMENT
 
 Everything hanging off of http://localhost:5000/api/env/
 is related to getting and storing values or history for a particular
-environment
+environment.  The next part of the URL should be the environment and
+that is followed by the path to the value.
 
 Create a value:
-	POST	http://localhost:5000/api/env/create/
+	POST	http://localhost:5000/api/env/dev/some_app/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
-	{"env": "dev", "name": "/some_app", "value": ""}
+	{"value": ""}
 Returns: {"Response": "Ok"}
 
 Create a child value:
-	POST	http://localhost:5000/api/env/create/
+	POST	http://localhost:5000/api/env/dev/some_app/value1/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
-	{"env": "dev", "name": "/some_app/value1", "value": "abc"}
+	{"value": "abc"}
 Returns: {"Response": "Ok"}
 
 Create an override child value:
-	POST	http://localhost:5000/api/env/create/
+	POST	http://localhost:5000/api/env/dev/some_app/value1?override=cityhall
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
-	{"env": "dev", "name": "/some_app/value1", "value": "def", "override": "cityhall"}
+	{"value": "def"}
 Returns: {"Response": "Ok"}
 
 Get a value:
-	GET		http://localhost:5000/api/env/view/dev/some_app/value1/
+	GET		http://localhost:5000/api/env/dev/some_app/value1/
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {"Response": "Ok", "value": "def"}
+
+Get the global value, specifically:
+	GET		http://localhost:5000/api/env/dev/some_app/value1/?override=
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {"Response": "Ok", "value": "abc"}
+
+Get an override value, specifically:
+	GET		http://localhost:5000/api/env/dev/some_app/value1/?override=cityhall
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 Returns: {"Response": "Ok", "value": "def"}
 
 Delete a value:
-	DEL		http://localhost:5000/api/env/delete/
+	DEL		http://localhost:5000/api/env/dev/some_app/value1/?override=cityhall
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 Returns: {"Response": "Ok"}
+
+Note: you cannot delete an global value without also deleting all overrides.
 	
 	
 	
@@ -182,7 +195,7 @@ so we first have to give it access to the dev environment
 	{"env": "dev", "user": "guest", "rights": 1}
 
 Then, you should be able to call without specifying an Auth-Token:
-	GET		http://localhost:5000/api/env/view/auto/some_app/value1
+	GET		http://localhost:5000/api/env/dev/some_app/value1/
 The call above will return: {"Response": "Ok", "value": "abc"}
 
 Note here that the response at the same URL has returned two different
@@ -201,7 +214,7 @@ use a graphical user interface to set/create values, and then consume
 it using a library).
 
 View children:
-	GET		http://localhost:5000/api/env/view/dev/some_app/?viewchildren=true
+	GET		http://localhost:5000/api/env/dev/some_app/?viewchildren=true
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 Returns: {
 	"Response": "Ok", 
@@ -224,7 +237,7 @@ Returns: {
 	]}
 	
 View history:
-	GET 	http://localhost:5000/api/env/view/auto/some_app/value1?override=cityhall&viewhistory=true
+	GET 	http://localhost:5000/api/env/dev/some_app/value1?override=cityhall&viewhistory=true
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 Returns: {
 	"Response": "Ok", 
@@ -236,10 +249,22 @@ Returns: {
 			"author": "cityhall", 
 			"value": "val1", 
 			"datetime": "2015-06-02T14:13:03", 
-			"active": 1, 
+			"active": 1,
+			"first_last": 1,
 			"id": 4
 		}
 	]
+	
+	Some notes on the values here. 
+	'id' is the internal, database id which is used for this key. Each
+key has an id, but a user will only be using the env and path to access
+a key. The uses of this value are mostly internal and in determining if
+a key has had its name changed or we are looking at a child key (see 
+below).
+	'first_last' is the marker of when a key is created or deleted.
+This will be set to true for the fist item, and it will be set to true
+for every child node that is part of the history. (Creation and
+deletion of child keys is included in the history.)
 
 
 

@@ -248,3 +248,23 @@ class TestEnvironment(TestCase):
         self.env.set('/value1/child', 'def')
         hist_after = self.env.get_history('/value1')
         self.assertEqual(len(hist_before), len(hist_after))
+
+    def test_deleting_global_also_deletes_overrides(self):
+        self.env.set('/value1', 'abc')
+        self.env.set('/value1', 'def', 'cityhall')
+        self.env.delete('/value1', '')
+        get = self.env.get_explicit('/value1', 'cityhall')
+        self.assertIsNone(get)
+
+    def test_deleted_values_no_longer_returned(self):
+        self.env.set('/value1', 'abc')
+        self.env.delete('/value1', '')
+        deleted = self.env.get('/value1')
+        does_not_exist = self.env.get('/key_doesnt_exist')
+        self.assertEqual(deleted, does_not_exist)
+        self.assertIsNone(deleted)
+
+    def test_cannot_delete_root(self):
+        self.env.set('/', 'abc')
+        self.env.delete('/', '')
+        self.assertEqual('abc', self.env.get('/'))

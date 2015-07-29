@@ -73,10 +73,10 @@ class SqliteDb(db.Db):
                 '  insert into cityhall_vals '
                 '  (id, '
                 '  env, parent, active, name, override, '
-                '  author, datetime, value, protect)'
+                '  author, datetime, value, first_last, protect)'
                 '  values '
                 '  (-1, :env,  -1, :active, :name, :override, '
-                '  :author, :datetime, :value, :protect);'
+                '  :author, :datetime, :value, :first_last, :protect);'
                 ' '
                 '  update cityhall_vals set id = rowid, parent = rowid where '
                 '  rowid = last_insert_rowid();'
@@ -92,6 +92,7 @@ class SqliteDb(db.Db):
                     'name': '/',
                     'override': '',
                     'value': '',
+                    'first_last': True,
                     'protect': False,
                 }
             )
@@ -182,9 +183,9 @@ class SqliteDb(db.Db):
             ' '
             '  insert into cityhall_vals ( '
             '  id, env, parent, active, name, override, author, datetime, '
-            '  value, protect) '
+            '  value, first_last, protect) '
             '  values (-1, :env, :parent, :active, :name, :override, :author, '
-            '  :datetime, :value, :protect);'
+            '  :datetime, :value, :first_last, :protect);'
             ' '
             '  update cityhall_vals set id = rowid '
             '  where rowid = last_insert_rowid(); '
@@ -198,6 +199,7 @@ class SqliteDb(db.Db):
                 'author': user,
                 'datetime': self._datetime_now_to_unixtime(),
                 'value': value,
+                'first_last': True,
                 'protect': False,
             })
 
@@ -219,9 +221,9 @@ class SqliteDb(db.Db):
             ' '
             '  insert into cityhall_vals ( '
             '  id, env, parent, active, name, override, '
-            '  author, datetime, value, protect) '
+            '  author, datetime, value, first_last, protect) '
             '  values (:id, :env, :parent, :true, :name, :override, '
-            '  :author, :datetime, :value, :protect); '
+            '  :author, :datetime, :value, :false, :protect); '
             ' '
             'end;',
             {
@@ -289,21 +291,22 @@ class SqliteDb(db.Db):
         ret = []
         for row in self.cursor.execute(
                 'select '
-                ' env, name, override, author, '
+                ' id, env, name, override, author, '
                 ' datetime, value, protect, active '
-                'from cityhall_vals where id = :val_id;',
-                {'val_id': index}):
+                'from cityhall_vals where '
+                '(id = :val_id) or (first_last = :true and parent = :val_id);',
+                {'val_id': index, 'true': True}):
             ret.append({
-                'id': index,
-                'env': row[0],
-                'name': row[1],
-                'override': row[2],
-                'author': row[3],
-                'datetime': self._unixtime_to_datetime_now(row[4]),
-                'value': row[5],
-                'protect': row[6],
+                'id': row[0],
+                'env': row[1],
+                'name': row[2],
+                'override': row[3],
+                'author': row[4],
+                'datetime': self._unixtime_to_datetime_now(row[5]),
+                'value': row[6],
+                'protect': row[7],
                 'parent': index,
-                'active': row[7],
+                'active': row[8]
             })
         return ret
 
@@ -327,3 +330,40 @@ class SqliteDb(db.Db):
                 return ret
 
         return ret
+
+    def delete(self, user, index):
+        first_row = self._first_row(
+            'select rowid, env, parent, name, override, value '
+            'from cityhall_vals where id = :val_id and active = :active;',
+            {'val_id': index, 'active': True, }
+        )
+
+        if not first_row:
+            return
+
+        self.cursor.execute(
+            'begin;'
+            ' '
+            '  update cityhall_vals set active = :false '
+            '  where  id = :id and active = :true; '
+            ' '
+            '  insert into cityhall_vals ( '
+            '  id, env, parent, active, name, override, '
+            '  author, datetime, value, first_last, protect) '
+            '  values (:id, :env, :parent, :false, :name, :override, '
+            '  :author, :datetime, :value, :true, :protect); '
+            ' '
+            'end;',
+            {
+                'id': index,
+                'env': first_row[1],
+                'parent': first_row[2],
+                'true': True,
+                'name': first_row[3],
+                'override': first_row[4],
+                'author': user,
+                'datetime': self._datetime_now_to_unixtime(),
+                'value': first_row[5],
+                'protect': False,
+                'false': False,
+            })
