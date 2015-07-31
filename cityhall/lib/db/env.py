@@ -34,7 +34,7 @@ def path_split(path):
 
 
 class Env(object):
-    def __init__(self, db, env, permissions, name):
+    def __init__(self, db, env, permissions, name, root_id):
         self.db = db
         self.cache = CacheDict(
             max_size=settings.ENV_CACHE['SIZE'],
@@ -44,7 +44,7 @@ class Env(object):
             concurrent=settings.ENV_CACHE['MULTI_THREAD'],
         )
         self.env = env
-        self.root_id = self.db.get_env_root(env)
+        self.root_id = root_id
         self.permissions = permissions
         self.name = name
 

@@ -39,9 +39,10 @@ class Connection(object):
         if self._ensure_open() and\
                 self.db_connection.authenticate(user, passhash, env):
             db = self.db_connection.get_db()
+            root_id = db.get_env_root(env)
             permissions = db.get_rights(env, user)
             if permissions is not None:
-                return Env(db, env, permissions, user)
+                return Env(db, env, permissions, user, root_id)
         return None
 
     def get_auth(self, user, passhash):

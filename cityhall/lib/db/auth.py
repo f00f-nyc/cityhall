@@ -17,6 +17,11 @@ from .db import Rights
 
 
 class Auth(object):
+    class EnvCache(object):
+        def __init__(self, root_id, rights):
+            self.root_id = root_id
+            self.rights = rights
+
     def __init__(self, db, name):
         self.db = db
         self.name = name
@@ -28,14 +33,16 @@ class Auth(object):
         return False
 
     def get_env(self, env):
-        if env in self.roots_cache:
-            rights = self.roots_cache[env]
-        else:
-            rights = self.db.get_rights(env, self.name)
-            self.roots_cache[env] = rights
+        cached = self.roots_cache.get('env', None)
 
-        if rights:
-            return Env(self.db, env, rights, self.name)
+        if not cached:
+            root_id = self.db.get_env_root(env)
+            rights = self.db.get_rights(env, self.name)
+            cached = Auth.EnvCache(root_id, rights)
+            self.roots_cache[env] = cached
+
+        if cached.rights:
+            return Env(self.db, env, cached.rights, self.name, cached.root_id)
         return None
 
     def create_user(self, user, passhash):
