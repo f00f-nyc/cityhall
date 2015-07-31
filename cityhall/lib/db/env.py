@@ -143,6 +143,15 @@ class Env(object):
             "{}{}/".format(parent_path, path[0])
         )
 
+    def _get_val_from_pair(self, val_pair):
+        if self.permissions >= Rights.Read:
+            if val_pair[1]:  # is protected
+                if self.permissions >= Rights.ReadProtected:
+                    return val_pair[0]
+                return None
+            return val_pair[0]
+        return None
+
     def set(self, path, value, override=None):
         override = '' if override is None else override
         value = '' if value is None else value
@@ -212,17 +221,22 @@ class Env(object):
     def get_explicit(self, path, override=None):
         index = self._get_index_of(path, override)
         if index >= 0:
-            return self.db.get_value(index)
+            return self._get_val_from_pair(self.db.get_value(index))
 
     def get(self, path):
         if path == '/':
-            return self.db.get_value(self.root_id)
+            return self._get_val_from_pair(
+                self.db.get_value(self.root_id)
+            )
 
         path = sanitize_path(path)
         parent_id = self._get_parent_id(path)
         value_name = get_name_of_value(path)
+
         if parent_id >= 0:
-            return self.db.get_value_for(parent_id, value_name, self.name)
+            return self._get_val_from_pair(
+                self.db.get_value_for(parent_id, value_name, self.name)
+            )
 
     def get_children(self, path):
         index = self._get_index_of(path)
@@ -236,6 +250,7 @@ class Env(object):
                     'override': child['override'],
                     'path': path + child['name'] + '/',
                     'value': child['value'],
+                    'protect': child['protect'],
                 }
                 for child in self.db.get_children_of(index)
             ]
@@ -260,3 +275,23 @@ class Env(object):
             }
             for item in self.db.get_history(index)
         ]
+
+    def set_protect(self, status, path, override):
+        if self.permissions < Rights.Write:
+            return False
+
+        override = '' if override is None else override
+
+        if (path == '/') and (override == ''):
+            self.db.set_protect_status(self.name, self.root_id, status)
+            return True
+
+        if path == '/':
+            return False    # Cannot create overrides for root
+
+        id = self._get_index_of(path, override)
+        if id > -1:
+            self.db.set_protect_status(self.name, id, status)
+            return True
+
+        return False

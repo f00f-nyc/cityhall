@@ -124,11 +124,14 @@ class SqliteDb(db.Db):
         return ret
 
     def get_value(self, index):
-        return self._first_value(
-            'select value from cityhall_vals '
+        val = self._first_row(
+            'select value, protect from cityhall_vals '
             'where id = :id and active = :active;',
             {'active': True, 'id': index, }
         )
+        if val is None:
+            return None, None
+        return val[0], val[1]
 
     def get_rights(self, env, user):
         ret = self._first_value(
@@ -205,7 +208,7 @@ class SqliteDb(db.Db):
 
     def update(self, user, index, value):
         first_row = self._first_row(
-            'select rowid, env, parent, name, override '
+            'select rowid, env, parent, name, override, protect '
             'from cityhall_vals where id = :val_id and active = :active;',
             {'val_id': index, 'active': True, }
         )
@@ -236,7 +239,7 @@ class SqliteDb(db.Db):
                 'author': user,
                 'datetime': self._datetime_now_to_unixtime(),
                 'value': value,
-                'protect': False,
+                'protect': first_row[5],
                 'false': False,
             })
 
@@ -312,9 +315,10 @@ class SqliteDb(db.Db):
 
     def get_value_for(self, parent_index, name, override):
         ret = None
+        protect = None
 
         for row in self.cursor.execute(
-            'select value, override from cityhall_vals '
+            'select value, override, protect from cityhall_vals '
             'where parent = :parent and name = :name and active = :active '
             ' and (override = :override or override = :global);',
             {
@@ -326,10 +330,11 @@ class SqliteDb(db.Db):
             }
         ):
             ret = row[0]
+            protect = row[2]
             if row[1] == override:
-                return ret
+                return ret, protect
 
-        return ret
+        return ret, protect
 
     def delete(self, user, index):
         first_row = self._first_row(
@@ -365,5 +370,43 @@ class SqliteDb(db.Db):
                 'datetime': self._datetime_now_to_unixtime(),
                 'value': first_row[5],
                 'protect': False,
+                'false': False,
+            })
+
+    def set_protect_status(self, user, index, status):
+        first_row = self._first_row(
+            'select rowid, env, parent, name, override, value '
+            'from cityhall_vals where id = :val_id and active = :active '
+            '     and protect != :status;',
+            {'val_id': index, 'active': True, 'status': status}
+        )
+
+        if not first_row:
+            return
+
+        self.cursor.execute(
+            'begin;'
+            ' '
+            '  update cityhall_vals set active = :false '
+            '  where  id = :id and active = :true; '
+            ' '
+            '  insert into cityhall_vals ( '
+            '  id, env, parent, active, name, override, '
+            '  author, datetime, value, first_last, protect) '
+            '  values (:id, :env, :parent, :true, :name, :override, '
+            '  :author, :datetime, :value, :false, :protect); '
+            ' '
+            'end;',
+            {
+                'id': index,
+                'env': first_row[1],
+                'parent': first_row[2],
+                'true': True,
+                'name': first_row[3],
+                'override': first_row[4],
+                'author': user,
+                'datetime': self._datetime_now_to_unixtime(),
+                'value': first_row[5],
+                'protect': status,
                 'false': False,
             })

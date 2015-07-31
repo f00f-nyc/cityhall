@@ -64,7 +64,8 @@
                 </td>
                 <td class="value_input" ng-style="UnsavedContent()">
                     <br>
-                    &nbsp;<textarea rows="10" cols="80" width="100%" ng-model="selected_value"></textarea>
+                    &nbsp;<textarea rows="10" cols="80" width="100%" ng-model="selected_value"></textarea><br>
+                    &nbsp;Protected:&nbsp;<input type="checkbox" ng-checked="selected_protected" ng-model="selected_protected">
                     <form ng-submit="Save()">
                         &nbsp;<input type="submit" value="Save">
                     </form>

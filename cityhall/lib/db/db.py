@@ -115,13 +115,13 @@ class Db(object):
         pass
 
     @abstractmethod
-    def get_value(self, parent_id, name, override):
-        pass
-
-    @abstractmethod
     def get_history(self, index):
         pass
 
     @abstractmethod
     def delete(self, author, index):
+        pass
+
+    @abstractmethod
+    def set_protect_status(self, author, index, status):
         pass

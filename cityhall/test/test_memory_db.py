@@ -278,11 +278,13 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         item_in_db = self.conn.valsTable[-1]
 
         val_from_db = self.db.get_value(item_in_db['id'])
-        self.assertEqual('some value', val_from_db)
+        self.assertEqual('some value', val_from_db[0])
+        self.assertFalse(val_from_db[1])
 
     def test_get_value_of_nonexistant_returns_none(self):
         val = self.db.get_value(1000)
-        self.assertTrue(val is None)
+        self.assertIsNone(val[0])
+        self.assertIsNone(val[1])
 
     def test_delete(self):
         dev_root = self.db.get_env_root('dev')
@@ -296,3 +298,37 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         self.assertEqual(before+1, after)
         self.assertFalse(entry['active'])
         self.assertTrue(entry['first_last'])
+
+    def test_protect(self):
+        dev_root = self.db.get_env_root('dev')
+        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+
+        before = len(self.conn.valsTable)
+        created = self.conn.valsTable[-1]
+        self.db.set_protect_status('dev', created['id'], True)
+        after = len(self.conn.valsTable)
+        updated = self.conn.valsTable[-1]
+
+        self.assertEqual(before+1, after)
+        self.assertEqual(created['id'], updated['id'])
+        self.assertFalse(created['protect'])
+        self.assertTrue(updated['protect'])
+        self.assertEqual(created['value'], updated['value'])
+        self.assertFalse(updated['first_last'])
+        self.assertFalse(created['active'])
+        self.assertTrue(updated['active'])
+
+    def test_unprotect(self):
+        dev_root = self.db.get_env_root('dev')
+        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        val_id = self.conn.valsTable[-1]['id']
+        self.db.set_protect_status('dev', val_id, True)
+
+        before = len(self.conn.valsTable)
+        self.db.set_protect_status('dev', val_id, False)
+        after = len(self.conn.valsTable)
+        public = self.conn.valsTable[-1]
+
+        self.assertEqual(before+1, after)
+        self.assertFalse(public['protect'])
+        self.assertTrue(public['active'])

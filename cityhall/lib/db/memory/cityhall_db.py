@@ -225,9 +225,9 @@ class CityHallDb(Db):
 
     def get_value(self, index):
         return next((
-            val['value'] for val in self.db.valsTable
+            (val['value'], val['protect']) for val in self.db.valsTable
             if val['active'] and val['id'] == index),
-            None
+            (None, None)
         )
 
     def get_history(self, index):
@@ -239,14 +239,39 @@ class CityHallDb(Db):
         ]
 
     def get_value_for(self, parent_index, name, override):
-        value_with_no_override = None
+        value_with_no_override = None, None
 
         for val in self.db.valsTable:
             if val['parent'] == parent_index and val['name'] == name and \
                     val['active']:
                 if val['override'] == override:
-                    return val['value']
+                    return val['value'], val['protect']
                 elif val['override'] == '':
-                    value_with_no_override = val['value']
+                    value_with_no_override = val['value'], val['protect']
 
         return value_with_no_override
+
+    def set_protect_status(self, user, index, status):
+        original = next((
+            val for val in self.db.valsTable
+            if (val['active']
+                and val['id'] == index
+                and val['protect'] != status)),
+            None
+        )
+
+        if original:
+            original['active'] = False
+            self.db.valsTable.append({
+                'id': index,
+                'env': original['env'],
+                'parent': original['parent'],
+                'active': True,
+                'name': original['name'],
+                'override': original['override'],
+                'author': user,
+                'datetime': datetime.now(),
+                'value': original['value'],
+                'first_last': False,
+                'protect': status
+            })

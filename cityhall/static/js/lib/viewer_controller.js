@@ -26,9 +26,12 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         $scope.env = 'dev';
         $scope.selected_env = 'auto';
         $scope.selected_value = '';
+        $scope.selected_protected = false;
 
         $scope.rootForTree = function() {
             this.name = "/";
+            this.real_name = "/";
+            this.protect = false;
             this.override = "";
             this.valid = false;
             this.complete = false;
@@ -86,7 +89,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 $scope.token = data['Token'];
                 $scope.status = data['Response'];
                 $scope.dataForTheTree[0].valid = true;
-            })
+            });
+
+            //TODO: implement an extra get override ?viewprotect=true to set protect status of root
         };
 
         $scope.ViewEnv = function() {
@@ -149,7 +154,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                             "value": child.value,
                             "path": child.path,
                             "children": [],
-                            "parent": node
+                            "parent": node,
+                            "protect": child.protect
                         });
                     }
                 }).error(function (data) {
@@ -162,12 +168,14 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                         "value": "error with: " + url + ": " + data.toString(),
                         "path": "/",
                         "children": [],
-                        "parent": node
+                        "parent": node,
+                        "protect": false
                     });
                 });
             }
 
             $scope.selected_value = node.value;
+            $scope.selected_protected = node.protect;
             $scope.selected_node = node;
             $scope.selected_can_create = (node.override == '');
             $scope.selected_history = [];
@@ -175,14 +183,24 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
 
         $scope.Save = function() {
             var node = $scope.selected_node;
-            var value = $scope.selected_value;
-            var diff = value != node.value;
+            var diff = false;
+
+            var data = {};
+            if ($scope.selected_value != node.value) {
+                data.value = $scope.selected_value;
+                diff = true;
+            }
+            if ($scope.selected_protected != node.protect) {
+                data.protect = $scope.selected_protected;
+                diff = true;
+            }
 
             if ($scope.token && diff) {
                 var url = $scope.urlForNode(node) + '?override=' + node.override;
-                $http.post(url, {value: value}, {headers: {'Auth-Token': $scope.token}})
+                $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
-                        node.value = value;
+                        node.value = $scope.selected_value;
+                        node.protect = $scope.selected_protected;
                     });
             }
         };
@@ -221,9 +239,11 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         };
 
         $scope.UnsavedContent = function() {
-            if ($scope.selected_value != $scope.selected_node.value) {
+            if (($scope.selected_value != $scope.selected_node.value)  ||
+                ($scope.selected_protected != $scope.selected_node.protect)) {
                 return {background: 'lightpink'};
             }
+
             return {};
         };
 

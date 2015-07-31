@@ -123,16 +123,25 @@ class EnvView(Endpoint):
             return info.error_message
 
         value = request.data.get('value', None)
+        protect = request.data.get('protect', None)
 
-        if (info.path is None) or (value is None) or (info.env is None):
+        if (info.path is None) or (info.env is None) or\
+                ((value is None) and (protect is None)):
             return {
                 'Response': 'Failure',
-                'Message': 'Expected an environment, name and value to create'
+                'Message': 'Expected an environment, name, and value or '
+                           'protect to create'
             }
+
+        if protect is not None:
+            protect = str(protect).upper() in ['1', 'TRUE', 'Y', 'YES', ]
 
         env = info.auth.get_env(info.env)
         try:
-            env.set(info.path, value, info.override)
+            if protect is not None:
+                env.set_protect(protect, info.path, info.override)
+            if value is not None:
+                env.set(info.path, value, info.override)
             return {'Response': 'Ok'}
         except Exception as e:
             return {'Response': 'Failure', 'Message': e.message}

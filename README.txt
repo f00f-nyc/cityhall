@@ -153,7 +153,7 @@ Create a child value:
 Returns: {"Response": "Ok"}
 
 Create an override child value:
-	POST	http://localhost:5000/api/env/dev/some_app/value1?override=cityhall
+	POST	http://localhost:5000/api/env/dev/some_app/value1/?override=cityhall
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 	{"value": "def"}
 Returns: {"Response": "Ok"}
@@ -174,12 +174,36 @@ Get an override value, specifically:
 Returns: {"Response": "Ok", "value": "def"}
 
 Delete a value:
+	DEL		http://localhost:5000/api/env/dev/some_app/value1/
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {"Response": "Ok"}
+
+NOTE: While this works, this is a dangerous way of working. Values 
+should be deleted explicitly, by specifying the override request 
+parameter.
+
+Delete the global override. NOTE: this also deletes all overrides for
+that value.
+	DEL		http://localhost:5000/api/env/dev/some_app/value1/?override=
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {"Response": "Ok"}
+
+Delete a specific override:
 	DEL		http://localhost:5000/api/env/dev/some_app/value1/?override=cityhall
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 Returns: {"Response": "Ok"}
 
-Note: you cannot delete an global value without also deleting all overrides.
-	
+Protect a specific override:
+	POST	http://localhost:5000/api/env/dev/some_app/value1/
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+	{"protect": "true"}
+Returns: {"Response": "Ok"}
+
+NOTE: This is the exact same API to set a value, which means that you
+can do both at the same time.  You can pass:
+	{"value": "def", "protect": "true"}
+and this will cause two operations, it will protect the value, then it
+will set the value. 
 	
 	
 API - GUEST USER

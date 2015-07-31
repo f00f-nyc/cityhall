@@ -268,3 +268,62 @@ class TestEnvironment(TestCase):
         self.env.set('/', 'abc')
         self.env.delete('/', '')
         self.assertEqual('abc', self.env.get('/'))
+
+    def test_can_protect(self):
+        self.env.set('/value1', 'abc')
+        self.env.set_protect(True, '/value1', '')
+        protect = self.db.valsTable[-1]
+        self.assertEqual('value1', protect['name'])
+        self.assertTrue(protect['protect'])
+
+    def test_can_unprotect(self):
+        self.env.set('/value1', 'abc')
+        self.env.set_protect(True, '/value1', '')
+        self.env.set_protect(False, '/value1', '')
+        unprotect = self.db.valsTable[-1]
+        self.assertEqual('value1', unprotect['name'])
+        self.assertFalse(unprotect['protect'])
+
+    def test_can_protect_override(self):
+        self.env.set('/value1', 'abc', 'test')
+        self.env.set_protect(True, '/value1', 'test')
+        protect = self.db.valsTable[-1]
+        self.assertEqual('test', protect['override'])
+        self.assertTrue(protect['protect'])
+
+    def test_protect_requires_write_permissions(self):
+        auth = self.conn.get_auth('cityhall', '')
+        auth.create_user('test', '')
+        auth.grant('auto', 'test', Rights.Read)
+        test_env = self.conn.get_env('test', '', 'auto')
+
+        self.env.set('/value1', 'abc')
+        before = len(self.db.valsTable)
+        self.assertFalse(test_env.set_protect(True, '/value1', ''))
+        after = len(self.db.valsTable)
+        self.assertEqual(before, after)
+
+    def test_protect_again_is_noop(self):
+        self.env.set('/value1', 'abc')
+        self.env.set_protect(True, '/value1', '')
+        before = len(self.db.valsTable)
+        self.assertTrue(self.env.set_protect(True, '/value1', ''))
+        after = len(self.db.valsTable)
+        self.assertEqual(before, after)
+
+    def test_protect_shows_up_in_history(self):
+        self.env.set('/value1', 'abc')
+        self.env.set_protect(True, '/value1', '')
+        hist = self.env.get_history('/value1')
+        self.assertEqual(2, len(hist))
+        self.assertTrue(hist[1]['protect'])
+
+    def test_protect_is_honored(self):
+        auth = self.conn.get_auth('cityhall', '')
+        self.env.set('/value1', 'abc')
+        self.env.set_protect(True, '/value1', '')
+
+        auth.create_user('test', '')
+        auth.grant('auto', 'test', Rights.Read)
+        test_env = self.conn.get_env('test', '', 'auto')
+        self.assertIsNone(test_env.get('/value1'))
