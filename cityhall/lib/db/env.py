@@ -241,6 +241,12 @@ class Env(object):
     def get_children(self, path):
         index = self._get_index_of(path)
         path = sanitize_path(path)
+        can_read = lambda i: True
+
+        if self.permissions < Rights.Read:
+            return []
+        elif self.permissions == Rights.Read:
+            can_read = lambda i: not i['protect']
 
         if index:
             return [
@@ -252,7 +258,7 @@ class Env(object):
                     'value': child['value'],
                     'protect': child['protect'],
                 }
-                for child in self.db.get_children_of(index)
+                for child in self.db.get_children_of(index) if can_read(child)
             ]
         return []
 
