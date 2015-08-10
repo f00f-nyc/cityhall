@@ -268,7 +268,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                             author: first.author,
                             type: "Created: " + first.name,
                             value: first.value,
-                            public: (first.protected > 0) ? "N" : "Y"
+                            public: (first.protect > 0) ? "N" : "Y"
                         }
                     ];
                     var exists = new Array();
@@ -311,7 +311,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                                 author: current.author,
                                 type: type,
                                 value: current.value,
-                                public: (current.protected > 0) ? "N" : "Y"
+                                public: (current.protect > 0) ? "N" : "Y"
                             })
                     }
                 });

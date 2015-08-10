@@ -332,3 +332,57 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         self.assertEqual(before+1, after)
         self.assertFalse(public['protect'])
         self.assertTrue(public['active'])
+
+    def test_get_user(self):
+        self.db.create_rights('cityhall', 'test_env0', 'test', Rights.NoRights)
+        self.db.create_rights('cityhall', 'test_env1', 'test', Rights.Read)
+        self.db.create_rights('cityhall', 'test_env2', 'test', Rights.ReadProtected)
+        self.db.create_rights('cityhall', 'test_env3', 'test', Rights.Write)
+        self.db.create_rights('cityhall', 'test_env4', 'test', Rights.Grant)
+        user_rights = self.db.get_user('test')
+
+        for i in range(0, 4):
+            env_name = 'test_env' + str(i)
+            self.assertIn(env_name, user_rights)
+            self.assertEqual(i, user_rights[env_name])
+
+    def test_delete_user(self):
+        self.db.update_rights('cityhall', 'test_env', 'test', Rights.Read)
+        activate_index = len(self.conn.authTable)-1
+
+        before = len(self.conn.authTable)
+        self.db.delete_user('cityhall', 'test')
+        after = len(self.conn.authTable)
+
+        activate = self.conn.authTable[activate_index]
+        entry2 = self.conn.authTable[-2]
+        entry1 = self.conn.authTable[-1]
+
+        self.assertEqual(before+2, after)
+        self.assertEqual('cityhall', entry1['author'])
+        self.assertFalse(activate['active'])
+        self.assertTrue(entry1['active'])
+        self.assertTrue(entry2['active'])
+        self.assertEqual(-1, entry1['rights'])
+        self.assertEqual(-1, entry2['rights'])
+
+    def test_only_positive_rights_exist(self):
+        self.db.update_rights('cityhall', 'dev', 'test', Rights.NoRights)
+        before = self.db.get_user('test')
+        self.assertIn('dev', before)
+
+        self.db.update_rights('cityhall', 'dev', 'test', Rights.DontExist)
+        after = self.db.get_user('test')
+        self.assertNotIn('dev', after)
+
+    def test_get_users(self):
+        self.db.create_env('cityhall', 'test_env')
+        test_env_users = self.db.get_users('test_env')
+        self.assertEqual(1, len(test_env_users))
+        self.assertEqual(Rights.Grant, test_env_users['cityhall'])
+
+        self.db.create_rights('test', 'dev', 'cityhall', Rights.Read)
+        dev_users = self.db.get_users('dev')
+        self.assertEqual(2, len(dev_users))
+        self.assertIn('cityhall', dev_users)
+        self.assertIn('test', dev_users)

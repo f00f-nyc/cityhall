@@ -410,3 +410,68 @@ class SqliteDb(db.Db):
                 'protect': status,
                 'false': False,
             })
+
+    def get_user(self, user):
+        return {
+            row[0]: row[1]
+            for row in self.cursor.execute(
+                'select env, rights from cityhall_auth '
+                'where active = :active and user = :user and rights > :exist',
+                {
+                    'active': True,
+                    'user': user,
+                    'exist': Rights.DontExist,
+                }
+            )
+        }
+
+    def delete_user(self, author, user):
+        rows = [
+            (row[0], row[1], row[2]) for row in
+            self.cursor.execute(
+                'select rowid, env, pass from cityhall_auth '
+                'where active = :active and user = :user and rights > :exist',
+                {
+                    'active': True,
+                    'user': user,
+                    'exist': Rights.DontExist,
+                }
+            )
+        ]
+
+        for row in rows:
+            self.cursor.execute(
+                'update cityhall_auth '
+                'set active = :inactive '
+                'where rowid = :id and active = :active; '
+                ' '
+                'insert into cityhall_auth '
+                '(active, datetime, env, author, user, pass, rights) '
+                'values '
+                '(:active, :datetime, :env, :author, :user, :pass, :rights);',
+                {
+                    'id': row[0],
+                    'inactive': False,
+                    'active': True,
+                    'datetime': self._datetime_now_to_unixtime(),
+                    'env': row[1],
+                    'author': author,
+                    'user': user,
+                    'pass': row[2],
+                    'rights': Rights.DontExist
+                }
+            )
+
+    def get_users(self, env):
+        return {
+            row[0]: row[1]
+            for row in self.cursor.execute(
+                'select user, rights from cityhall_auth '
+                'where active = :active and env = :env and rights > :exist',
+                {
+                    'active': True,
+                    'env': env,
+                    'exist': Rights.DontExist,
+                }
+            )
+        }

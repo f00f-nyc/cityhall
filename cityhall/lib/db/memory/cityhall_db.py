@@ -275,3 +275,39 @@ class CityHallDb(Db):
                 'first_last': False,
                 'protect': status
             })
+
+    def get_user(self, user):
+        user_entries = [
+            auth for auth in self.db.authTable
+            if auth['active'] and (auth['user'] == user)
+            and (auth['rights'] > Rights.DontExist)
+        ]
+        return {entry['env']: entry['rights'] for entry in user_entries}
+
+    def delete_user(self, author, user):
+        user_entries = [
+            auth for auth in self.db.authTable
+            if auth['active'] and (auth['user'] == user)
+            and (auth['rights'] > Rights.DontExist)
+        ]
+
+        for entry in user_entries:
+            entry['active'] = False
+            self.db.authTable.append({
+                'id': len(self.db.authTable),
+                'active': True,
+                'datetime': datetime.now(),
+                'env': entry['env'],
+                'author': author,
+                'user': user,
+                'pass': entry['pass'],
+                'rights': Rights.DontExist,
+            })
+
+    def get_users(self, env):
+        env_entries = [
+            auth for auth in self.db.authTable
+            if auth['active'] and (auth['env'] == env)
+            and (auth['rights'] > Rights.DontExist)
+        ]
+        return {entry['user']: entry['rights'] for entry in env_entries}

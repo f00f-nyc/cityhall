@@ -125,3 +125,15 @@ class Db(object):
     @abstractmethod
     def set_protect_status(self, author, index, status):
         pass
+
+    @abstractmethod
+    def get_user(self, user):
+        pass
+
+    @abstractmethod
+    def delete_user(self, author, user):
+        pass
+
+    @abstractmethod
+    def get_users(self, env):
+        pass
