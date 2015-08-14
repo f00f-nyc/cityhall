@@ -74,3 +74,55 @@ class TestAuthentication(TestCase):
         test_auth.grant('auto', 'test', Rights.Write)
         rights = test_auth.get_permissions('auto')
         self.assertEqual(Rights.NoRights, rights)
+
+    def test_get_users(self):
+        users = self.auth.get_users('auto')
+        before = len(users)
+
+        self.auth.create_user('test', '')
+        self.auth.grant('auto', 'test', Rights.ReadProtected)
+        users = self.auth.get_users('auto')
+        after = len(users)
+
+        self.assertEqual(before+1, after)
+        self.assertIn('test', users)
+        self.assertEqual(users['test'], Rights.ReadProtected)
+
+    def test_get_user(self):
+        self.auth.create_env('add')
+        self.auth.create_user('test', '')
+
+        environments = self.auth.get_user('test')
+        self.assertEqual(1, len(environments))
+        self.assertIn('auto', environments)
+        self.assertEqual(Rights.NoRights, environments['auto'])
+
+        self.auth.grant('add', 'test', Rights.Read)
+        environments = self.auth.get_user('test')
+        self.assertEqual(2, len(environments))
+
+    def test_delete_user(self):
+        """
+        A user can only be deleted if the author has Grant permissions on
+        all environments of that user, or that user has Admin rights on auto
+        """
+        self.auth.create_user('test1', '')
+        self.auth.create_user('test2', '')
+        self.auth.grant('auto', 'test2', Rights.Grant)
+
+        test1_auth = self.conn.get_auth('test1', '')
+        test1_auth.create_env('test1_env')
+        test2_auth = self.conn.get_auth('test2', '')
+        test2_auth.create_env('test2_env')
+
+        self.assertFalse(test2_auth.delete_user('test1'))
+        test1_auth.grant('test1_env', 'test2', Rights.Grant)
+        self.assertTrue(test2_auth.delete_user('test1'))
+
+        self.assertFalse(self.db.authenticate('test1', ''))
+        self.assertTrue(self.auth.delete_user('test2'))
+
+    def test_cannot_delete_user_twice(self):
+        self.auth.create_user('test', '')
+        self.assertTrue(self.auth.delete_user('test'))
+        self.assertFalse(self.auth.delete_user('test'))

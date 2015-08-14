@@ -28,6 +28,7 @@ class Rights(object):
     ReadProtected = 2
     Write = 3
     Grant = 4
+    Admin = 5
 
 
 class DbFactory(object):

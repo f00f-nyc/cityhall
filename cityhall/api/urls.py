@@ -24,8 +24,8 @@ urlpatterns = patterns(
     url(r"^create_default/$", Create.as_view(), name="create_def"),
 
     url(r"^auth/$", Authenticate.as_view(), name="authenticate"),
-    url(r"^auth/create/env/$", CreateEnvironment.as_view(), name="create_env"),
-    url(r"^auth/create/user/$", CreateUser.as_view(), name="create_user"),
+    url(r"^auth/env/$", CreateEnvironment.as_view(), name="create_env"),
+    url(r"^auth/user/$", CreateUser.as_view(), name="create_user"),
     url(r"^auth/grant/$", GrantRights.as_view(), name="grant_rights"),
 
     url(

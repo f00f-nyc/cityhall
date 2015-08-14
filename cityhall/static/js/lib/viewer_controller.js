@@ -65,12 +65,28 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         $scope.status = 'Ready.';
         $scope.token = '';
 
-        $scope.urlForPath = function(path, override) {
-            var url = cityhall_url + 'env/' + $scope.selected_env + path;
+        $scope.move_key_env = '';
+        $scope.move_key_sub = false;
+
+        $scope.create_user = '';
+        $scope.create_pass = '';
+
+        $scope.delete_user = '';
+
+        $scope.grant_user = '';
+        $scope.grant_rights = 1;
+        $scope.grant_env = '';
+
+        $scope.urlForEnvPath = function(env, path, override) {
+            var url = cityhall_url + 'env/' + env + path;
             if (override == undefined) {
                 return url;
             }
             return url + '?override=' + override;
+        };
+
+        $scope.urlForPath = function(path, override) {
+            return $scope.urlForEnvPath($scope.selected_env, path, override);
         };
 
         $scope.urlForNode = function(node) {
@@ -106,7 +122,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         $scope.CreateEnv = function() {
             if ($scope.token) {
                 $http.post(
-                    cityhall_url + 'auth/create/env/',
+                    cityhall_url + 'auth/env/',
                     {name: $scope.env},
                     {headers: {'Auth-Token': $scope.token}}
                 )
@@ -359,6 +375,111 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                     $scope.Selected(parent);
                 });
             }
+        };
+
+        $scope.MoveKey = function() {
+            if ($scope.selected_node.path == '/') {
+                alert("Cannot move root");
+                return;
+            }
+            if ($scope.move_key_env.length == 0) {
+                alert("Must enter a environment name");
+                return;
+            }
+            if ($scope.selected_env === $scope.move_key_env) {
+                alert("Cannot move to the current environment");
+                return;
+            }
+            if ($scope.move_key_sub) {
+                alert("Moving children not implemented yet");
+            }
+
+            var url =  $scope.urlForEnvPath($scope.move_key_env, $scope.selected_node.parent.path);
+            var req = {
+                    method: 'GET',
+                    url: url,
+                    headers: {
+                        'Auth-Token': $scope.token
+                    }
+                };
+
+            $http(req).success(function (data) {
+                if (data.Response == 'Failure') {
+                    alert(data.Message);
+                    return;
+                }
+
+                var node = $scope.selected_node;
+
+                url = $scope.urlForEnvPath($scope.move_key_env, node.path) + '?override=' + node.override;
+                var data = {
+                    value: node.value,
+                    protect: node.protect
+                };
+                console.log(url);
+                console.log(data);
+
+                $http.post(url, data, {headers: {'Auth-Token': $scope.token}});
+
+                }).error(function (data) {
+                    alert('Unable to move to ' + $scope.move_key_env + $scope.selected_node.path +
+                    ', the environment or the parent path do not exist.');
+                });
+        };
+
+        $scope.CreateUser = function() {
+            var hash = '';
+            if ($scope.create_pass.length > 0) {
+                hash = md5.createHash($scope.create_pass);
+            }
+
+            var create_data = {'user': $scope.create_user, 'passhash': hash};
+            var create_url = cityhall_url + 'auth/user/';
+            $http.post(create_url, create_data, {headers: {'Auth-Token': $scope.token}})
+                .success(function (data){
+                    console.log(data);
+                    if (data.Response == 'Failure') {
+                        alert(data.Message);
+                    } else {
+                        alert('User ' + $scope.create_user + ' created successfully.');
+                    }
+                });
+        };
+
+        $scope.DeleteUser = function() {
+            var req = {
+                    method: 'DELETE',
+                    url: cityhall_url + 'auth/user/',
+                    headers: {
+                        'Auth-Token': $scope.token
+                    },
+                    data: {
+                        'user': $scope.delete_user
+                    }
+                };
+
+            $http(req, {user: $scope.delete_user}).success(function (data) {
+                if (data.Response == 'Failure') {
+                    alert(data.Message);
+                }
+                else {
+                    alert('User ' + $scope.delete_user + ' deleted successfully.')
+                }
+            });
+        };
+
+        $scope.GrantUser = function() {
+            var url = cityhall_url + 'auth/grant/';
+            var data = {'env': $scope.grant_env, 'user': $scope.grant_user, 'rights': $scope.grant_rights};
+            $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
+                    .success(function (data) {
+                        if (data['Response'] == 'Failure') {
+                            alert(data['Message']);
+                            return;
+                        } else {
+                            alert('User rights successfully modified.')
+                        }
+                    });
         };
     }
 ]);

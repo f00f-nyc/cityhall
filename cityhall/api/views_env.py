@@ -137,6 +137,7 @@ class EnvView(Endpoint):
             protect = str(protect).upper() in ['1', 'TRUE', 'Y', 'YES', ]
 
         env = info.auth.get_env(info.env)
+
         try:
             if protect is not None:
                 env.set_protect(protect, info.path, info.override)

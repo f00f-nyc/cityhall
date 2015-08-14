@@ -34,7 +34,7 @@
                 <th width="80%" align="left">Value</th>
             </tr>
             <tr>
-                <td><input type="text" ng-model="env">
+                <td><input type="text" ng-model="env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">
                     <table>
                         <tr>
                             <td>
@@ -115,8 +115,43 @@
                 </td>
             </tr>
         </table>
-        <br/>
-        <br/>
+        <br>
+
+        <hr>
+        <p>Move Key</p>
+        <form ng-submit="MoveKey()">
+            <input type="text" ng-model="move_key_env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
+            <input type="checkbox" ng-model="move_key_sub">Include children&nbsp;&nbsp;&nbsp;<input type="submit" value="Move">
+        </form>
+        <br>
+
+        <hr>
+        <p>User Functions</p>
+        <p><form ng-submit="CreateUser()">
+            <input type="text" ng-model="create_user">&nbsp;<input type="password" ng-model="create_pass">&nbsp;<input type="submit" value="Create">
+        </form></p>
+        <p><form ng-submit="DeleteUser()">
+            <input type="text" ng-model="delete_user">&nbsp;<input type="submit" value="Delete">
+        </form></p>
+        <p><form ng-submit="GrantUser()">
+            Grant user &nbsp;<input type="text" ng-model="grant_user">&nbsp;rights&nbsp;
+            <select ng-model="grant_rights">
+                <option value="0">No Rights</option>
+                <option value="1">Read</option>
+                <option value="2">Read Protected</option>
+                <option value="3">Write</option>
+                <option value="4">Grant</option>
+                <option value="5">Administrator</option>
+            </select>
+            &nbsp;to&nbsp;<input type="text" ng-model="grant_env">
+            &nbsp;<input type="submit" value="Grant">
+        </form>
+
+        </p>
+
+
+        <br>
+        <br>
         {{ token }}
         <br />
         {{ status }}

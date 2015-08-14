@@ -18,9 +18,10 @@ from datetime import datetime
 import calendar
 import apsw
 from .sqlite_db import SqliteDb
+from .sqlite_funcs_mixin import SqliteFuncsMixin
 
 
-class SqliteDbFactory(db.Db):
+class SqliteDbFactory(db.Db, SqliteFuncsMixin):
     def __init__(self, filename):
         self.filename = filename
         self.connection = None
@@ -31,21 +32,6 @@ class SqliteDbFactory(db.Db):
             return "(Sqlite Db): Not connected"
         else:
             return "(Sqlite Db) Connected"
-
-    def _first_row(self, sql, kwargs):
-        print "Running: {} with {}".format(sql, str(kwargs))
-        for row in self.cursor.execute(sql, kwargs):
-            print "  +-> returning: {}".format(str(row))
-            return row
-        print "  +-> sql didn't return any rows"
-        return None
-
-    def _first_value(self, sql, kwargs):
-        row = self._first_row(sql, kwargs)
-        print "  +-> _first_row value: {}".format(
-            row[0] if row else "None"
-        )
-        return row[0] if row else None
 
     def open(self):
         self.connection = apsw.Connection(self.filename)
@@ -118,7 +104,7 @@ class SqliteDbFactory(db.Db):
                     'author': 'cityhall',
                     'user': 'cityhall',
                     'pass': '',
-                    'rights': Rights.Grant,
+                    'rights': Rights.Admin,
                     'val_id': 1,
                     'val_name': '/',
                     'val_override': '',
@@ -131,15 +117,27 @@ class SqliteDbFactory(db.Db):
         if env is None:
             return 0 < self._first_value(
                 'select count(*) from cityhall_auth '
-                'where active = :active and user = :user and pass = :pass;',
-                {'active': 1, 'user': user, 'pass': passhash, }
+                'where active = :active and user = :user and pass = :pass'
+                '    and rights >= :rights;',
+                {
+                    'active': 1,
+                    'user': user,
+                    'pass': passhash,
+                    'rights': Rights.NoRights,
+                }
             )
         else:
             return 0 < self._first_value(
                 'select count(*) from cityhall_auth where '
                 'active > 0 and user = :user and pass = :pass '
-                'and env = :env;',
-                {'active': 1, 'user': user, 'pass': passhash, 'env': env, }
+                'and env = :env and rights >= :rights;',
+                {
+                    'active': 1,
+                    'user': user,
+                    'pass': passhash,
+                    'env': env,
+                    'rights': Rights.NoRights,
+                }
             )
 
     def get_db(self):

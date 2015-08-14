@@ -125,7 +125,7 @@ class Env(object):
 
         for child in children:
             cache_key = "{}{}/:{}".format(
-                parent_path, child['name'], override
+                parent_path, child['name'], child['override']
             )
             self.cache[cache_key] = child['id']
 

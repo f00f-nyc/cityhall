@@ -12,13 +12,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from .sqlite_funcs_mixin import SqliteFuncsMixin
 from lib.db import db
 from lib.db.db import Rights
 from datetime import datetime
 import calendar
 
 
-class SqliteDb(db.Db):
+
+class SqliteDb(db.Db, SqliteFuncsMixin):
     def __init__(self, cursor):
         self.cursor = cursor
 
@@ -29,21 +31,6 @@ class SqliteDb(db.Db):
     @staticmethod
     def _unixtime_to_datetime_now(time):
         return datetime.utcfromtimestamp(time)
-
-    def _first_row(self, sql, kwargs):
-        print "Running: {} with {}".format(sql, str(kwargs))
-        for row in self.cursor.execute(sql, kwargs):
-            print "  +-> returning: {}".format(str(row))
-            return row
-        print "  +-> sql didn't return any rows"
-        return None
-
-    def _first_value(self, sql, kwargs):
-        row = self._first_row(sql, kwargs)
-        print "  +-> _first_row value: {}".format(
-            row[0] if row else "None"
-        )
-        return row[0] if row else None
 
     def create_env(self, user, env):
         user_info = self._first_row(

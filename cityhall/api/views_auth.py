@@ -15,6 +15,7 @@
 from restless.views import Endpoint
 from .views import CONN, CACHE, auth_token_in_cache
 import shortuuid
+import simplejson as json
 
 
 class Authenticate(Endpoint):
@@ -101,15 +102,47 @@ class CreateUser(Endpoint):
                 'Message': 'Expected a user and passhash to create user'
             }
 
-        if auth is None:
+        try:
+            auth.create_user(user, passhash)
+            return {'Response': 'Ok'}
+        except Exception as ex:
+            return {'Response': 'Failure', 'Message': ex.message}
+
+    def delete(self, request):
+        data = request.data
+
+        if not data:
+            try:
+                data = json.loads(request.body)
+            except:
+                return {
+                    'Response': 'Failure',
+                    'Message': 'Delete API call is invalid, missing body'
+                }
+
+        user = data.get('user', None)
+
+        if not user:
             return {
                 'Response': 'Failure',
-                'Message': 'Given token "' + cache_key +
-                           '" could not be found in cache'
+                'Message': 'Delete API call is invalid, no user specified'
             }
 
-        auth.create_user(user, passhash)
-        return {'Response': 'Ok'}
+        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
+        auth = CACHE[cache_key]
+
+        try:
+            if auth.delete_user(user):
+                return {'Response': 'Ok'}
+            else:
+                return {
+                    'Response': 'Failure',
+                    'Message': "Operation failed, user may not exist or you "
+                               "don't have Grant permissions to all "
+                               "environments of that user."
+                }
+        except Exception as ex:
+            return {'Response': 'Failure', 'Message': ex.message}
 
 
 class GrantRights(Endpoint):
@@ -140,7 +173,7 @@ class GrantRights(Endpoint):
             rights = int(rights)
         except ValueError:
             return {
-                'Return': 'Failure',
+                'Response': 'Failure',
                 'Message': 'rights value should be an integer (0-4)'
             }
 

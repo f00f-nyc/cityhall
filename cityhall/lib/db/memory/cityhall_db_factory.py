@@ -51,7 +51,7 @@ class CityHallDbFactory(db.DbFactory):
             'author': 'cityhall',
             'user': 'cityhall',
             'pass': '',
-            'rights': Rights.Grant,
+            'rights': Rights.Admin,
         }]
 
     def is_open(self):
@@ -64,9 +64,9 @@ class CityHallDbFactory(db.DbFactory):
         check_env = lambda a: True if not env else a['env'] == env
 
         for auth in self.authTable:
-            if auth['active'] and (auth['pass'] == passhash) and\
-                    (auth['user'] == user) and check_env(auth):
-                return True
+            if auth['active'] and (auth['pass'] == passhash)\
+                    and (auth['user'] == user) and check_env(auth):
+                return auth['rights'] >= Rights.NoRights
         return False
 
         # return next(

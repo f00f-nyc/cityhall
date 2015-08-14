@@ -62,7 +62,7 @@ class TestMemoryDbWithEnv(TestCase):
 
     def test_get_rights_works(self):
         self.assertEqual(
-            Rights.Grant,
+            Rights.Admin,
             self.conn.get_db().get_rights('auto', 'cityhall')
         )
 
