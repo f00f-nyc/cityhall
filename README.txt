@@ -77,7 +77,7 @@ GETTING STARTED
 API
 
 The API calls in this guide will be written like this:
-	POST	http://localhost:5000/api/auth/create/
+	POST	http://localhost:5000/api/auth/
 	Auth-Token: [Authenticate Token]
 	{"name": "dev"}
 The first line is the verb and URL, the second line is the extra
@@ -85,7 +85,7 @@ headers that have to be passed in, the third line is the sample JSON
 to follow along with the guide. The idea is to translate these to a
 call from the program that will be using City Hall or, for the purposes
 of this guide, a curl call from the command line:
-	curl -X POST -H "Content-Type: application/json" -H "Auth-Token: [Authenticate Token]" -d '{"name": "dev"}' http://localhost:5000/api/auth/create/
+	curl -X POST -H "Content-Type: application/json" -H "Auth-Token: [Authenticate Token]" -d '{"name": "dev"}' http://localhost:5000/api/auth/
 	
 	
 	
@@ -99,7 +99,13 @@ rights:
 	2) Read Protect - The user can read un-protected values and history
 	3) Write - The user can write values
 	4) Grant - The user can grant rights to this environment
-
+	
+Since the permissions are ad hoc (a user might have Grant permissions
+to one environment, but lack them in another environment), there is 
+another level, which in most cases, acts identical to Grant:
+	5) Admin - If the user has Admin rights to 'auto', only for the
+		purposes of deleting users he has Grant on their environments.
+		
 You will also need to hit here first, in order to get an authentication
 token.  This is a token that will be included will all subsequent calls
 to City Hall.  The reason for this token is to avoid authentication on
@@ -112,14 +118,21 @@ Authenticate:
 Returns: {"Token": "PPeiSCshNpwFxAuJWUMshM", "Response": "Ok"}
 	 
 Create environment:
-	POST	http://localhost:5000/api/auth/create/env/
+	POST	http://localhost:5000/api/auth/env/dev/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
-	{"name": "dev"}
 Returns: {"Response": "Ok"}
 This sets gives the current user Grant permissions on that environment
 
+View environment:
+	GET		http://localhost:5000/api/auth/env/dev/
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+Returns: {"Response": "Ok", "Users": {"cityhall": 5, "alex": 1}}
+This returns authentication info about that environment.  For example,
+the users who are authorized for it, and their permissions.  Note that
+in order to use this, you must have read permissions for it.
+
 Create user:
-	POST	http://localhost:5000/api/auth/create/user/
+	POST	http://localhost:5000/api/auth/user/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
 	{"user": "alex", "passhash": ""}
 Returns: {"Response": "Ok"}
@@ -289,6 +302,22 @@ below).
 This will be set to true for the fist item, and it will be set to true
 for every child node that is part of the history. (Creation and
 deletion of child keys is included in the history.)
+
+
+
+API - AUTHORIZATION OTHER
+
+Like the section above, these are here for extended functionality of 
+City Hall.  They are not meant for day-to-day usage.
+
+Delete User:
+	DEL		http://localhost:5000/api/auth/user/
+	Auth-Token: PPeiSCshNpwFxAuJWUMshM
+	{"user": "alex"}
+Returns: {"Response": "Ok"}
+This will delete the specified user. The operation will fail if the
+Auth-Token doesn't have Grant permission to all of the environments 
+which the specified user is a part of.
 
 
 

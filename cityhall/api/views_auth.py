@@ -13,7 +13,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from .views import CONN, CACHE, auth_token_in_cache
+from .views import CONN, CACHE
+from .authenticate import is_valid, get_auth_from_request
 import shortuuid
 import simplejson as json
 
@@ -52,12 +53,25 @@ class Authenticate(Endpoint):
         }
 
 
-class CreateEnvironment(Endpoint):
+class Environments(Endpoint):
     def authenticate(self, request):
-        return auth_token_in_cache(request)
+        return is_valid(request)
 
-    def post(self, request):
-        name = request.data.get('name', None)
+    def get(self, request, *args, **kwargs):
+        env = kwargs.get('env', '##unable to get ENV##')
+        auth = get_auth_from_request(request, env)
+
+        if not auth[0]:
+            return auth[1]
+        else:
+            users = auth[1].get_users(env)
+            return {
+                'Response': 'Ok',
+                'Users': users
+            }
+
+    def post(self, request, *args, **kwargs):
+        name = kwargs.get('env', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
         auth = CACHE[cache_key]
 
@@ -88,7 +102,7 @@ class CreateEnvironment(Endpoint):
 
 class CreateUser(Endpoint):
     def authenticate(self, request):
-        return auth_token_in_cache(request)
+        return is_valid(request)
 
     def post(self, request):
         user = request.data.get('user', None)
@@ -147,7 +161,7 @@ class CreateUser(Endpoint):
 
 class GrantRights(Endpoint):
     def authenticate(self, request):
-        return auth_token_in_cache(request)
+        return is_valid(request)
 
     def post(self, request):
         env = request.data.get('env', None)

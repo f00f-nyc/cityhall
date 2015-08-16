@@ -145,10 +145,28 @@
             </select>
             &nbsp;to&nbsp;<input type="text" ng-model="grant_env">
             &nbsp;<input type="submit" value="Grant">
-        </form>
+        </form></p>
+        <br>
 
-        </p>
-
+        <hr>
+        <p>View Users</p>
+        <p><form ng-submit="ViewUsers()">
+            Environment&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View Users"><br>
+            <br>
+            <table width="800px">
+                <thead>
+                    <tr class="row_odd">
+                        <th width="50%">User</th>
+                        <th width="50%">Permissions</th>
+                    </tr>
+                    <tr ng-repeat="user in view_users" ng-class="{row_odd: ($index % 2 == 1)}">
+                        <td class="history_text">{{ user.environment }}</td>
+                        <td class="history_text">{{ user.rights }}</td>
+                    </tr>
+                </thead>
+            </table>
+        </form></p>
+        <br>
 
         <br>
         <br>

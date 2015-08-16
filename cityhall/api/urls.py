@@ -14,8 +14,9 @@
 
 from django.conf.urls import patterns, url
 from .views import (Info, Create)
-from .views_auth import \
-    Authenticate, CreateEnvironment, CreateUser, GrantRights
+from .views_auth import (
+    Authenticate, Environments, CreateUser, GrantRights
+)
 from .views_env import EnvView
 
 urlpatterns = patterns(
@@ -24,7 +25,7 @@ urlpatterns = patterns(
     url(r"^create_default/$", Create.as_view(), name="create_def"),
 
     url(r"^auth/$", Authenticate.as_view(), name="authenticate"),
-    url(r"^auth/env/$", CreateEnvironment.as_view(), name="create_env"),
+    url(r"^auth/env/(?P<env>[0-9a-zA-Z]+)/$", Environments.as_view(), name="create_env"),
     url(r"^auth/user/$", CreateUser.as_view(), name="create_user"),
     url(r"^auth/grant/$", GrantRights.as_view(), name="grant_rights"),
 

@@ -77,6 +77,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         $scope.grant_rights = 1;
         $scope.grant_env = '';
 
+        $scope.view_env = '';
+        $scope.view_users = [];
+
         $scope.urlForEnvPath = function(env, path, override) {
             var url = cityhall_url + 'env/' + env + path;
             if (override == undefined) {
@@ -122,8 +125,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         $scope.CreateEnv = function() {
             if ($scope.token) {
                 $http.post(
-                    cityhall_url + 'auth/env/',
-                    {name: $scope.env},
+                    cityhall_url + 'auth/env/' + $scope.env + '/',
+                    {},
                     {headers: {'Auth-Token': $scope.token}}
                 )
                 .success(function (data) {
@@ -148,6 +151,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 };
 
                 $http(req).success(function (data) {
+                    console.log(data);
+
                     if (node.name.endsWith(INCOMPLETE_MARKER)) {
                         node.name = node.name.substring(0, node.name.length-3);
                     }
@@ -447,7 +452,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         };
 
         $scope.DeleteUser = function() {
-            var req = {
+            if ($scope.token) {
+                var req = {
                     method: 'DELETE',
                     url: cityhall_url + 'auth/user/',
                     headers: {
@@ -458,20 +464,22 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                     }
                 };
 
-            $http(req, {user: $scope.delete_user}).success(function (data) {
-                if (data.Response == 'Failure') {
-                    alert(data.Message);
-                }
-                else {
-                    alert('User ' + $scope.delete_user + ' deleted successfully.')
-                }
-            });
+                $http(req, {user: $scope.delete_user}).success(function (data) {
+                    if (data.Response == 'Failure') {
+                        alert(data.Message);
+                    }
+                    else {
+                        alert('User ' + $scope.delete_user + ' deleted successfully.')
+                    }
+                });
+            }
         };
 
         $scope.GrantUser = function() {
-            var url = cityhall_url + 'auth/grant/';
-            var data = {'env': $scope.grant_env, 'user': $scope.grant_user, 'rights': $scope.grant_rights};
-            $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
+            if ($scope.token) {
+                var url = cityhall_url + 'auth/grant/';
+                var data = {'env': $scope.grant_env, 'user': $scope.grant_user, 'rights': $scope.grant_rights};
+                $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
                         if (data['Response'] == 'Failure') {
                             alert(data['Message']);
@@ -480,6 +488,51 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                             alert('User rights successfully modified.')
                         }
                     });
+            }
+        };
+
+        $scope.ViewUsers = function() {
+            if ($scope.token) {
+                var int_to_str = function(int) {
+                    switch (int){
+                        case 0: return "None";
+                        case 1: return "Read";
+                        case 2: return "Read Protected";
+                        case 3: return "Write";
+                        case 4: return "Grant";
+                        case 5: return "Admin";
+                    }
+                    return "Unknown";
+                };
+                $scope.view_users = [];
+
+                var url = cityhall_url + 'auth/env/' + $scope.view_env + '/';
+
+                var req = {
+                    method: 'GET',
+                    url: url,
+                    headers: {
+                        'Auth-Token': $scope.token
+                    }
+                };
+
+                $http(req).success(function (data) {
+                    console.log(data);
+
+                    if (data['Response'] == 'Ok') {
+                        var users = data['Users'];
+
+                        for (var env in users) {
+                            $scope.view_users.push({
+                                environment: env,
+                                rights: int_to_str(users[env])
+                            });
+                        }
+                    } else {
+                        alert(data['Message']);
+                    }
+                });
+            }
         };
     }
 ]);

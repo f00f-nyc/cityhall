@@ -82,8 +82,11 @@ class Auth(object):
             else:
                 self.db.update_rights(self.name, env, user, rights)
 
-    def get_users(self, env):
-        return self.db.get_users(env)
+    def get_users(self, env_name):
+        env = self.get_env(env_name)
+        if env.permissions >= Rights.Read:
+            return self.db.get_users(env_name)
+        return 'Do not have permissions to ' + env_name
 
     def get_user(self, user):
         return self.db.get_user(user)
