@@ -100,12 +100,32 @@ class Environments(Endpoint):
         }
 
 
-class CreateUser(Endpoint):
+class Users(Endpoint):
     def authenticate(self, request):
         return is_valid(request)
 
-    def post(self, request):
-        user = request.data.get('user', None)
+    def get(self, request, *args, **kwargs):
+        user = kwargs.get('user')
+        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
+        auth = CACHE[cache_key]
+
+        if (user is None):
+            return {
+                'Response': 'Failure',
+                'Message': 'Expected a user to retrieve'
+            }
+
+        try:
+            envs = auth.get_user(user)
+            return {'Response': 'Ok', 'Environments': envs}
+        except:
+            return {
+                'Response': 'Failure',
+
+            }
+
+    def post(self, request, *args, **kwargs):
+        user = kwargs.get('user', None)
         passhash = request.data.get('passhash', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
         auth = CACHE[cache_key]
@@ -122,19 +142,8 @@ class CreateUser(Endpoint):
         except Exception as ex:
             return {'Response': 'Failure', 'Message': ex.message}
 
-    def delete(self, request):
-        data = request.data
-
-        if not data:
-            try:
-                data = json.loads(request.body)
-            except:
-                return {
-                    'Response': 'Failure',
-                    'Message': 'Delete API call is invalid, missing body'
-                }
-
-        user = data.get('user', None)
+    def delete(self, request, *args, **kwargs):
+        user = kwargs.get('user', None)
 
         if not user:
             return {

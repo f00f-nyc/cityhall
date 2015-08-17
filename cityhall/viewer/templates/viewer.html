@@ -34,23 +34,9 @@
                 <th width="80%" align="left">Value</th>
             </tr>
             <tr>
-                <td><input type="text" ng-model="env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">
-                    <table>
-                        <tr>
-                            <td>
-                                <form ng-submit="ViewEnv()">
-                                    <input type="submit" value="View">
-                                </form>
-                            </td>
-                            <td>&nbsp;&nbsp;&nbsp;</td>
-                            <td>
-                                <form ng-submit="CreateEnv()">
-                                    <input type="submit" value="Create">
-                                </form>
-                            </td>
-                        </tr>
-                    </table>
-                <td></td>
+                <td colspan="2">
+                    <input ng-model="env_search" ng-change="EnvSearch()">
+                </td>
             </tr>
             <tr valign="top">
                 <td>
@@ -166,6 +152,15 @@
                 </thead>
             </table>
         </form></p>
+
+        <hr>
+        <p>Create Environment</p>
+        <p><form ng-submit="CreateEnv()">
+                <input type="text" ng-model="env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">
+                &nbsp;&nbsp;
+                <input type="submit" value="Create">
+            </form>
+        </p>
         <br>
 
         <br>

@@ -239,14 +239,18 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
         )
         if current:
             self.cursor.execute(
+                'begin; '
+                ' '
                 'update cityhall_auth '
                 'set active = :inactive '
-                'where user = :user and active = :active; '
+                'where user = :user and active = :active and env = :env; '
                 ' '
                 'insert into cityhall_auth '
                 '(active, datetime, env, author, user, pass, rights) '
                 'values '
-                '(:active, :datetime, :env, :author, :user, :pass, :rights);',
+                '(:active, :datetime, :env, :author, :user, :pass, :rights);'
+                ' '
+                'end;',
                 {
                     'inactive': False,
                     'active': True,
