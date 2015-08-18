@@ -5,11 +5,13 @@
     {% block before_head %}{% endblock %}
     <head>
         <title>{% block title %}City Hall Base Template{% endblock %}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="{% static "css/lib/cityhall.css" %}" />
 
         {% block styles %}{% endblock %}
     </head>
-    <body class="city_hall_style">
+    <body>
         <section id="navbar">
             {% block navbar %}{% endblock %}
         </section>

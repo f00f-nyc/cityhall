@@ -27,6 +27,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         $scope.selected_value = '';
         $scope.selected_protected = false;
 
+        $scope.view_mode = 1;
+
         $scope.dataForTheTree = [{
             name: 'Not connected',
             real_name: '/',
@@ -298,6 +300,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
         };
 
         $scope.GetHistory = function() {
+            $scope.view_mode = 3;
+
             if ($scope.token) {
                 var url = $scope.urlForPath($scope.selected_node.path, $scope.selected_node.override);
                 url = url + '&viewhistory=true';

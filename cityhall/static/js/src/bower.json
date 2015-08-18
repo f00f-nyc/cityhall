@@ -1,10 +1,16 @@
 {
-  "name": "cityhall",
+  "name": "City Hall",
   "version": "0.0.1",
+  "homepage": "https://github.com/f00f-nyc/cityhall",
+  "authors": [
+    "Alex Popa <alex.popa@gmail.com>"
+  ],
+  "description": "Enterprise Settings Server",
+  "license": "AGPL",
   "dependencies": {
-    "angular": "1.2.28",
     "angular-md5": "0.1.7",
-    "angular-tree-control": "0.2.9"
+    "angular-tree-control": "0.2.9",
+    "bootstrap": "~3.3.5"
   },
   "private": true
 }

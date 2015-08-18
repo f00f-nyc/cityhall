@@ -2,6 +2,8 @@
 {% load staticfiles %}
 
 {% block before_head %}
+    <script type="text/javascript" src="{% static "js/src/jquery/jquery.min.2.1.4.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/src/bootstrap/bootstrap.min.3.3.5.js" %}"></script>
     <script type="text/javascript" src="{% static "js/src/angular/angular-1.2.28.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/src/angular-md5/angular-md5-0.1.7.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/src/angular-tree-control/angular-tree-control-0.2.9.min.js" %}"></script>
@@ -15,82 +17,118 @@
 {% block title %}City Hall Viewer{% endblock %}
 
 {% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/src/bootstrap/bootstrap.min.3.3.5.css" %}" />
     <link rel="stylesheet" type="text/css" href="{% static "css/lib/viewer.css" %}" />
     <link rel="stylesheet" type="text/css" href="{% static "css/src/angular-tree-control/tree-control-attribute.css" %}" />
+    <style>
+    </style>
 {% endblock %}
 
 {% block content %}
     {% verbatim %}
-    <div class="test_style2" ng-app="CityHallApp" id="content" ng-controller="CityHallCtrl">
-        <form ng-submit="Login()">
-            <input type="text" ng-model="user" />&nbsp;<input type="password" ng-model="pass">&nbsp;<input type="submit" value="Login">
-        </form>
-        <br>
-        <br>
-        <br>
-        <table width="100%">
-            <tr class="row_odd">
-                <th width="20%" align="left">Environment</th>
-                <th width="80%" align="left">Value</th>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <input ng-model="env_search" ng-change="EnvSearch()">
-                </td>
-            </tr>
-            <tr valign="top">
-                <td>
-                    <div treecontrol class="tree-classic"
+    <div ng-app="CityHallApp" ng-controller="CityHallCtrl">
+    <div class="container" id="content" >
+
+        <div class="row">
+            <h1>City Hall Enterprise Settings</h1>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7"></div>
+            <div class="col-sm-5">
+                <form ng-submit="Login()">
+                    <input type="text" ng-model="user" size="12" />&nbsp;<input type="password" ng-model="pass" size="12">&nbsp;<input type="submit" value="Login">
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-1"></div>
+            <div class="col-sm-11">
+                <ul class="nav nav-tabs">
+                    <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Environment</a></li>
+                    <li ng-class="{active: view_mode == 11}"><a href ng-click="view_mode = 11">Management</a></li>
+                    <li ng-class="{active: view_mode == 21}"><a href ng-click="view_mode = 21">Users</a></li>
+                </ul>
+                <br>
+            </div>
+        </div>
+
+        <div class="row" id="env-top" ng-show="view_mode < 10">
+            <div class="col-sm-4">
+                <input ng-model="env_search" ng-change="EnvSearch()">
+                <br>
+                <div treecontrol class="tree-classic"
                         tree-model="dataForTheTree"
                         options="treeOptions"
                         on-selection="Selected(node, expanded)"
                         selected-node="node1">
                           {{ node.name }}
                     </div>
-                </td>
-                <td class="value_input" ng-style="UnsavedContent()">
-                    <br>
-                    &nbsp;<textarea rows="10" cols="80" width="100%" ng-model="selected_value"></textarea><br>
-                    &nbsp;Protected:&nbsp;<input type="checkbox" ng-checked="selected_protected" ng-model="selected_protected">
-                    <form ng-submit="Save()">
-                        &nbsp;<input type="submit" value="Save">
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td><br></td>
-                <td><br></td>
-            </tr>
-            <tr style="vertical-align: top">
-                <td>
-                    <div ng-show="selected_can_create" class="create_form">
+            </div>
+
+            <div class="col-sm-8">
+                <div id="env-value" ng-show="view_mode == 1">
+                    <a href ng-click="view_mode = 2">Manage</a>&nbsp;&nbsp;<a href ng-click="GetHistory()">Audit</a>
+                    <div class="value_input" ng-style="UnsavedContent()">
+                        <br>
+                        &nbsp;<textarea rows="1" cols="80" width="100%" ng-model="selected_value"></textarea>
+
+                        <div class="row">
+                            <div class="col-sm-7"></div>
+                            <div class="col-sm-5">
+                                    <form ng-submit="Save()">
+                                        Protected:&nbsp;<input type="checkbox" ng-checked="selected_protected" ng-model="selected_protected">
+                                        &nbsp;<input type="submit" value="Save">
+                                    </form>
+                            </div>
+                            <div class="col-sm-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="env-manage" ng-show="view_mode == 2">
+                    <a href ng-click="view_mode = 1">Back</a>
+                    <div ng-show="selected_can_create">
+                        <h4>Create Subkey</h4>
                         <form ng-submit="Create()">
-                            Name:&nbsp;<input type="text" ng-model="create_name" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
+                            Name:&nbsp;<input type="text" ng-model="create_name" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">&nbsp;&nbsp;
                             Override:&nbsp;<input type="text" ng-model="create_override" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
                             <br>
                             <input type="submit" value="Create">
                         </form>
                     </div>
-                    <br>
+                    <br><br>
                     <div>
+                        <h4>Delete Key</h4>
                         <form ng-submit="Delete()">
                             <input type="submit" value="Delete">
                         </form>
                     </div>
-                </td>
-                <td>
+                    <br><br>
+                    <div>
+                        <h4>Move Key</h4>
+                            <form ng-submit="MoveKey()">
+                                <input type="text" ng-model="move_key_env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
+                                <input type="checkbox" ng-model="move_key_sub">Include children&nbsp;&nbsp;&nbsp;<input type="submit" value="Move">
+                            </form>
+                    </div>
+                </div>
+
+                <div id="env-audit" ng-show="view_mode == 3">
+                    <a href ng-click="view_mode = 1">Back</a>
                     <form ng-submit="GetHistory()">
-                        <input type="submit" value="History">
+                        <input type="submit" value="Refresh">
                     </form>
-                    <table>
-                        <tr class="row_odd">
-                            <th width="20%">Date</th>
+                    <table class="table table-striped">
+                        <tr>
+                            <th width="28%">Date</th>
                             <th width="10%">Author</th>
-                            <th width="28%">Type</th>
+                            <th width="20%">Type</th>
                             <th width="37%">Value</th>
                             <th width="5%">Public</th>
                         </tr>
-                        <tr ng-repeat="history in selected_history" ng-class="{row_odd: ($index % 2 == 1)}">
+                        <tr ng-repeat="history in selected_history">
                             <td class="history_text">{{ history.datetime }}</td>
                             <td class="history_text">{{ history.author }}</td>
                             <td class="history_text">{{ history.type }}</td>
@@ -98,76 +136,84 @@
                             <td class="history_text">{{ history.public }}</td>
                         </tr>
                     </table>
-                </td>
-            </tr>
-        </table>
-        <br>
+                </div>
 
-        <hr>
-        <p>Move Key</p>
-        <form ng-submit="MoveKey()">
-            <input type="text" ng-model="move_key_env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
-            <input type="checkbox" ng-model="move_key_sub">Include children&nbsp;&nbsp;&nbsp;<input type="submit" value="Move">
-        </form>
-        <br>
 
-        <hr>
-        <p>User Functions</p>
-        <p><form ng-submit="CreateUser()">
-            <input type="text" ng-model="create_user">&nbsp;<input type="password" ng-model="create_pass">&nbsp;<input type="submit" value="Create">
-        </form></p>
-        <p><form ng-submit="DeleteUser()">
-            <input type="text" ng-model="delete_user">&nbsp;<input type="submit" value="Delete">
-        </form></p>
-        <p><form ng-submit="GrantUser()">
-            Grant user &nbsp;<input type="text" ng-model="grant_user">&nbsp;rights&nbsp;
-            <select ng-model="grant_rights">
-                <option value="0">No Rights</option>
-                <option value="1">Read</option>
-                <option value="2">Read Protected</option>
-                <option value="3">Write</option>
-                <option value="4">Grant</option>
-                <option value="5">Administrator</option>
-            </select>
-            &nbsp;to&nbsp;<input type="text" ng-model="grant_env">
-            &nbsp;<input type="submit" value="Grant">
-        </form></p>
-        <br>
+            </div>
+        </div>
 
-        <hr>
-        <p>View Users</p>
-        <p><form ng-submit="ViewUsers()">
-            Environment&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View Users"><br>
-            <br>
-            <table width="800px">
-                <thead>
-                    <tr class="row_odd">
-                        <th width="50%">User</th>
-                        <th width="50%">Permissions</th>
-                    </tr>
-                    <tr ng-repeat="user in view_users" ng-class="{row_odd: ($index % 2 == 1)}">
-                        <td class="history_text">{{ user.environment }}</td>
-                        <td class="history_text">{{ user.rights }}</td>
-                    </tr>
-                </thead>
-            </table>
-        </form></p>
+        <div class="row" id="manage-top" ng-show="view_mode == 11">
+            <div>
+                <h4>Create Environment</h4>
+                <p><form ng-submit="CreateEnv()">
+                        <input type="text" ng-model="env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">
+                        &nbsp;&nbsp;
+                        <input type="submit" value="Create">
+                    </form>
+                </p>
+            </div>
+            <br><br>
+            <div>
+                <h4>Create User</h4>
+                <p><form ng-submit="CreateUser()">
+                    <input type="text" ng-model="create_user">&nbsp;<input type="password" ng-model="create_pass">&nbsp;<input type="submit" value="Create">
+                </form></p>
+            </div>
+            <br><br>
+            <div>
+                <h4>Grant Permissions</h4>
+                <p><form ng-submit="GrantUser()">
+                    Grant user &nbsp;<input type="text" ng-model="grant_user">&nbsp;rights&nbsp;
+                    <select ng-model="grant_rights">
+                        <option value="0">No Rights</option>
+                        <option value="1">Read</option>
+                        <option value="2">Read Protected</option>
+                        <option value="3">Write</option>
+                        <option value="4">Grant</option>
+                        <option value="5">Administrator</option>
+                    </select>
+                    &nbsp;to&nbsp;<input type="text" ng-model="grant_env">
+                    &nbsp;<input type="submit" value="Grant">
+                </form></p>
+            </div>
+            <br><br>
+            <div>
+                <h4>Delete User</h4>
+                <p><form ng-submit="DeleteUser()">
+                    <input type="text" ng-model="delete_user">&nbsp;<input type="submit" value="Delete">
+                </form></p>
+            </div>
+        </div>
 
-        <hr>
-        <p>Create Environment</p>
-        <p><form ng-submit="CreateEnv()">
-                <input type="text" ng-model="env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">
-                &nbsp;&nbsp;
-                <input type="submit" value="Create">
-            </form>
-        </p>
-        <br>
 
-        <br>
-        <br>
-        {{ token }}
-        <br />
-        {{ status }}
+        <div id="view-top" ng-show="view_mode == 21">
+            <p><form ng-submit="ViewUsers()">
+                Environment&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View Users"><br>
+                <br>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th width="50%">User</th>
+                            <th width="50%">Permissions</th>
+                        </tr>
+                        <tr ng-repeat="user in view_users">
+                            <td class="history_text">{{ user.environment }}</td>
+                            <td class="history_text">{{ user.rights }}</td>
+                        </tr>
+                    </thead>
+                </table>
+            </form></p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <br><br><br><br><br>
+        <br><br><br><br><br>
+        <div class="container">
+            <p class="text-muted">Token: {{ token }}</p>
+            <p>{{ status }}</p>
+        </div>
+    </footer>
     </div>
     {% endverbatim %}
 {% endblock %}
