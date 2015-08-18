@@ -82,16 +82,12 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
 
         $scope.env_search = '';
 
-        $scope.urlForEnvPath = function(path, override) {
+        $scope.urlForPath = function(path, override) {
             var url = cityhall_url + 'env/' + path;
             if (override == undefined) {
                 return url;
             }
             return url + '?override=' + override;
-        };
-
-        $scope.urlForPath = function(path, override) {
-            return $scope.urlForEnvPath(path, override);
         };
 
         $scope.urlForNode = function(node) {
@@ -434,7 +430,13 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 alert("Moving children not implemented yet");
             }
 
-            var url =  $scope.urlForEnvPath($scope.move_key_env, $scope.selected_node.parent.path);
+            var switchPath = function(path, env) {
+                return env + path.substring(path.indexOf('/'));
+            };
+
+            var new_parent_path = switchPath($scope.selected_node.parent.path, $scope.move_key_env);
+            var url =  $scope.urlForPath(new_parent_path);
+
             var req = {
                     method: 'GET',
                     url: url,
@@ -449,15 +451,29 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                     return;
                 }
 
-                url = $scope.urlForEnvPath($scope.move_key_env, node.path) + '?override=' + node.override;
+                var new_path = switchPath($scope.selected_node.path, $scope.move_key_env);
+                url = $scope.urlForPath(new_path, node.override);
                 var data = {
                     value: node.value,
                     protect: node.protect
                 };
-                console.log(url);
-                console.log(data);
 
-                $http.post(url, data, {headers: {'Auth-Token': $scope.token}});
+                $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
+                    .success(function (data) {
+                        var unload_env_in = function(arr) {
+                            for (var i=0; i<arr.length; i++) {
+                                var node = arr[i];
+                                if (node.real_name == $scope.move_key_env) {
+                                    node.name = node.real_name + INCOMPLETE_MARKER;
+                                    node.children = [];
+                                    node.complete = false;
+                                }
+                            }
+                        };
+
+                        unload_env_in($scope.dataForTheTree);
+                        unload_env_in($scope.hiddenDataForTheTree);
+                    })
 
                 }).error(function (data) {
                     alert('Unable to move to ' + $scope.move_key_env + $scope.selected_node.path +
