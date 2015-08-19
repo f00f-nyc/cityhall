@@ -200,5 +200,5 @@ class GrantRights(Endpoint):
                 'Message': 'rights value should be an integer (0-4)'
             }
 
-        auth.grant(env, user, rights)
-        return {'Response': 'Ok'}
+        ret = auth.grant(env, user, rights)
+        return {'Response': ret[0], 'Message': ret[1]}

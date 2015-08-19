@@ -126,3 +126,51 @@ class TestAuthentication(TestCase):
         self.auth.create_user('test', '')
         self.assertTrue(self.auth.delete_user('test'))
         self.assertFalse(self.auth.delete_user('test'))
+
+    def test_grant_response_insufficient_privileges(self):
+        self.auth.create_user('grants', '')
+        self.auth.create_user('user1', '')
+
+        grant_auth = self.conn.get_auth('grants', '')
+        resp = grant_auth.grant('auto', 'user1', Rights.Read)
+        self.assertEqual(resp[0], "Failure")
+        self.assertEqual(
+            resp[1], "Insufficient rights to grant to environment 'auto'"
+        )
+
+    def test_grant_response_noop(self):
+        self.auth.create_user('grants', '')
+        self.auth.create_user('user1', '')
+        self.auth.grant('auto', 'grants', Rights.Grant)
+
+        grant_auth = self.conn.get_auth('grants', '')
+        resp = grant_auth.grant('auto', 'user1', Rights.NoRights)
+        self.assertEqual(resp[0], "Ok")
+        self.assertEqual(
+            resp[1], "Rights for 'user1' already at set level"
+        )
+
+    def test_grant_response_created(self):
+        self.auth.create_user('grants', '')
+        self.auth.create_user('user1', '')
+
+        grant_auth = self.conn.get_auth('grants', '')
+        grant_auth.create_env('test')
+        resp = grant_auth.grant('test', 'user1', Rights.Read)
+        self.assertEqual(resp[0], "Ok")
+        self.assertEqual(
+            resp[1], "Rights for 'user1' created"
+        )
+
+    def test_grant_response_updated(self):
+        self.auth.create_user('grants', '')
+        self.auth.create_user('user1', '')
+
+        grant_auth = self.conn.get_auth('grants', '')
+        grant_auth.create_env('test')
+        grant_auth.grant('test', 'user1', Rights.Write)
+        resp = grant_auth.grant('test', 'user1', Rights.Read)
+        self.assertEqual(resp[0], "Ok")
+        self.assertEqual(
+            resp[1], "Rights for 'user1' updated"
+        )

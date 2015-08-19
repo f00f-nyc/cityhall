@@ -77,10 +77,28 @@ class Auth(object):
 
         if curr >= Rights.Grant:
             existing = self.db.get_rights(env, user)
+            if existing == rights:
+                return (
+                    'Ok',
+                    "Rights for '{}' already at set level".format(user),
+                )
             if existing == Rights.DontExist:
                 self.db.create_rights(self.name, env, user, rights)
+                return (
+                    'Ok',
+                    "Rights for '{}' created".format(user),
+                )
             else:
                 self.db.update_rights(self.name, env, user, rights)
+                return (
+                    'Ok',
+                    "Rights for '{}' updated".format(user),
+                )
+        else:
+            return (
+                "Failure",
+                "Insufficient rights to grant to environment '{}'".format(env),
+            )
 
     def get_users(self, env_name):
         env = self.get_env(env_name)

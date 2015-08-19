@@ -531,12 +531,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 var data = {'env': $scope.grant_env, 'user': $scope.grant_user, 'rights': $scope.grant_rights};
                 $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
-                        if (data['Response'] == 'Failure') {
-                            alert(data['Message']);
-                            return;
-                        } else {
-                            alert('User rights successfully modified.')
-                        }
+                        alert(data['Message']);
                     });
             }
         };
