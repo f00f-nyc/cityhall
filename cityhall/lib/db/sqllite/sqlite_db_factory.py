@@ -53,22 +53,15 @@ class SqliteDbFactory(db.Db, SqliteFuncsMixin):
                 'begin;'
                 ' '
                 ' create table cityhall_auth('
-                '   active INT,'
+                '   active INT, '
                 '   datetime INT,'
-                '   env TEXT,'
+                '   user_root INT,'
                 '   author TEXT,'
                 '   user TEXT,'
-                '   pass TEXT,'
-                '   rights INT);'
-                ' '
-                ' insert into cityhall_auth'
-                ' (active, datetime, env, author, user, pass, rights)'
-                ' values '
-                ' (:active, :datetime, :env, :author, :user, :pass, :rights);'
+                '   pass TEXT);'
                 ' '
                 ' create table cityhall_vals('
                 '   id INT,'
-                '   env TEXT,'
                 '   parent INT,'
                 '   active INT,'
                 '   name TEXT,'
@@ -79,16 +72,9 @@ class SqliteDbFactory(db.Db, SqliteFuncsMixin):
                 '   protect INT,'
                 '   first_last INT);'
                 ' '
-                ' insert into cityhall_vals'
-                ' (id, env, parent, active, name, override, author, datetime,'
-                '  value, protect, first_last)'
-                ' values '
-                ' (:val_id, :env, :val_id, :active, :val_name, :val_override,'
-                '  :user, :datetime, :value, :protect, :active);'
-                ' '
-                ' create index cityhall_auth_user_env_active on '
-                '   cityhall_auth (user, env, active); '
-                ' '
+                ' create index cityhall_auth_user_active on '
+                '   cityhall_auth (user, pass, active); '
+                ''
                 ' create index cityhall_vals_active_id on '
                 '   cityhall_vals (active, id); '
                 ' create index cityhall_vals_active_parent_id on '
@@ -96,49 +82,43 @@ class SqliteDbFactory(db.Db, SqliteFuncsMixin):
                 ' create index cityhall_vals_active_parent_name_override on '
                 '   cityhall_vals (active, parent, name, override); '
                 ' '
-                'end;',
-                {
-                    'active': True,
-                    'datetime': calendar.timegm(datetime.now().timetuple()),
-                    'env': 'auto',
-                    'author': 'cityhall',
-                    'user': 'cityhall',
-                    'pass': '',
-                    'rights': Rights.Admin,
-                    'val_id': 1,
-                    'val_name': '/',
-                    'val_override': '',
-                    'value': '',
-                    'protect': 0
-                }
+                'end;'
             )
 
-    def authenticate(self, user, passhash, env=None):
-        if env is None:
-            return 0 < self._first_value(
-                'select count(*) from cityhall_auth '
-                'where active = :active and user = :user and pass = :pass'
-                '    and rights >= :rights;',
-                {
-                    'active': 1,
-                    'user': user,
-                    'pass': passhash,
-                    'rights': Rights.NoRights,
-                }
-            )
-        else:
-            return 0 < self._first_value(
-                'select count(*) from cityhall_auth where '
-                'active > 0 and user = :user and pass = :pass '
-                'and env = :env and rights >= :rights;',
-                {
-                    'active': 1,
-                    'user': user,
-                    'pass': passhash,
-                    'env': env,
-                    'rights': Rights.NoRights,
-                }
-            )
+            self_db = self.get_db()
+
+            self_db.create_root('cityhall', 'auto')
+            self_db.create_root('cityhall', 'users')
+            root_id = self_db.get_env_root('users')
+            self_db.create('cityhall', root_id, 'cityhall', '')
+            children = self_db.get_children_of(root_id)
+            cityhall_id = children[0]['id']
+            self_db.create('cityhall', cityhall_id, 'auto', Rights.Grant)
+            self_db.create('cityhall', cityhall_id, 'users', Rights.Grant)
+
+            self_db.create_user('cityhall', 'cityhall', '', cityhall_id)
+
+    def authenticate(self, user, passhash):
+        if not self._first_value(
+            'select count(*) from cityhall_auth '
+            'where active = :active and user = :user and pass = :pass;',
+            {
+                'active': 1,
+                'user': user,
+                'pass': passhash
+            }
+        ):
+            return False
+
+        return self._first_value(
+            'select user_root from cityhall_auth '
+            'where active = :active and user = :user and pass = :pass;',
+            {
+                'active': 1,
+                'user': user,
+                'pass': passhash
+            }
+        )
 
     def get_db(self):
         if self.is_open():

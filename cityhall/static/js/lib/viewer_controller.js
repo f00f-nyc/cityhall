@@ -160,6 +160,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 )
                 .success(function (data) {
                         console.log(data);
+                        $scope.UnloadEnv('users');
                         alert(data.Message);
                     });
             }
@@ -415,6 +416,22 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
             }
         };
 
+        $scope.UnloadEnv = function(env) {
+            var unload_env_in = function(arr) {
+                for (var i=0; i<arr.length; i++) {
+                    var node = arr[i];
+                    if (node.real_name == env) {
+                        node.name = node.real_name + INCOMPLETE_MARKER;
+                        node.children = [];
+                        node.complete = false;
+                    }
+                }
+            };
+
+            unload_env_in($scope.dataForTheTree);
+            unload_env_in($scope.hiddenDataForTheTree);
+        };
+
         $scope.MoveKey = function() {
             var node = $scope.selected_node;
 
@@ -464,19 +481,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
 
                 $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
-                        var unload_env_in = function(arr) {
-                            for (var i=0; i<arr.length; i++) {
-                                var node = arr[i];
-                                if (node.real_name == $scope.move_key_env) {
-                                    node.name = node.real_name + INCOMPLETE_MARKER;
-                                    node.children = [];
-                                    node.complete = false;
-                                }
-                            }
-                        };
-
-                        unload_env_in($scope.dataForTheTree);
-                        unload_env_in($scope.hiddenDataForTheTree);
+                        $scope.UnloadEnv($scope.move_key_env);
                     })
 
                 }).error(function (data) {
@@ -499,6 +504,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                     if (data.Response == 'Failure') {
                         alert(data.Message);
                     } else {
+                        $scope.UnloadEnv('users');
                         alert('User ' + $scope.create_user + ' created successfully.');
                     }
                 });
@@ -519,6 +525,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                         alert(data.Message);
                     }
                     else {
+                        $scope.UnloadEnv('users');
                         alert('User ' + $scope.delete_user + ' deleted successfully.')
                     }
                 });
@@ -531,6 +538,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 var data = {'env': $scope.grant_env, 'user': $scope.grant_user, 'rights': $scope.grant_rights};
                 $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
+                        $scope.UnloadEnv('users');
                         alert(data['Message']);
                     });
             }
@@ -540,12 +548,16 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
             if ($scope.token) {
                 var int_to_str = function(int) {
                     switch (int){
+                        case "0":
                         case 0: return "None";
+                        case "1":
                         case 1: return "Read";
+                        case "2":
                         case 2: return "Read Protected";
+                        case "3":
                         case 3: return "Write";
+                        case "4":
                         case 4: return "Grant";
-                        case 5: return "Admin";
                     }
                     return "Unknown";
                 };

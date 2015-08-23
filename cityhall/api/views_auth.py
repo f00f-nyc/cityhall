@@ -118,10 +118,10 @@ class Users(Endpoint):
         try:
             envs = auth.get_user(user)
             return {'Response': 'Ok', 'Environments': envs}
-        except:
+        except Exception as ex:
             return {
                 'Response': 'Failure',
-
+                'Message': ex.message,
             }
 
     def post(self, request, *args, **kwargs):

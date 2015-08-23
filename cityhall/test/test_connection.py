@@ -15,6 +15,7 @@
 from django.test import TestCase
 from lib.db.memory.cityhall_db_factory import CityHallDbFactory
 from lib.db.connection import Connection
+from lib.db.db import Rights
 
 
 class TestConnection(TestCase):
@@ -40,23 +41,6 @@ class TestConnection(TestCase):
         self.conn.connect()
         self.conn.create_default_env()
         self.assertTrue(self.conn.authenticate('cityhall', ''))
-
-    def test_get_env(self):
-        self.conn.connect()
-        self.assertTrue(self.conn.get_env('cityhall', '', 'auto') is None)
-        self.conn.create_default_env()
-        self.assertTrue(self.conn.get_env('cityhall', '', 'auto') is not None)
-
-    def test_cannot_get_env_if_not_granted_rights(self):
-        self.conn.connect()
-        self.conn.create_default_env()
-        db = self.db_conn.get_db()
-
-        db.create_user('cityhall', 'test', '')
-        db.create_env('test', 'dev')
-
-        self.assertTrue(self.conn.get_env('cityhall', '', 'dev') is None)
-        self.assertTrue(self.conn.get_env('test', '', 'dev') is not None)
 
     def test_get_auth(self):
         self.conn.connect()

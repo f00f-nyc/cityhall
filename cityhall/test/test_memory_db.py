@@ -57,112 +57,78 @@ class TestMemoryDbWithEnv(TestCase):
         self.conn.open()
         self.conn.create_default_tables()
 
-    def test_get_rights_on_non_user_fails(self):
-        self.assertEqual(-1, self.conn.get_db().get_rights('test', 'auto'))
-
-    def test_get_rights_works(self):
-        self.assertEqual(
-            Rights.Admin,
-            self.conn.get_db().get_rights('auto', 'cityhall')
-        )
-
     def test_create_user(self):
         count_before = len(self.conn.authTable)
-        self.conn.get_db().create_user('cityhall', 'test', '')
+        db = self.conn.get_db()
+        users_root = db.get_env_root('users')
+        db.create('cityhall', users_root, 'test', '')
+        test_folder = db.get_child(users_root, 'test')
+        test_id = test_folder['id']
+        self.conn.get_db().create_user('cityhall', 'test', '', test_id)
         count_after = len(self.conn.authTable)
         self.assertEqual(count_before + 1, count_after)
 
         last_entry = self.conn.authTable[count_before]
         self.assertEqual(last_entry['user'], 'test')
-        self.assertEqual(last_entry['env'], 'auto')
-        self.assertEqual(last_entry['rights'], Rights.NoRights)
+        self.assertTrue(last_entry['active'])
+        self.assertEqual(last_entry['user_root'], test_id)
+        self.assertEqual(last_entry['author'], 'cityhall')
 
     def test_create_same_user_is_noop(self):
-        self.conn.get_db().create_user('cityhall', 'test', '')
+        db = self.conn.get_db()
+        users_root = db.get_env_root('users')
+        db.create('cityhall', users_root, 'test', '')
+        test_folder = db.get_child(users_root, 'test')
+        id = test_folder['id']
+
+        self.conn.get_db().create_user('cityhall', 'test', '', id)
 
         count_before = len(self.conn.authTable)
-        self.conn.get_db().create_user('cityhall', 'test', '')
+        self.conn.get_db().create_user('cityhall', 'test', '', id)
         count_after = len(self.conn.authTable)
         self.assertEqual(count_before, count_after)
 
-    def test_set_rights_works(self):
-        db = self.conn.get_db()
-        db.create_user('cityhall', 'test', '')
-        original_auth = self.conn.authTable[len(self.conn.authTable)-1]
-
-        db.update_rights('cityhall', 'auto', 'test', Rights.Read)
-        new_auth = self.conn.authTable[len(self.conn.authTable)-1]
-
-        self.assertFalse(original_auth['active'])
-        self.assertTrue(new_auth['active'])
-        self.assertGreater(new_auth['id'], original_auth['id'])
-        self.assertNotEqual(new_auth['rights'], original_auth['rights'])
-        self.assertEqual(Rights.Read, new_auth['rights'])
-
-    def test_set_rights_to_itself_is_noop(self):
-        db = self.conn.get_db()
-        db.create_user('cityhall', 'test', '')
-        before = len(self.conn.authTable)
-        db.update_rights('cityhall', 'auto', 'test', Rights.NoRights)
-        after = len(self.conn.authTable)
-        self.assertEqual(before, after)
-
-    def test_create_rights_to_different_env(self):
-        db = self.conn.get_db()
-        db.create_user('cityhall', 'test', '')
-        db.create_env('cityhall', 'dev')
-        before = len(self.conn.authTable)
-        db.create_rights('cityhall', 'dev', 'test', Rights.Read)
-        after = len(self.conn.authTable)
-        self.assertEqual(before+1, after)
-
     def test_authenticate(self):
         self.assertFalse(self.conn.authenticate('test', ''))
-        self.conn.get_db().create_user('cityhall', 'test', '')
+        db = self.conn.get_db()
+        users_env = db.get_env_root('users')
+        db.create('cityhall', users_env, 'test', '')
+        created = db.get_child(users_env, 'test')
+        self.conn.get_db().create_user('cityhall', 'test', '', created['id'])
         self.assertTrue(self.conn.authenticate('test', ''))
-        self.assertTrue(self.conn.authenticate('test', '', 'auto'))
-        self.assertFalse(self.conn.authenticate('test', '', 'dev'))
 
-    def test_create_env(self):
+    def test_create_root(self):
         vals_before = len(self.conn.valsTable)
-        auth_before = len(self.conn.authTable)
-        self.conn.get_db().create_env('cityhall', 'dev')
+        self.conn.get_db().create_root('cityhall', 'dev')
         vals_after = len(self.conn.valsTable)
-        auth_after = len(self.conn.authTable)
 
         self.assertEqual(vals_before+1, vals_after)
-        self.assertEqual(auth_before+1, auth_after)
 
     def test_create_env_returns_status(self):
         self.assertTrue(
-            self.conn.get_db().create_env('cityhall', 'dev'),
-            "If the env is created, create_env returns true"
+            self.conn.get_db().create_root('cityhall', 'dev'),
+            "If the root is created, create_env returns true"
         )
         self.assertIsNot(
-            self.conn.get_db().create_env('cityhall', 'dev'),
-            "If creating the env fails, create_env returns false"
-        )
-        self.assertIsNot(
-            self.conn.get_db().create_env('non_existant_user', 'dev'),
-            "If creating the env fails, create_env returns false"
+            self.conn.get_db().create_root('cityhall', 'dev'),
+            "If creating the root fails, create_env returns false"
         )
 
     def test_create_same_env_is_noop(self):
         db = self.conn.get_db()
-        db.create_env('cityhall', 'dev')
+        db.create_root('cityhall', 'dev')
 
         vals_before = len(self.conn.valsTable)
         auth_before = len(self.conn.authTable)
-        db.create_env('cityhall', 'dev')
+        db.create_root('cityhall', 'dev')
         self.assertEqual(vals_before, len(self.conn.valsTable))
         self.assertEqual(auth_before, len(self.conn.authTable))
 
-    def test_create_env_creates_root(self):
-        self.conn.get_db().create_env('cityhall', 'dev')
+    def test_create_root_is_complete(self):
+        self.conn.get_db().create_root('cityhall', 'dev')
 
         val = self.conn.valsTable[-1]
-        self.assertEqual('dev', val['env'])
-        self.assertEqual('/', val['name'])
+        self.assertEqual('dev', val['name'])
         self.assertEqual(val['id'], val['parent'])
         self.assertEqual('', val['value'])
         self.assertEqual('cityhall', val['author'])
@@ -170,27 +136,12 @@ class TestMemoryDbWithEnv(TestCase):
         self.assertTrue(val['active'])
         self.assertTrue(val['first_last'])
 
-    def test_create_env_creates_authentications(self):
-        self.conn.get_db().create_env('cityhall', 'dev')
-
-        auth = self.conn.authTable[-1]
-        self.assertEqual('dev', auth['env'])
-        self.assertEqual(Rights.Grant, auth['rights'])
-        self.assertEqual('cityhall', auth['user'])
-        self.assertEqual('', auth['pass'])
-        self.assertEqual('cityhall', auth['author'])
-
-    def test_create_env_on_non_user_fails(self):
-        before = len(self.conn.valsTable)
-        self.conn.get_db().create_env('test', 'dev')
-        self.assertEqual(before, len(self.conn.valsTable))
-
     def test_get_env_root_on_nonexistant(self):
         self.assertEqual(-1, self.conn.get_db().get_env_root('dev'))
 
     def test_get_env_root_on_existant(self):
         db = self.conn.get_db()
-        db.create_env('cityhall', 'dev')
+        db.create_root('cityhall', 'dev')
         val = self.conn.valsTable[-1]
         self.assertEqual(val['id'], db.get_env_root('dev'))
 
@@ -206,8 +157,25 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         self.conn.open()
         self.conn.create_default_tables()
         self.db = self.conn.get_db()
-        self.db.create_user('cityhall', 'test', '')
-        self.db.create_env('test', 'dev')
+        self.users_root = self.db.get_env_root('users')
+        self.user_root = self.db.get_child(self.users_root, 'cityhall')
+
+        self._create_user('test')
+        self.db.create_root('test', 'dev')
+        self._give_user_rights('test', 'dev', Rights.Grant)
+
+    def _create_user(self, name):
+        self.db.create('cityhall', self.users_root, name, '')
+        created = self.db.get_child(self.users_root, name)
+        self.db.create_user('cityhall', name, '', created['id'])
+
+    def _give_user_rights(self, name, env, rights):
+        user_folder = self.db.get_child(self.users_root, name)
+        exists = self.db.get_child(user_folder['id'], env)
+        if exists:
+            self.db.update('cityhall', exists['id'], rights)
+        else:
+            self.db.create('cityhall', user_folder['id'], env, rights)
 
     def test_get_children_of_empty(self):
         val_id = self.db.get_env_root('test')
@@ -218,7 +186,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
     def test_create_value(self):
         dev_root = self.db.get_env_root('dev')
         before = len(self.conn.valsTable)
-        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        self.db.create('test', dev_root, 'value1', 'some value')
         after = len(self.conn.valsTable)
         val = self.conn.valsTable[-1]
 
@@ -232,7 +200,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
 
     def test_child_value_is_returned(self):
         dev_root = self.db.get_env_root('dev')
-        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        self.db.create('test', dev_root, 'value1', 'some value')
         children = self.db.get_children_of(dev_root)
 
         self.assertEqual(1, len(children))
@@ -241,7 +209,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
 
     def test_update(self):
         dev_root = self.db.get_env_root('dev')
-        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        self.db.create('test', dev_root, 'value1', 'some value')
 
         original_value = self.conn.valsTable[-1]
         before = len(self.conn.valsTable)
@@ -258,11 +226,11 @@ class TestMemoryDbWithEnvAndUser(TestCase):
 
     def test_create_override(self):
         dev_root = self.db.get_env_root('dev')
-        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        self.db.create('test', dev_root, 'value1', 'some value')
 
         original_value = self.conn.valsTable[-1]
         before = len(self.conn.valsTable)
-        self.db.create('test', 'dev', dev_root, 'value1', 'test value', 'test')
+        self.db.create('test', dev_root, 'value1', 'test value', 'test')
         after = len(self.conn.valsTable)
         new_value = self.conn.valsTable[before]
 
@@ -274,7 +242,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
 
     def test_get_value(self):
         dev_root = self.db.get_env_root('dev')
-        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        self.db.create('test', dev_root, 'value1', 'some value')
         item_in_db = self.conn.valsTable[-1]
 
         val_from_db = self.db.get_value(item_in_db['id'])
@@ -288,7 +256,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
 
     def test_delete(self):
         dev_root = self.db.get_env_root('dev')
-        self.db.create('test', 'dev', dev_root, 'value1', 'abc')
+        self.db.create('test', dev_root, 'value1', 'abc')
         before = len(self.conn.valsTable)
         val_id = self.conn.valsTable[-1]['id']
         self.db.delete('test', val_id)
@@ -301,7 +269,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
 
     def test_protect(self):
         dev_root = self.db.get_env_root('dev')
-        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        self.db.create('test', dev_root, 'value1', 'some value')
 
         before = len(self.conn.valsTable)
         created = self.conn.valsTable[-1]
@@ -320,7 +288,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
 
     def test_unprotect(self):
         dev_root = self.db.get_env_root('dev')
-        self.db.create('test', 'dev', dev_root, 'value1', 'some value')
+        self.db.create('test', dev_root, 'value1', 'some value')
         val_id = self.conn.valsTable[-1]['id']
         self.db.set_protect_status('dev', val_id, True)
 
@@ -333,55 +301,26 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         self.assertFalse(public['protect'])
         self.assertTrue(public['active'])
 
-    def test_get_user(self):
-        self.db.create_rights('cityhall', 'test_env0', 'test', Rights.NoRights)
-        self.db.create_rights('cityhall', 'test_env1', 'test', Rights.Read)
-        self.db.create_rights('cityhall', 'test_env2', 'test', Rights.ReadProtected)
-        self.db.create_rights('cityhall', 'test_env3', 'test', Rights.Write)
-        self.db.create_rights('cityhall', 'test_env4', 'test', Rights.Grant)
-        user_rights = self.db.get_user('test')
-
-        for i in range(0, 4):
-            env_name = 'test_env' + str(i)
-            self.assertIn(env_name, user_rights)
-            self.assertEqual(i, user_rights[env_name])
-
     def test_delete_user(self):
-        self.db.update_rights('cityhall', 'test_env', 'test', Rights.Read)
-        activate_index = len(self.conn.authTable)-1
-
-        before = len(self.conn.authTable)
         self.db.delete_user('cityhall', 'test')
-        after = len(self.conn.authTable)
+        entries = [
+            auth for auth in self.conn.authTable
+            if auth['user'] == 'test'
+        ]
 
-        activate = self.conn.authTable[activate_index]
-        entry2 = self.conn.authTable[-2]
-        entry1 = self.conn.authTable[-1]
-
-        self.assertEqual(before+2, after)
-        self.assertEqual('cityhall', entry1['author'])
-        self.assertFalse(activate['active'])
-        self.assertTrue(entry1['active'])
-        self.assertTrue(entry2['active'])
-        self.assertEqual(-1, entry1['rights'])
-        self.assertEqual(-1, entry2['rights'])
-
-    def test_only_positive_rights_exist(self):
-        self.db.update_rights('cityhall', 'dev', 'test', Rights.NoRights)
-        before = self.db.get_user('test')
-        self.assertIn('dev', before)
-
-        self.db.update_rights('cityhall', 'dev', 'test', Rights.DontExist)
-        after = self.db.get_user('test')
-        self.assertNotIn('dev', after)
+        self.assertEqual(2, len(entries))
+        self.assertFalse(entries[0]['active'])
+        self.assertFalse(entries[1]['active'])
 
     def test_get_users(self):
-        self.db.create_env('cityhall', 'test_env')
+        self.db.create_root('cityhall', 'test_env')
+        self._give_user_rights('cityhall', 'test_env', Rights.Grant)
         test_env_users = self.db.get_users('test_env')
+
         self.assertEqual(1, len(test_env_users))
         self.assertEqual(Rights.Grant, test_env_users['cityhall'])
 
-        self.db.create_rights('test', 'dev', 'cityhall', Rights.Read)
+        self._give_user_rights('cityhall', 'dev', Rights.Read)
         dev_users = self.db.get_users('dev')
         self.assertEqual(2, len(dev_users))
         self.assertIn('cityhall', dev_users)
