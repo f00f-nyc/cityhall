@@ -28,7 +28,6 @@ class Rights(object):
     ReadProtected = 2
     Write = 3
     Grant = 4
-    Admin = 5
 
 
 class DbFactory(object):
@@ -57,7 +56,7 @@ class DbFactory(object):
         pass
 
     @abstractmethod
-    def authenticate(self, user, passhash, env=None):
+    def authenticate(self, user, passhash):
         pass
 
 
@@ -72,7 +71,7 @@ class Db(object):
     see its corresponding tests: /test/tests_connection.py
     """
     @abstractmethod
-    def create_env(self, user, env):
+    def create_root(self, author, env):
         pass
 
     @abstractmethod
@@ -84,7 +83,7 @@ class Db(object):
         pass
 
     @abstractmethod
-    def create(self, user, env, parent, name, value, override=''):
+    def create(self, user, parent, name, value, override=''):
         pass
 
     @abstractmethod
@@ -93,22 +92,6 @@ class Db(object):
 
     @abstractmethod
     def get_value_for(self, parent_index, name, override):
-        pass
-
-    @abstractmethod
-    def get_rights(self, env, user):
-        pass
-
-    @abstractmethod
-    def update_rights(self, author, env, user, rights):
-        pass
-
-    @abstractmethod
-    def create_rights(self, author, env, user, rights):
-        pass
-
-    @abstractmethod
-    def create_user(self, author, user, passhash):
         pass
 
     @abstractmethod
@@ -128,7 +111,7 @@ class Db(object):
         pass
 
     @abstractmethod
-    def get_user(self, user):
+    def create_user(self, author, user, passhash, user_root):
         pass
 
     @abstractmethod
@@ -137,4 +120,8 @@ class Db(object):
 
     @abstractmethod
     def get_users(self, env):
+        pass
+
+    @abstractmethod
+    def get_child(self, parent, name, override=''):
         pass

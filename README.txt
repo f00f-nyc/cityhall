@@ -100,12 +100,11 @@ rights:
 	3) Write - The user can write values
 	4) Grant - The user can grant rights to this environment
 	
-Since the permissions are ad hoc (a user might have Grant permissions
-to one environment, but lack them in another environment), there is 
-another level, which in most cases, acts identical to Grant:
-	5) Admin - If the user has Admin rights to 'auto', only for the
-		purposes of deleting users he has Grant on their environments.
-		
+There is another consideration here: Since user permissions are stored
+in cityhall itself (in the 'users' environment'), having write
+permissions to that environment is the same thing as being an 
+administrator of the system.
+
 You will also need to hit here first, in order to get an authentication
 token.  This is a token that will be included will all subsequent calls
 to City Hall.  The reason for this token is to avoid authentication on

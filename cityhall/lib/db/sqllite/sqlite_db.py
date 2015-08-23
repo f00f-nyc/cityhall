@@ -19,7 +19,6 @@ from datetime import datetime
 import calendar
 
 
-
 class SqliteDb(db.Db, SqliteFuncsMixin):
     def __init__(self, cursor):
         self.cursor = cursor
@@ -32,37 +31,16 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
     def _unixtime_to_datetime_now(time):
         return datetime.utcfromtimestamp(time)
 
-    def create_env(self, user, env):
-        user_info = self._first_row(
-            'select pass from cityhall_auth '
-            'where user = :user and active = :active;',
-            {'user': user, 'active': True, }
-        )
-
-        if not user_info:
-            return
-
-        auth = {'pass': user_info[0], }
-        env_exists = self._first_value(
-            'select count (*) from cityhall_vals '
-            'where env = :env and active = :active;',
-            {'env': env, 'active': True, }
-        )
-
-        if env_exists == 0:
+    def create_root(self, author, env):
+        if self.get_env_root(env) < 0:
             self._first_row(
                 'begin;'
-                '  insert into cityhall_auth '
-                '  (active, datetime, env, author, user, pass, rights) '
-                '  values '
-                '  (:active, :datetime, :env, :author, :user, :pass, :rights);'
                 ' '
                 '  insert into cityhall_vals '
-                '  (id, '
-                '  env, parent, active, name, override, '
+                '  (id, parent, active, name, override, '
                 '  author, datetime, value, first_last, protect)'
                 '  values '
-                '  (-1, :env,  -1, :active, :name, :override, '
+                '  (-1, -1, :active, :name, :override, '
                 '  :author, :datetime, :value, :first_last, :protect);'
                 ' '
                 '  update cityhall_vals set id = rowid, parent = rowid where '
@@ -70,14 +48,10 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
                 'end;',
                 {
                     'active': True,
-                    'datetime': self._datetime_now_to_unixtime(),
-                    'env': env,
-                    'user': user,
-                    'pass': auth['pass'],
-                    'rights': Rights.Grant,
-                    'author': user,
-                    'name': '/',
+                    'name': env,
                     'override': '',
+                    'author': author,
+                    'datetime': self._datetime_now_to_unixtime(),
                     'value': '',
                     'first_last': True,
                     'protect': False,
@@ -89,23 +63,22 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
     def get_children_of(self, index):
         ret = []
         for row in self.cursor.execute(
-                'select id, env, name, override, author, datetime, '
+                'select id, name, override, author, datetime, '
                 ' value, protect from cityhall_vals '
                 'where '
                 '  active = :active '
                 '  and parent = :parent '
-                '  and id != :parent;',
+                '  and id != parent;',
                 {'active': True, 'parent': index}):
             ret.append({
                 'active': True,
                 'id': row[0],
-                'env': row[1],
-                'name': row[2],
-                'override': row[3],
-                'author': row[4],
-                'datetime': datetime.utcfromtimestamp(row[5]),
-                'value': row[6],
-                'protect': row[7],
+                'name': row[1],
+                'override': row[2] or '',
+                'author': row[3],
+                'datetime': datetime.utcfromtimestamp(row[4]),
+                'value': row[5],
+                'protect': row[6],
                 'parent': index
             })
         return ret
@@ -120,68 +93,28 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
             return None, None
         return val[0], val[1]
 
-    def get_rights(self, env, user):
-        ret = self._first_value(
-            'select rights from cityhall_auth '
-            'where active = :active and env = :env and user = :user;',
-            {'active': True, 'env': env, 'user': user, }
-        )
-        return ret if ret is not None else Rights.DontExist
-
     def get_env_root(self, env):
         ret = self._first_value(
             'select id from cityhall_vals '
-            'where env = :env and active = :active and parent = id;',
+            'where name = :env and active = :active and parent = id;',
             {'active': True, 'env': env, }
         )
         return ret if ret is not None else -1
 
-    def create_rights(self, author, env, user, rights):
-        exist_auth = self._first_value(
-            'select count(*) from cityhall_auth where '
-            'user = :user and env = :env and active = :active '
-            'and rights != :rights;',
-            {'user': user, 'env': env, 'active': True, 'rights': rights, }
-        )
-        user_pass = self._first_value(
-            'select pass from cityhall_auth where '
-            'user = :user and active = :active '
-            'order by rowid limit 1;',
-            {'user': user, 'active': True}
-        )
-
-        if isinstance(user_pass, basestring) and (exist_auth == 0):
-            self.cursor.execute(
-                'insert into cityhall_auth'
-                '(active, datetime, env, author, user, pass, rights)'
-                'values '
-                '(:active, :datetime, :env, :author, :user, :pass, :rights);',
-                {
-                    'active': True,
-                    'datetime': self._datetime_now_to_unixtime(),
-                    'env': env,
-                    'author': author,
-                    'user': user,
-                    'pass': user_pass,
-                    'rights': rights,
-                }
-            )
-
-    def create(self, user, env, parent, name, value, override=''):
+    def create(self, user, parent, name, value, override=''):
         self.cursor.execute(
             'begin;'
             ' '
             '  insert into cityhall_vals ( '
-            '  id, env, parent, active, name, override, author, datetime, '
+            '  id, parent, active, name, override, author, datetime, '
             '  value, first_last, protect) '
-            '  values (-1, :env, :parent, :active, :name, :override, :author, '
+            '  values (-1, :parent, :active, :name, :override, :author, '
             '  :datetime, :value, :first_last, :protect);'
             ' '
             '  update cityhall_vals set id = rowid '
             '  where rowid = last_insert_rowid(); '
             'end;',
             {
-                'env': env,
                 'parent': parent,
                 'active': True,
                 'name': name,
@@ -195,7 +128,7 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
 
     def update(self, user, index, value):
         first_row = self._first_row(
-            'select rowid, env, parent, name, override, protect '
+            'select rowid, parent, name, override, protect '
             'from cityhall_vals where id = :val_id and active = :active;',
             {'val_id': index, 'active': True, }
         )
@@ -210,97 +143,70 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
             '  where  id = :id and active = :true; '
             ' '
             '  insert into cityhall_vals ( '
-            '  id, env, parent, active, name, override, '
+            '  id, parent, active, name, override, '
             '  author, datetime, value, first_last, protect) '
-            '  values (:id, :env, :parent, :true, :name, :override, '
+            '  values (:id, :parent, :true, :name, :override, '
             '  :author, :datetime, :value, :false, :protect); '
             ' '
             'end;',
             {
                 'id': index,
-                'env': first_row[1],
-                'parent': first_row[2],
+                'parent': first_row[1],
                 'true': True,
-                'name': first_row[3],
-                'override': first_row[4],
+                'name': first_row[2],
+                'override': first_row[3],
                 'author': user,
                 'datetime': self._datetime_now_to_unixtime(),
                 'value': value,
-                'protect': first_row[5],
+                'protect': first_row[4],
                 'false': False,
             })
 
-    def update_rights(self, author, env, user, rights):
-        current = self._first_row(
-            'select rowid, pass from cityhall_auth '
-            'where active = :active and user = :user and '
-            'env = :env and rights != :rights;',
-            {'active': True, 'user': user, 'env': env, 'rights': rights, }
-        )
-        if current:
-            self.cursor.execute(
-                'begin; '
-                ' '
-                'update cityhall_auth '
-                'set active = :inactive '
-                'where user = :user and active = :active and env = :env; '
-                ' '
-                'insert into cityhall_auth '
-                '(active, datetime, env, author, user, pass, rights) '
-                'values '
-                '(:active, :datetime, :env, :author, :user, :pass, :rights);'
-                ' '
-                'end;',
+    def create_user(self, author, user, passhash, user_root):
+        if self._first_value(
+                'select count(*) from cityhall_auth '
+                'where active = :active and user = :user;',
                 {
-                    'inactive': False,
                     'active': True,
-                    'datetime': self._datetime_now_to_unixtime(),
-                    'env': env,
-                    'author': author,
                     'user': user,
-                    'pass': current[1],
-                    'rights': rights
                 }
-            )
+        ):
+            return
 
-    def create_user(self, author, user, passhash):
-        if self.get_rights('auto', user) == Rights.DontExist:
-            self.cursor.execute(
-                'insert into cityhall_auth '
-                '(active, datetime, env, author, user, pass, rights) '
-                'values '
-                '(:active, :datetime, :env, :author, :user, :pass, :rights);',
-                {
-                    'active': True,
-                    'datetime': self._datetime_now_to_unixtime(),
-                    'env': 'auto',
-                    'author': author,
-                    'user': user,
-                    'pass': passhash,
-                    'rights': Rights.NoRights
-                }
-            )
+        self.cursor.execute(
+            'insert into cityhall_auth '
+            '(active, datetime, user_root, author, user, pass) '
+            'values '
+            '(:active, :datetime, :user_root, :author, :user, :pass);',
+            {
+                'active': True,
+                'datetime': self._datetime_now_to_unixtime(),
+                'user_root': user_root,
+                'author': author,
+                'user': user,
+                'pass': passhash,
+            }
+        )
 
     def get_history(self, index):
         ret = []
         for row in self.cursor.execute(
                 'select '
-                ' id, env, name, override, author, '
+                ' id, name, override, author, '
                 ' datetime, value, protect, active '
                 'from cityhall_vals where '
                 '(id = :val_id) or (first_last = :true and parent = :val_id);',
                 {'val_id': index, 'true': True}):
             ret.append({
                 'id': row[0],
-                'env': row[1],
-                'name': row[2],
-                'override': row[3],
-                'author': row[4],
-                'datetime': self._unixtime_to_datetime_now(row[5]),
-                'value': row[6],
-                'protect': row[7],
+                'name': row[1],
+                'override': row[2],
+                'author': row[3],
+                'datetime': self._unixtime_to_datetime_now(row[4]),
+                'value': row[5],
+                'protect': row[6],
                 'parent': index,
-                'active': row[8]
+                'active': row[7]
             })
         return ret
 
@@ -329,7 +235,7 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
 
     def delete(self, user, index):
         first_row = self._first_row(
-            'select rowid, env, parent, name, override, value '
+            'select rowid, parent, name, override, value '
             'from cityhall_vals where id = :val_id and active = :active;',
             {'val_id': index, 'active': True, }
         )
@@ -344,29 +250,28 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
             '  where  id = :id and active = :true; '
             ' '
             '  insert into cityhall_vals ( '
-            '  id, env, parent, active, name, override, '
+            '  id, parent, active, name, override, '
             '  author, datetime, value, first_last, protect) '
-            '  values (:id, :env, :parent, :false, :name, :override, '
+            '  values (:id, :parent, :false, :name, :override, '
             '  :author, :datetime, :value, :true, :protect); '
             ' '
             'end;',
             {
                 'id': index,
-                'env': first_row[1],
-                'parent': first_row[2],
+                'parent': first_row[1],
                 'true': True,
-                'name': first_row[3],
-                'override': first_row[4],
+                'name': first_row[2],
+                'override': first_row[3],
                 'author': user,
                 'datetime': self._datetime_now_to_unixtime(),
-                'value': first_row[5],
+                'value': first_row[4],
                 'protect': False,
                 'false': False,
             })
 
     def set_protect_status(self, user, index, status):
         first_row = self._first_row(
-            'select rowid, env, parent, name, override, value '
+            'select rowid, parent, name, override, value '
             'from cityhall_vals where id = :val_id and active = :active '
             '     and protect != :status;',
             {'val_id': index, 'active': True, 'status': status}
@@ -382,87 +287,90 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
             '  where  id = :id and active = :true; '
             ' '
             '  insert into cityhall_vals ( '
-            '  id, env, parent, active, name, override, '
+            '  id, parent, active, name, override, '
             '  author, datetime, value, first_last, protect) '
-            '  values (:id, :env, :parent, :true, :name, :override, '
+            '  values (:id, :parent, :true, :name, :override, '
             '  :author, :datetime, :value, :false, :protect); '
             ' '
             'end;',
             {
                 'id': index,
-                'env': first_row[1],
-                'parent': first_row[2],
+                'parent': first_row[1],
                 'true': True,
-                'name': first_row[3],
-                'override': first_row[4],
+                'name': first_row[2],
+                'override': first_row[3],
                 'author': user,
                 'datetime': self._datetime_now_to_unixtime(),
-                'value': first_row[5],
+                'value': first_row[4],
                 'protect': status,
                 'false': False,
             })
 
-    def get_user(self, user):
-        return {
-            row[0]: row[1]
-            for row in self.cursor.execute(
-                'select env, rights from cityhall_auth '
-                'where active = :active and user = :user and rights > :exist',
-                {
-                    'active': True,
-                    'user': user,
-                    'exist': Rights.DontExist,
-                }
-            )
-        }
-
     def delete_user(self, author, user):
-        rows = [
-            (row[0], row[1], row[2]) for row in
-            self.cursor.execute(
-                'select rowid, env, pass from cityhall_auth '
-                'where active = :active and user = :user and rights > :exist',
-                {
-                    'active': True,
-                    'user': user,
-                    'exist': Rights.DontExist,
-                }
-            )
-        ]
-
-        for row in rows:
-            self.cursor.execute(
-                'update cityhall_auth '
-                'set active = :inactive '
-                'where rowid = :id and active = :active; '
-                ' '
-                'insert into cityhall_auth '
-                '(active, datetime, env, author, user, pass, rights) '
-                'values '
-                '(:active, :datetime, :env, :author, :user, :pass, :rights);',
-                {
-                    'id': row[0],
-                    'inactive': False,
-                    'active': True,
-                    'datetime': self._datetime_now_to_unixtime(),
-                    'env': row[1],
-                    'author': author,
-                    'user': user,
-                    'pass': row[2],
-                    'rights': Rights.DontExist
-                }
-            )
+        self.cursor.execute(
+            'begin;'
+            ' '
+            'update cityhall_auth '
+            'set active = :inactive '
+            'where active = :active and user = :user;'
+            ' '
+            'insert into cityhall_auth '
+            '(active, datetime, author, user, pass) '
+            'values '
+            '(:inactive, :datetime, :author, :user, :pass);'
+            ' '
+            'end;',
+            {
+                'inactive': False,
+                'active': True,
+                'datetime': self._datetime_now_to_unixtime(),
+                'author': author,
+                'user': user,
+                'pass': '',
+            }
+        )
 
     def get_users(self, env):
         return {
             row[0]: row[1]
             for row in self.cursor.execute(
-                'select user, rights from cityhall_auth '
-                'where active = :active and env = :env and rights > :exist',
+                'select a.user, v.value from cityhall_auth a '
+                'join cityhall_vals v '
+                'where '
+                '   a.user_root = v.parent '
+                '   and v.active = :active '
+                '   and v.name = :env;',
                 {
                     'active': True,
                     'env': env,
-                    'exist': Rights.DontExist,
                 }
             )
         }
+
+    def get_child(self, parent, name, override=''):
+        ret = self._first_row(
+            'select id, name, override, author, datetime, '
+            ' value, protect '
+            ' from cityhall_vals '
+            ' where active = :active and parent = :parent and'
+            '       name = :name and override = :override;',
+            {
+                'active': True,
+                'parent': parent,
+                'name': name,
+                'override': override,
+            }
+        )
+        if ret is not None:
+            return {
+                'active': True,
+                'id': ret[0],
+                'name': ret[1],
+                'override': ret[2] or '',
+                'author': ret[3],
+                'datetime': datetime.utcfromtimestamp(ret[4]),
+                'value': ret[5],
+                'protect': ret[6],
+                'parent': parent,
+            }
+        return None

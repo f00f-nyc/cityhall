@@ -30,12 +30,11 @@ class TestAuthentication(TestCase):
         self.db = self.conn.db_connection
         self.conn.connect()
         self.conn.create_default_env()
-        self.env = self.conn.get_env('cityhall', '', 'auto')
         self.auth = self.conn.get_auth('cityhall', '')
+        self.env = self.auth.get_env('auto')
 
     def test_can_get_env(self):
-        env = self.auth.get_env('auto')
-        self.assertTrue(env is not None)
+        self.assertTrue(self.env is not None)
 
     def test_create_env(self):
         env = self.auth.create_env('dev')
@@ -73,7 +72,7 @@ class TestAuthentication(TestCase):
         test_auth = self.conn.get_auth('test', '')
         test_auth.grant('auto', 'test', Rights.Write)
         rights = test_auth.get_permissions('auto')
-        self.assertEqual(Rights.NoRights, rights)
+        self.assertEqual(Rights.DontExist, rights)
 
     def test_get_users(self):
         users = self.auth.get_users('auto')
@@ -93,13 +92,12 @@ class TestAuthentication(TestCase):
         self.auth.create_user('test', '')
 
         environments = self.auth.get_user('test')
-        self.assertEqual(1, len(environments))
-        self.assertIn('auto', environments)
-        self.assertEqual(Rights.NoRights, environments['auto'])
+        self.assertEqual(0, len(environments))
 
         self.auth.grant('add', 'test', Rights.Read)
         environments = self.auth.get_user('test')
-        self.assertEqual(2, len(environments))
+        self.assertEqual(1, len(environments))
+        self.assertIn('add', environments)
 
     def test_delete_user(self):
         """
@@ -124,6 +122,7 @@ class TestAuthentication(TestCase):
 
     def test_cannot_delete_user_twice(self):
         self.auth.create_user('test', '')
+        self.auth.grant('auto', 'test', Rights.Read)
         self.assertTrue(self.auth.delete_user('test'))
         self.assertFalse(self.auth.delete_user('test'))
 
@@ -142,9 +141,10 @@ class TestAuthentication(TestCase):
         self.auth.create_user('grants', '')
         self.auth.create_user('user1', '')
         self.auth.grant('auto', 'grants', Rights.Grant)
+        self.auth.grant('auto', 'user1', Rights.Read)
 
         grant_auth = self.conn.get_auth('grants', '')
-        resp = grant_auth.grant('auto', 'user1', Rights.NoRights)
+        resp = grant_auth.grant('auto', 'user1', Rights.Read)
         self.assertEqual(resp[0], "Ok")
         self.assertEqual(
             resp[1], "Rights for 'user1' already at set level"

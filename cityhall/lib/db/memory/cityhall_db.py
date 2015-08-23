@@ -37,109 +37,31 @@ class CityHallDb(Db):
             len(self.db.authTable) if self.db.authTable else 'None'
         )
 
-    def get_rights(self, env, user):
+    def create_user(self, author, user, passhash, user_root):
         for auth in self.db.authTable:
-            if auth['active'] and (auth['env'] == env) and\
-                    (auth['user'] == user):
-                return auth['rights']
-        return Rights.DontExist
+            if auth['active'] and auth['user'] == user:
+                return
 
-        # return next(
-        #     (auth['rights'] for auth in self.db.authTable
-        #         if auth['active'] and (auth['env'] == env) and
-        #         (auth['user'] == user)),
-        #     Rights.DontExist
-        # )
+        self.db.authTable.append({
+            'id': len(self.db.authTable),
+            'active': True,
+            'datetime': datetime.now(),
+            'user_root': user_root,
+            'author': author,
+            'user': user,
+            'pass': passhash,
+        })
 
-    def create_user(self, author, user, passhash):
-        if self.get_rights('auto', user) == Rights.DontExist:
-            self.db.authTable.append({
-                'id': len(self.db.authTable),
-                'active': True,
-                'datetime': datetime.now(),
-                'env': 'auto',
-                'author': author,
-                'user': user,
-                'pass': passhash,
-                'rights': Rights.NoRights,
-            })
-
-    def update_rights(self, author, env, user, rights):
-        auth_id = next(
-            (auth['id'] for auth in self.db.authTable
-                if auth['active'] and (auth['user'] == user) and
-                (auth['env'] == env) and auth['rights'] != rights),
-            Rights.DontExist
-        )
-        if auth_id > 0:
-            auth = self.db.authTable[auth_id]
-            auth['active'] = False
-            self.db.authTable.append({
-                'id': len(self.db.authTable),
-                'active': True,
-                'datetime': datetime.now(),
-                'env': env,
-                'author': author,
-                'user': user,
-                'pass': auth['pass'],
-                'rights': rights
-            })
-
-    def create_rights(self, author, env, user, rights):
-        auth_id = next(
-            (auth['id'] for auth in self.db.authTable
-                if auth['active'] and (auth['user'] == user) and
-                (auth['env'] == env) and auth['rights'] != rights),
-            Rights.DontExist
-        )
-        auth_pass = next(
-            (auth['pass'] for auth in self.db.authTable
-                if auth['active'] and auth['user'] == user),
-            None
-        )
-
-        if isinstance(auth_pass, basestring) and (auth_id == Rights.DontExist):
-            self.db.authTable.append({
-                'id': len(self.db.authTable),
-                'active': True,
-                'datetime': datetime.now(),
-                'env': env,
-                'author': author,
-                'user': user,
-                'pass': auth_pass,
-                'rights': rights
-            })
-
-    def create_env(self, user, env):
-        auth_id = next(
-            (auth['id'] for auth in self.db.authTable
-                if auth['active'] and (auth['user'] == user)),
-            -1
-        )
-        user_exists = auth_id >= 0
-        env_exists = self.get_env_root(env) >= 0
-
-        if user_exists and not env_exists:
-            auth = self.db.authTable[auth_id]
+    def create_root(self, author, env):
+        if self.get_env_root(env) < 0:
             val_id = get_next_id(self.db.valsTable)
-            self.db.authTable.append({
-                'id': len(self.db.authTable),
-                'active': True,
-                'datetime': datetime.now(),
-                'env': env,
-                'author': user,
-                'user': user,
-                'pass': auth['pass'],
-                'rights': Rights.Grant,
-            })
             self.db.valsTable.append({
                 'id': val_id,
-                'env': env,
                 'parent': val_id,
                 'active': True,
-                'name': '/',
+                'name': env,
                 'override': '',
-                'author': user,
+                'author': author,
                 'datetime': datetime.now(),
                 'value': '',
                 'first_last': True,
@@ -151,7 +73,7 @@ class CityHallDb(Db):
     def get_env_root(self, env):
         return next(
             (val['id'] for val in self.db.valsTable
-                if val['active'] and val['env'] == env),
+                if val['id'] == val['parent'] and val['name'] == env),
             -1
         )
 
@@ -162,10 +84,9 @@ class CityHallDb(Db):
             and child['id'] != index        # do not return roots
         ]
 
-    def create(self, user, env, parent, name, value, override=''):
+    def create(self, user, parent, name, value, override=''):
         self.db.valsTable.append({
             'id': get_next_id(self.db.valsTable),
-            'env': env,
             'parent': parent,
             'active': True,
             'name': name,
@@ -188,7 +109,6 @@ class CityHallDb(Db):
             original['active'] = False
             self.db.valsTable.append({
                 'id': index,
-                'env': original['env'],
                 'parent': original['parent'],
                 'active': True,
                 'name': original['name'],
@@ -211,7 +131,6 @@ class CityHallDb(Db):
             original['active'] = False
             self.db.valsTable.append({
                 'id': index,
-                'env': original['env'],
                 'parent': original['parent'],
                 'active': False,
                 'name': original['name'],
@@ -264,7 +183,6 @@ class CityHallDb(Db):
             original['active'] = False
             self.db.valsTable.append({
                 'id': index,
-                'env': original['env'],
                 'parent': original['parent'],
                 'active': True,
                 'name': original['name'],
@@ -276,38 +194,38 @@ class CityHallDb(Db):
                 'protect': status
             })
 
-    def get_user(self, user):
-        user_entries = [
-            auth for auth in self.db.authTable
-            if auth['active'] and (auth['user'] == user)
-            and (auth['rights'] > Rights.DontExist)
-        ]
-        return {entry['env']: entry['rights'] for entry in user_entries}
-
     def delete_user(self, author, user):
-        user_entries = [
-            auth for auth in self.db.authTable
-            if auth['active'] and (auth['user'] == user)
-            and (auth['rights'] > Rights.DontExist)
-        ]
-
-        for entry in user_entries:
-            entry['active'] = False
-            self.db.authTable.append({
-                'id': len(self.db.authTable),
-                'active': True,
-                'datetime': datetime.now(),
-                'env': entry['env'],
-                'author': author,
-                'user': user,
-                'pass': entry['pass'],
-                'rights': Rights.DontExist,
-            })
+        for auth in self.db.authTable:
+            if auth['active'] and auth['user'] == user:
+                auth['active'] = False
+                self.db.authTable.append({
+                    'id': len(self.db.authTable),
+                    'active': False,
+                    'datetime': datetime.now(),
+                    'author': author,
+                    'user': user,
+                    'pass': '',
+                })
+                return True
+        return False
 
     def get_users(self, env):
-        env_entries = [
-            auth for auth in self.db.authTable
-            if auth['active'] and (auth['env'] == env)
-            and (auth['rights'] > Rights.DontExist)
-        ]
-        return {entry['user']: entry['rights'] for entry in env_entries}
+        ret = {}
+        users_root = self.get_env_root('users')
+        all_users = self.get_children_of(users_root)
+
+        for user in all_users:
+            permissions = self.get_children_of(user['id'])
+
+            for permission in permissions:
+                if permission['name'] == env:
+                    ret[user['name']] = permission['value']
+        return ret
+
+    def get_child(self, parent, name, override=''):
+        children = self.get_children_of(parent)
+
+        for child in children:
+            if child['active'] and child['name'] == name \
+                    and child['override'] == override:
+                return child

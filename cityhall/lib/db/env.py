@@ -50,7 +50,10 @@ class Env(object):
 
     def get_auth(self):
         from .auth import Auth
-        return Auth(self.db, self.name)
+        users_root = self.db.get_env_root('users')
+        self_root = self.db.get_child(users_root, self.name)
+        if self_root:
+            return Auth(self.db, self.name, self_root['id'])
 
     @staticmethod
     def _get_parent_path(sanitized_path):
@@ -192,10 +195,10 @@ class Env(object):
                 global_entry_must_be_created = False
 
         if global_entry_must_be_created:
-            self.db.create(self.name, self.env, parent_index, search, '', '')
+            self.db.create(self.name, parent_index, search, '', '')
 
         self.db.create(
-            self.name, self.env, parent_index, search, value, override,
+            self.name, parent_index, search, value, override,
         )
 
         return True

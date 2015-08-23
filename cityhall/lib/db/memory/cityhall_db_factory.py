@@ -31,50 +31,109 @@ class CityHallDbFactory(db.DbFactory):
             raise Exception("Cannot open new connection, already opened")
 
     def create_default_tables(self):
-        self.valsTable = [{
-            'id': 1,
-            'env': 'auto',
-            'parent': 0,
-            'active': True,
-            'name': '/',
-            'override': '',
-            'author': 'cityhall',
-            'datetime': datetime.now(),
-            'value': '',
-            'protect': False,
-        }]
+        """
+        Get rid of valsTable->env
+        When id = parent, then it is a root, and the name is the name of the env
+
+        Get rid of authTable->env, introduce authTable->userId: userId is now
+        the id of the valsTable entry which stores this user.  The User env will
+        look like:
+        /
+        +-> cityhall
+            +-> users: 4
+            +-> dev: 4
+            +-> qa: 1
+            +-> prod: 1
+        +-> alex
+            +-> users: 1
+            +-> dev: 4
+            +-> qa 2
+          etc
+
+
+        This will make getting the users for a particular environment difficult
+
+        """
+        self.valsTable = [
+            {
+                'id': 1,
+                'parent': 1,
+                'active': True,
+                'name': 'auto',
+                'override': '',
+                'author': 'cityhall',
+                'datetime': datetime.now(),
+                'value': '',
+                'protect': False,
+            },
+            {
+                'id': 2,
+                'parent': 2,
+                'active': True,
+                'name': 'users',
+                'override': '',
+                'author': 'cityhall',
+                'datetime': datetime.now(),
+                'value': '',
+                'protect': False,
+            },
+            {
+                'id': 3,
+                'parent': 2,
+                'active': True,
+                'name': 'cityhall',
+                'override': '',
+                'author': 'cityhall',
+                'datetime': datetime.now(),
+                'value': '',
+                'protect': False,
+            },
+            {
+                'id': 4,
+                'parent': 3,
+                'active': True,
+                'name': 'auto',
+                'override': '',
+                'author': 'cityhall',
+                'datetime': datetime.now(),
+                'value': '4',
+                'protect': False,
+
+            },
+            {
+                'id': 5,
+                'parent': 3,
+                'active': True,
+                'name': 'users',
+                'override': '',
+                'author': 'cityhall',
+                'datetime': datetime.now(),
+                'value': '4',
+                'protect': False,
+
+            }]
         self.authTable = [{
             'id': 0,
             'active': True,
             'datetime': datetime.now(),
-            'env': 'auto',
+            'user_root': 3,
             'author': 'cityhall',
             'user': 'cityhall',
             'pass': '',
-            'rights': Rights.Admin,
         }]
 
     def is_open(self):
         return self.state == DbState.Open
 
-    def authenticate(self, user, passhash, env=None):
+    def authenticate(self, user, passhash):
         if not self.authTable:
             return None
 
-        check_env = lambda a: True if not env else a['env'] == env
-
         for auth in self.authTable:
             if auth['active'] and (auth['pass'] == passhash)\
-                    and (auth['user'] == user) and check_env(auth):
-                return auth['rights'] >= Rights.NoRights
+                    and (auth['user'] == user):
+                return auth['user_root']
         return False
-
-        # return next(
-        #     (auth['active'] for auth in self.db.authTable
-        #         if auth['active'] and (auth['pass'] == passhash) and
-        #         (auth['user'] == user) and check_env(auth)),
-        #     False
-        # )
 
     def get_db(self):
         if self.is_open():

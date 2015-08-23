@@ -30,7 +30,8 @@ class TestEnvironment(TestCase):
         self.db = self.conn.db_connection
         self.conn.connect()
         self.conn.create_default_env()
-        self.env = self.conn.get_env('cityhall', '', 'auto')
+        self.auth = self.conn.get_auth('cityhall', '')
+        self.env = self.auth.get_env('auto')
 
     def test_can_get_auth_from_env(self):
         auth = self.env.get_auth()
@@ -146,7 +147,8 @@ class TestEnvironment(TestCase):
         auth = self.env.get_auth()
         auth.create_user('test', '')
         auth.grant('auto', 'test', Rights.Read)
-        test_env = self.conn.get_env('test', '', 'auto')
+        test_auth = self.conn.get_auth('test', '')
+        test_env = test_auth.get_env('auto')
         self.assertEqual('abc', test_env.get('/value'))
 
     def children_match_value1_value2_value3(self, children):
@@ -201,11 +203,13 @@ class TestEnvironment(TestCase):
         auth.create_user('test_read_protect', '')
         auth.grant('auto', 'test_read_protect', Rights.ReadProtected)
 
-        env = self.conn.get_env('test_read', '', 'auto')
+        read_auth = self.conn.get_auth('test_read', '')
+        env = read_auth.get_env('auto')
         hist = env.get_history('/value1')
         self.assertEqual(0, len(hist))
 
-        env = self.conn.get_env('test_read_protect', '', 'auto')
+        read_protected_auth = self.conn.get_auth('test_read_protect', '')
+        env = read_protected_auth.get_env('auto')
         hist = env.get_history('/value1')
         self.assertEqual(1, len(hist))
 
@@ -295,7 +299,8 @@ class TestEnvironment(TestCase):
         auth = self.conn.get_auth('cityhall', '')
         auth.create_user('test', '')
         auth.grant('auto', 'test', Rights.Read)
-        test_env = self.conn.get_env('test', '', 'auto')
+        auth_test = self.conn.get_auth('test', '')
+        test_env = auth_test.get_env('auto')
 
         self.env.set('/value1', 'abc')
         before = len(self.db.valsTable)
@@ -325,5 +330,6 @@ class TestEnvironment(TestCase):
 
         auth.create_user('test', '')
         auth.grant('auto', 'test', Rights.Read)
-        test_env = self.conn.get_env('test', '', 'auto')
+        test_auth = self.conn.get_auth('test', '')
+        test_env = test_auth.get_env('auto')
         self.assertIsNone(test_env.get('/value1'))
