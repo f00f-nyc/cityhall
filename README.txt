@@ -103,7 +103,7 @@ rights:
 There is another consideration here: Since user permissions are stored
 in cityhall itself (in the 'users' environment'), having write
 permissions to that environment is the same thing as being an 
-administrator of the system.
+administrator of the system.  
 
 You will also need to hit here first, in order to get an authentication
 token.  This is a token that will be included will all subsequent calls
@@ -122,6 +122,11 @@ Create environment:
 Returns: {"Response": "Ok"}
 This sets gives the current user Grant permissions on that environment
 
+Note here that an environment can be created without having write
+permissions to the 'users' environment, even though the end result is
+a value written into that environment.
+
+
 View environment:
 	GET		http://localhost:5000/api/auth/env/dev/
 	Auth-Token: PPeiSCshNpwFxAuJWUMshM
@@ -136,6 +141,9 @@ Create user:
 	{"user": "alex", "passhash": ""}
 Returns: {"Response": "Ok"}
 This creates a user with None permissions on auto environment
+Again, this call will affect the users environment.  The folder named 
+for that user will be created in 'users' environment, and subsequent
+permissions will be added as children of that folder.
 
 Grant permissions:
 	POST	http://localhost:5000/api/auth/grant/
@@ -316,7 +324,9 @@ Delete User:
 Returns: {"Response": "Ok"}
 This will delete the specified user. The operation will fail if the
 Auth-Token doesn't have Grant permission to all of the environments 
-which the specified user is a part of.
+which the specified user is a part of.  Of course, if the Auth-Token
+has Write permissions to the 'users' environment, that's effectively
+the same as having Grant to all of the users' environments.
 
 
 

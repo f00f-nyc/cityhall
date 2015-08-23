@@ -31,29 +31,6 @@ class CityHallDbFactory(db.DbFactory):
             raise Exception("Cannot open new connection, already opened")
 
     def create_default_tables(self):
-        """
-        Get rid of valsTable->env
-        When id = parent, then it is a root, and the name is the name of the env
-
-        Get rid of authTable->env, introduce authTable->userId: userId is now
-        the id of the valsTable entry which stores this user.  The User env will
-        look like:
-        /
-        +-> cityhall
-            +-> users: 4
-            +-> dev: 4
-            +-> qa: 1
-            +-> prod: 1
-        +-> alex
-            +-> users: 1
-            +-> dev: 4
-            +-> qa 2
-          etc
-
-
-        This will make getting the users for a particular environment difficult
-
-        """
         self.valsTable = [
             {
                 'id': 1,
