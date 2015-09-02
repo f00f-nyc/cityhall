@@ -13,7 +13,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from lib.db.db import Db
-from lib.db.db import Rights
 from datetime import datetime
 
 
@@ -67,7 +66,7 @@ class CityHallDb(Db):
                 'first_last': True,
                 'protect': False,
             })
-            return True
+            return val_id
         return False
 
     def get_env_root(self, env):
@@ -85,8 +84,9 @@ class CityHallDb(Db):
         ]
 
     def create(self, user, parent, name, value, override=''):
+        created_id = get_next_id(self.db.valsTable)
         self.db.valsTable.append({
-            'id': get_next_id(self.db.valsTable),
+            'id': created_id,
             'parent': parent,
             'active': True,
             'name': name,
@@ -97,6 +97,7 @@ class CityHallDb(Db):
             'first_last': True,
             'protect': False,
         })
+        return created_id
 
     def update(self, user, index, value):
         original = next((

@@ -40,10 +40,6 @@ class DbFactory(object):
         pass
 
     @abstractmethod
-    def open(self):
-        pass
-
-    @abstractmethod
     def is_open(self):
         pass
 

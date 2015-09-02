@@ -14,6 +14,7 @@
 
 from restless.views import Endpoint
 from .authenticate import is_valid, get_auth_from_request
+from lib.db.db import Rights
 
 
 class EnvView(Endpoint):
@@ -84,6 +85,12 @@ class EnvView(Endpoint):
             protect = str(protect).upper() in ['1', 'TRUE', 'Y', 'YES', ]
 
         env = info.auth.get_env(info.env)
+
+        if int(env.permissions) < Rights.Write:
+            return {
+                'Response': 'Failure',
+                'Message': 'Do not have write permissions to ' + info.env
+            }
 
         try:
             if protect is not None:

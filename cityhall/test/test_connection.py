@@ -15,7 +15,6 @@
 from django.test import TestCase
 from lib.db.memory.cityhall_db_factory import CityHallDbFactory
 from lib.db.connection import Connection
-from lib.db.db import Rights
 
 
 class TestConnection(TestCase):

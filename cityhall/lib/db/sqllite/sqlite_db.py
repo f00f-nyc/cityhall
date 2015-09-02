@@ -14,7 +14,6 @@
 
 from .sqlite_funcs_mixin import SqliteFuncsMixin
 from lib.db import db
-from lib.db.db import Rights
 from datetime import datetime
 import calendar
 
@@ -57,7 +56,7 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
                     'protect': False,
                 }
             )
-            return True
+            return self.get_env_root(env)
         return False
 
     def get_children_of(self, index):
@@ -125,6 +124,8 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
                 'first_last': True,
                 'protect': False,
             })
+        inserted = self.get_child(parent, name, override)
+        return inserted['id']
 
     def update(self, user, index, value):
         first_row = self._first_row(

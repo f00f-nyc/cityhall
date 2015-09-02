@@ -14,8 +14,6 @@
 
 from lib.db import db
 from lib.db.db import Rights
-from datetime import datetime
-import calendar
 import apsw
 from .sqlite_db import SqliteDb
 from .sqlite_funcs_mixin import SqliteFuncsMixin

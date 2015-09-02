@@ -13,7 +13,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from lib.db import db
-from lib.db.db import DbState, Rights
+from lib.db.db import DbState
 from datetime import datetime
 from .cityhall_db import CityHallDb
 

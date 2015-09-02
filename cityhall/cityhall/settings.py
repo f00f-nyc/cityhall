@@ -45,8 +45,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -134,5 +132,9 @@ ENV_CACHE = {
 # CITY_HALL_DATABASE = CityHallDbFactory()
 
 # sqlite3 db
-from lib.db.sqllite.sqlite_db_factory import SqliteDbFactory
-CITY_HALL_DATABASE = SqliteDbFactory('db.sqlite3')
+# from lib.db.sqllite.sqlite_db_factory import SqliteDbFactory
+# CITY_HALL_DATABASE = SqliteDbFactory('db.sqlite3')
+
+# django db
+from api.cityhall.factory import Factory
+CITY_HALL_DATABASE = Factory()

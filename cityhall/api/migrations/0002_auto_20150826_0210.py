@@ -12,6 +12,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase
 
-# Create your tests here.
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from django.db import migrations
+from api.default_data import load_default_data
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('api', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.RunPython(load_default_data),
+    ]

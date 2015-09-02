@@ -30,8 +30,7 @@ class Auth(object):
 
     def create_env(self, env):
         if self.db.create_root(self.name, env):
-            self.db.create(self.name, self.user_root, env, Rights.Grant)
-            return self.get_env(env)
+            return self.db.create(self.name, self.user_root, env, Rights.Grant)
         return False
 
     def get_env(self, env):
@@ -52,9 +51,8 @@ class Auth(object):
         exists = self.db.get_child(self.users_env, user)
 
         if not exists:
-            self.db.create(self.name, self.users_env, user, '')
-            created = self.db.get_child(self.users_env, user)
-            self.db.create_user(self.name, user, passhash, created['id'])
+            user_root = self.db.create(self.name, self.users_env, user, '')
+            self.db.create_user(self.name, user, passhash, user_root)
 
     def _delete_user(self, delete, delete_rights, delete_root):
         for right in delete_rights:

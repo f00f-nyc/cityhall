@@ -252,8 +252,12 @@ app.controller('CityHallCtrl', ['$scope', 'md5', '$http',
                 var url = $scope.urlForNode(node) + '?override=' + node.override;
                 $http.post(url, data, {headers: {'Auth-Token': $scope.token}})
                     .success(function (data) {
-                        node.value = $scope.selected_value;
-                        node.protect = $scope.selected_protected;
+                        if (data['Response'] == 'Ok') {
+                            node.value = $scope.selected_value;
+                            node.protect = $scope.selected_protected;
+                        } else {
+                            alert(data['Message']);
+                        }
                     });
             }
         };

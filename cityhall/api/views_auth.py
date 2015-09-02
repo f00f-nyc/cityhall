@@ -16,7 +16,6 @@ from restless.views import Endpoint
 from .views import CONN, CACHE
 from .authenticate import is_valid, get_auth_from_request
 import shortuuid
-import simplejson as json
 
 
 class Authenticate(Endpoint):
