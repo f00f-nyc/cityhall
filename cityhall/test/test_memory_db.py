@@ -325,3 +325,20 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         self.assertEqual(2, len(dev_users))
         self.assertIn('cityhall', dev_users)
         self.assertIn('test', dev_users)
+
+    def test_update_user(self):
+        before = len(self.conn.authTable)
+        self.db.update_user('cityhall', 'test', 'password')
+        after = len(self.conn.authTable)
+
+        entries = [
+            entry
+            for entry in self.conn.authTable
+            if entry['user'] == 'test'
+        ]
+
+        self.assertEqual(before+1, after)
+        self.assertEqual(2, len(entries))
+        self.assertFalse(entries[0]['active'])
+        self.assertTrue(entries[1]['active'])
+        self.assertEqual('password', entries[1]['pass'])

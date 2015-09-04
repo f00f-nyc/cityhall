@@ -375,3 +375,6 @@ class SqliteDb(db.Db, SqliteFuncsMixin):
                 'parent': parent,
             }
         return None
+
+    def update_user(self, author, user, passhash):
+        raise NotImplementedError("Functionality not implemented, yet")

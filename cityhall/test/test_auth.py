@@ -174,3 +174,15 @@ class TestAuthentication(TestCase):
         self.assertEqual(
             resp[1], "Rights for 'user1' updated"
         )
+
+    def test_update_user(self):
+        self.auth.create_user('test', '123')
+
+        test_auth_before = self.conn.get_auth('test', '123')
+        self.auth.update_user('test', 'abc')
+        test_auth_after_wrong_pass = self.conn.get_auth('test', '123')
+        test_auth_after_correct_pass = self.conn.get_auth('test', 'abc')
+
+        self.assertIsNotNone(test_auth_before)
+        self.assertIsNone(test_auth_after_wrong_pass)
+        self.assertIsNotNone(test_auth_after_correct_pass)

@@ -99,6 +99,22 @@ class CityHallDb(Db):
         })
         return created_id
 
+    def update_user(self, author, user, passhash):
+        for auth in self.db.authTable:
+            if auth['active'] and auth['user'] == user:
+                auth['active'] = False
+                self.db.authTable.append({
+                    'id': len(self.db.authTable),
+                    'active': True,
+                    'datetime': datetime.now(),
+                    'author': author,
+                    'user': user,
+                    'pass': passhash,
+                    'user_root': auth['user_root']
+                })
+                return True
+        return False
+
     def update(self, user, index, value):
         original = next((
             val for val in self.db.valsTable
@@ -206,6 +222,7 @@ class CityHallDb(Db):
                     'author': author,
                     'user': user,
                     'pass': '',
+                    'user_root': auth['user_root']
                 })
                 return True
         return False

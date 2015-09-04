@@ -66,7 +66,9 @@ def get_auth_from_request(request, env):
 
 
 def is_valid(request):
-    if (request.method == 'POST') or (request.method == 'DELETE'):
+    if (request.method == 'POST') \
+            or (request.method == 'DELETE')\
+            or (request.method == 'PUT'):
         return auth_token_in_cache(request)
     elif request.method == 'GET':
         return authenticate_for_get(request)

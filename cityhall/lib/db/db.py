@@ -111,6 +111,10 @@ class Db(object):
         pass
 
     @abstractmethod
+    def update_user(self, author, user, passhash):
+        pass
+
+    @abstractmethod
     def delete_user(self, author, user):
         pass
 

@@ -141,6 +141,21 @@ class Users(Endpoint):
         except Exception as ex:
             return {'Response': 'Failure', 'Message': ex.message}
 
+    def put(self, request, *args, **kwargs):
+        user = kwargs.get('user', None)
+        passhash = request.data.get('passhash', None)
+        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
+        auth = CACHE[cache_key]
+
+        if auth.name != user:
+            return {
+                'Response': 'Failure',
+                'Message': 'May only update your own user'
+            }
+
+        auth.update_user(user, passhash)
+        return {'Response': 'Ok'}
+
     def delete(self, request, *args, **kwargs):
         user = kwargs.get('user', None)
 

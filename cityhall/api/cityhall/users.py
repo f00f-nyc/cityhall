@@ -56,3 +56,15 @@ class Users(object):
         new_value.pk = None
         new_value.author = author
         new_value.save()
+
+    @transaction.atomic
+    def update_user(self, author, user, passhash):
+        existing = User.objects.get(active=True, name=user)
+        new_value = copy(existing)
+        existing.active = False
+        existing.save()
+
+        new_value.pk = None
+        new_value.author = author
+        new_value.password = passhash
+        new_value.save()

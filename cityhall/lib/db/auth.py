@@ -54,6 +54,10 @@ class Auth(object):
             user_root = self.db.create(self.name, self.users_env, user, '')
             self.db.create_user(self.name, user, passhash, user_root)
 
+    def update_user(self, user, passhash):
+        self._ensure_users_env()
+        self.db.update_user(self.name, user, passhash)
+
     def _delete_user(self, delete, delete_rights, delete_root):
         for right in delete_rights:
             self.db.delete(self.name, right['id'])

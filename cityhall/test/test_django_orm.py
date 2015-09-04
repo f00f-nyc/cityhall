@@ -100,6 +100,23 @@ class TestUsers(TestCase):
         self.assertIn('test', users_after)
         self.assertEqual(1, int(users_after['test']))
 
+    def test_update_user(self):
+        users_root = self.envs.get_env_root('users')
+        user_root = self.values.create('cityhall', users_root, 'test', '')
+        self.users.create_user('cityhall', 'test', '', user_root)
+
+        before = User.objects.count()
+        self.users.update_user('cityhall', 'test', 'password')
+        after = User.objects.count()
+
+        entries = list(User.objects.filter(name='test'))
+
+        self.assertEqual(before+1, after)
+        self.assertEqual(2, len(entries))
+        self.assertFalse(entries[0].active)
+        self.assertTrue(entries[1].active)
+        self.assertEqual('password', entries[1].password)
+
 
 class TestValues(TestCase):
     def setUp(self):
