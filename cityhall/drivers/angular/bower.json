@@ -1,0 +1,32 @@
+{
+  "name": "cityhall",
+  "version": "0.0.1",
+  "homepage": "http://digitalborderlands.com/cityhall",
+  "authors": [
+    "Alex Popa <alex.popa@digitalborderlands.com>"
+  ],
+  "description": "Driver to reach City Hall API using angular",
+  "main": "directive.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "City",
+    "Hall",
+    "cityhall",
+    "settings",
+    "server"
+  ],
+  "license": "AGPL",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.2.28",
+    "angular-md5": "0.1.7"
+  }
+}

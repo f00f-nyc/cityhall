@@ -94,6 +94,11 @@ class EnvView(Endpoint):
 
         try:
             if protect is not None:
+                # cannot set protect if doesn't exist, so ensure it exists
+                exist = env.get_explicit(info.path, info.override)
+                if (exist is None) or (exist[0] is None):
+                    env.set(info.path, '', info.override)
+
                 env.set_protect(protect, info.path, info.override)
             if value is not None:
                 env.set(info.path, value, info.override)
@@ -122,16 +127,13 @@ class EnvView(Endpoint):
 
     @staticmethod
     def get_value_for(auth, env, path, override):
-        if override is None:
-            return {
-                'Response': 'Ok',
-                'value': auth.get_env(env).get(path)
-            }
-        else:
-            return {
-                'Response': 'Ok',
-                'value': auth.get_env(env).get_explicit(path, override)
-            }
+        value = auth.get_env(env).get(path) if override is None \
+            else auth.get_env(env).get_explicit(path, override)
+        return {
+            'Response': 'Ok',
+            'value': value[0],
+            'protect': value[1],
+        }
 
     @staticmethod
     def get_history_for(auth, env, path, override):

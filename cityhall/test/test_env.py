@@ -67,7 +67,7 @@ class TestEnvironment(TestCase):
         self.assertTrue(global_val['name'], override_val['name'])
         self.assertNotEqual(global_val['id'], override_val['id'])
         self.assertEqual(
-            override_val['value'],
+            (override_val['value'], False),
             self.env.get_explicit('/value', override_name)
         )
 
@@ -81,11 +81,11 @@ class TestEnvironment(TestCase):
         self.env.set('/parent1/parent2/child', override_val, 'cityhall')
 
         self.assertEqual(
-            global_val,
+            (global_val, False),
             self.env.get_explicit('/parent1/parent2/child')
         )
         self.assertEqual(
-            override_val,
+            (override_val, False),
             self.env.get_explicit('/parent1/parent2/child', 'cityhall')
         )
 
@@ -120,9 +120,12 @@ class TestEnvironment(TestCase):
         value_override = 'global value'
         self.env.set('/value', value_global)
         self.env.set('/value', value_override, 'cityhall')
-        self.assertEqual(value_global, self.env.get_explicit('/value'))
         self.assertEqual(
-            value_override,
+            (value_global, False),
+            self.env.get_explicit('/value')
+        )
+        self.assertEqual(
+            (value_override, False),
             self.env.get_explicit('/value', 'cityhall')
         )
 
@@ -142,14 +145,14 @@ class TestEnvironment(TestCase):
         # or their specific one
         self.env.set('/value', 'abc')
         self.env.set('/value', 'def', 'cityhall')
-        self.assertEqual('def', self.env.get('/value'))
+        self.assertEqual(('def', False), self.env.get('/value'))
 
         auth = self.env.get_auth()
         auth.create_user('test', '')
         auth.grant('auto', 'test', Rights.Read)
         test_auth = self.conn.get_auth('test', '')
         test_env = test_auth.get_env('auto')
-        self.assertEqual('abc', test_env.get('/value'))
+        self.assertEqual(('abc', False), test_env.get('/value'))
 
     def children_match_value1_value2_value3(self, children):
         self.assertEqual(3, len(children))
@@ -266,12 +269,21 @@ class TestEnvironment(TestCase):
         deleted = self.env.get('/value1')
         does_not_exist = self.env.get('/key_doesnt_exist')
         self.assertEqual(deleted, does_not_exist)
-        self.assertIsNone(deleted)
+        self.assertIsNone(deleted[0])
+        self.assertIsNone(deleted[1])
 
     def test_cannot_delete_root(self):
         self.env.set('/', 'abc')
         self.env.delete('/', '')
-        self.assertEqual('abc', self.env.get('/'))
+        self.assertEqual(('abc', False), self.env.get('/'))
+
+    def test_get_returns_protect(self):
+        self.env.set('/', 'abc')
+        self.env.set_protect(True, '/', '')
+        self.assertEqual(('abc', True), self.env.get('/'))
+
+        self.env.set_protect(False, '/', '')
+        self.assertEqual(('abc', False), self.env.get('/'))
 
     def test_can_protect(self):
         self.env.set('/value1', 'abc')
@@ -332,4 +344,4 @@ class TestEnvironment(TestCase):
         auth.grant('auto', 'test', Rights.Read)
         test_auth = self.conn.get_auth('test', '')
         test_env = test_auth.get_env('auto')
-        self.assertIsNone(test_env.get('/value1'))
+        self.assertEqual((None, None), test_env.get('/value1'))

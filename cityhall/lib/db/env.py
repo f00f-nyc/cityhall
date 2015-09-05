@@ -146,14 +146,12 @@ class Env(object):
             "{}{}/".format(parent_path, path[0])
         )
 
-    def _get_val_from_pair(self, val_pair):
-        if self.permissions >= Rights.Read:
-            if val_pair[1]:  # is protected
-                if self.permissions >= Rights.ReadProtected:
-                    return val_pair[0]
-                return None
-            return val_pair[0]
-        return None
+    def _honor_permissions(self, val_pair):
+        if self.permissions >= Rights.ReadProtected:
+            return val_pair
+        if self.permissions >= Rights.Read and not val_pair[1]:
+            return val_pair
+        return None, None
 
     def set(self, path, value, override=None):
         override = '' if override is None else override
@@ -224,20 +222,18 @@ class Env(object):
     def get_explicit(self, path, override=None):
         index = self._get_index_of(path, override)
         if index >= 0:
-            return self._get_val_from_pair(self.db.get_value(index))
+            return self._honor_permissions(self.db.get_value(index))
 
     def get(self, path):
         if path == '/':
-            return self._get_val_from_pair(
-                self.db.get_value(self.root_id)
-            )
+            return self._honor_permissions(self.db.get_value(self.root_id))
 
         path = sanitize_path(path)
         parent_id = self._get_parent_id(path)
         value_name = get_name_of_value(path)
 
         if parent_id >= 0:
-            return self._get_val_from_pair(
+            return self._honor_permissions(
                 self.db.get_value_for(parent_id, value_name, self.name)
             )
 
@@ -298,9 +294,9 @@ class Env(object):
         if path == '/':
             return False    # Cannot create overrides for root
 
-        id = self._get_index_of(path, override)
-        if id > -1:
-            self.db.set_protect_status(self.name, id, status)
+        index = self._get_index_of(path, override)
+        if index > -1:
+            self.db.set_protect_status(self.name, index, status)
             return True
 
         return False

@@ -254,8 +254,8 @@ class TestValues(TestCase):
         index = self._create('test', '123')
 
         children = self.values.get_children_of(self.auto_id)
-        first = children[0]
-        self.assertEqual(1, len(children))
+        first = children[1]
+        self.assertEqual(2, len(children))
         self.assertTrue(first['active'])
         self.assertEqual(index, first['id'])
         self.assertEqual('test', first['name'])
@@ -270,6 +270,7 @@ class TestValues(TestCase):
             'cityhall', self.auto_id, 'test', '456', 'test'
         )
         children = self.values.get_children_of(self.auto_id)
+        children = [child for child in children if child['name'] == 'test']
         override = children[0] \
             if children[0]['override'] == 'test' else children[1]
         self.assertEqual(2, len(children))
@@ -279,6 +280,7 @@ class TestValues(TestCase):
 
         self.values.set_protect_status('cityhall', index, True)
         children = self.values.get_children_of(self.auto_id)
+        children = [child for child in children if child['name'] == 'test']
         override = children[0] \
             if children[0]['override'] == 'test' else children[1]
         self.assertEqual(2, len(children))
@@ -286,6 +288,7 @@ class TestValues(TestCase):
 
         self.values.delete('cityhall', index)
         children = self.values.get_children_of(self.auto_id)
+        children = [child for child in children if child['name'] == 'test']
         self.assertEqual(1, len(children))
 
     def test_get_value_for(self):
@@ -342,11 +345,11 @@ class TestValues(TestCase):
         self.assertEqual(3, len(history))
 
         history = self.values.get_history(self.auto_id)
-        self.assertEqual(2, len(history))
-        self.assertEqual(history[1]['id'], index)
+        self.assertEqual(3, len(history))
+        self.assertEqual(history[2]['id'], index)
 
         self.values.delete('cityhall', index)
         history = self.values.get_history(index)
         self.assertEqual(4, len(history))
         history = self.values.get_history(self.auto_id)
-        self.assertEqual(3, len(history))
+        self.assertEqual(4, len(history))

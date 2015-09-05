@@ -46,7 +46,7 @@ def load_default_data(apps, schema_editor):
     cityhall_user = valuemodel()
     cityhall_user.active = True
     cityhall_user.id = 3
-    cityhall_user.parent = 2
+    cityhall_user.parent = users_env.id
     cityhall_user.name = 'cityhall'
     cityhall_user.override = ''
     cityhall_user.author = 'cityhall'
@@ -58,7 +58,7 @@ def load_default_data(apps, schema_editor):
     cityhall_auto_rights = valuemodel()
     cityhall_auto_rights.active = True
     cityhall_auto_rights.id = 4
-    cityhall_auto_rights.parent = 3
+    cityhall_auto_rights.parent = cityhall_user.id
     cityhall_auto_rights.name = 'auto'
     cityhall_auto_rights.override = ''
     cityhall_auto_rights.author = 'cityhall'
@@ -70,7 +70,7 @@ def load_default_data(apps, schema_editor):
     cityhall_users_rights = valuemodel()
     cityhall_users_rights.active = True
     cityhall_users_rights.id = 5
-    cityhall_users_rights.parent = 3
+    cityhall_users_rights.parent = cityhall_user.id
     cityhall_users_rights.name = 'users'
     cityhall_users_rights.override = ''
     cityhall_users_rights.author = 'cityhall'
@@ -78,6 +78,18 @@ def load_default_data(apps, schema_editor):
     cityhall_users_rights.protect = False
     cityhall_users_rights.first_last = True
     cityhall_users_rights.save()
+
+    connect = valuemodel()
+    connect.active = True
+    connect.id = 6
+    connect.parent = auto_env.id
+    connect.name = 'connect'
+    connect.override = ''
+    connect.author = 'cityhall'
+    connect.entry = ''
+    connect.protect = False
+    connect.first_last = True
+    connect.save()
 
     cityhall = usermodel()
     cityhall.active = True
