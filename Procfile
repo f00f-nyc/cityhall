@@ -1,1 +1,1 @@
-web: gunicorn cityhall/cityhall.wsgi --log-file -
+gunicorn --chdir cityhall cityhall.wsgi --log-file -
