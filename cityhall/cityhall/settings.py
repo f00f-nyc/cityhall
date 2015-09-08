@@ -114,25 +114,27 @@ USE_L10N = True
 USE_TZ = True
 
 # Parse database configuration from $DATABASE_URL
-# DATABASES['default'] =  dj_database_url.config()
+DATABASES['default'] =  dj_database_url.config()
 
 # Enable Connection Pooling (if desired)
-# DATABASES['default']['ENGINE'] = 'django_postgrespool'
+DATABASES['default']['ENGINE'] = 'django_postgrespool'
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow all host headers
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = 'staticfiles'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
+
 
 ENV_CACHE = {
     'SIZE': 1000,
@@ -141,14 +143,16 @@ ENV_CACHE = {
     'MULTI_THREAD_POLL_SEC': 60
 }
 
+# Simplified static file serving.
+# https://warehouse.python.org/project/whitenoise/
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+
 # in memory db
 # from lib.db.memory.cityhall_db_factory import CityHallDbFactory
 # CITY_HALL_DATABASE = CityHallDbFactory()
 
-# sqlite3 db
-# from lib.db.sqllite.sqlite_db_factory import SqliteDbFactory
-# CITY_HALL_DATABASE = SqliteDbFactory('db.sqlite3')
-
 # django db
 from api.cityhall.factory import Factory
 CITY_HALL_DATABASE = Factory()
+

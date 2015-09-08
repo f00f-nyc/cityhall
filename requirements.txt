@@ -13,3 +13,4 @@ py-lru-cache==0.1.2
 shortuuid==0.4.2
 simplejson==3.8.0
 six==1.9.0
+whitenoise==1.0.6
