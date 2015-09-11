@@ -155,6 +155,3 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 # django db
 from api.cityhall.factory import Factory
 CITY_HALL_DATABASE = Factory()
-
-
-print DATABASES['default']
