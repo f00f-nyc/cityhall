@@ -143,10 +143,6 @@ ENV_CACHE = {
     'MULTI_THREAD_POLL_SEC': 60
 }
 
-# Simplified static file serving.
-# https://warehouse.python.org/project/whitenoise/
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
-
 
 # in memory db
 # from lib.db.memory.cityhall_db_factory import CityHallDbFactory
