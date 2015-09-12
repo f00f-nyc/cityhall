@@ -151,3 +151,9 @@ ENV_CACHE = {
 # django db
 from api.cityhall.factory import Factory
 CITY_HALL_DATABASE = Factory()
+
+
+# Simplified static file serving.
+# https://warehouse.python.org/project/whitenoise/
+
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
