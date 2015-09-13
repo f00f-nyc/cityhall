@@ -18,6 +18,16 @@ from .authenticate import is_valid, get_auth_from_request
 import shortuuid
 
 
+def print_cache(token):
+    print "dumping cache: "
+
+    for k in CACHE._LRUCacheDict__values:
+        print "    " + k + ".  name: " + CACHE[k].name
+    if token:
+        message = "in cache" if token in CACHE else "not in cache"
+        print "   token " + str(token) + " is " + message
+
+
 class Authenticate(Endpoint):
     def authenticate(self, request):
         """
@@ -47,7 +57,7 @@ class Authenticate(Endpoint):
             key = str(shortuuid.uuid())
             CACHE[key] = auth
 
-            print "returning token: " + key
+            print_cache(key)
             return {'Response': 'Ok', 'Token': key}
 
         return {
@@ -113,6 +123,8 @@ class Users(Endpoint):
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
         auth = CACHE[cache_key]
 
+        print_cache(cache_key)
+
         if (user is None):
             return {
                 'Response': 'Failure',
@@ -123,6 +135,8 @@ class Users(Endpoint):
             envs = auth.get_user(user)
             return {'Response': 'Ok', 'Environments': envs}
         except Exception as ex:
+            print "caught exception while getting user: " + ex.message
+
             return {
                 'Response': 'Failure',
                 'Message': ex.message,
