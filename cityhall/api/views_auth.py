@@ -116,15 +116,16 @@ class Environments(Endpoint):
 
 class Users(Endpoint):
     def authenticate(self, request):
+        cache_key = request.META.get('HTTP_AUTH_TOKEN', 'auth token not passed')
+        print_cache(cache_key)
+
         return is_valid(request)
 
     def get(self, request, *args, **kwargs):
         user = kwargs.get('user')
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
         auth = CACHE[cache_key]
-
-        print_cache(cache_key)
-
+        
         if (user is None):
             return {
                 'Response': 'Failure',
