@@ -35,7 +35,10 @@ class Authenticate(Endpoint):
             passhash = request.data['passhash']
             auth = CONN.get_auth(user, passhash)
 
+            print "attempting to authenticate: " + user
+
             if auth is None:
+                print "invalid auth"
                 return {
                     'Response': 'Failure',
                     'Message': 'Invalid username/password'
@@ -43,6 +46,8 @@ class Authenticate(Endpoint):
 
             key = str(shortuuid.uuid())
             CACHE[key] = auth
+
+            print "returning token: " + key
             return {'Response': 'Ok', 'Token': key}
 
         return {
