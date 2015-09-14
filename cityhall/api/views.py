@@ -31,6 +31,26 @@ CONN = Connection(DB)
 CONN.connect()
 
 
+def print_cache(request):
+    print "dumping cache:"
+
+    if request is None:
+        print "  request is None.  What the heck??"
+        return
+
+    method = request.method
+    url = request.path
+    print "    {} to url: {}".format(method, url)
+
+    token = request.META.get('HTTP_AUTH_TOKEN', 'request has no auth token')
+
+    for k in CACHE._LRUCacheDict__values:
+        print "    " + k + ".  name: " + CACHE[k].name
+
+    message = "in cache" if token in CACHE else "not in cache"
+    print "    token " + str(token) + " is " + message
+
+
 def auth_token_in_cache(request):
     cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
 

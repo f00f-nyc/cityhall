@@ -13,19 +13,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from .views import CONN, CACHE
+from .views import CONN, CACHE, print_cache
 from .authenticate import is_valid, get_auth_from_request
 import shortuuid
-
-
-def print_cache(token):
-    print "dumping cache: "
-
-    for k in CACHE._LRUCacheDict__values:
-        print "    " + k + ".  name: " + CACHE[k].name
-    if token:
-        message = "in cache" if token in CACHE else "not in cache"
-        print "   token " + str(token) + " is " + message
 
 
 class Authenticate(Endpoint):
@@ -45,10 +35,8 @@ class Authenticate(Endpoint):
             passhash = request.data['passhash']
             auth = CONN.get_auth(user, passhash)
 
-            print "attempting to authenticate: " + user
-
             if auth is None:
-                print "invalid auth"
+                print "** attempting to authenticate: " + user + "  -> invalid auth"
                 return {
                     'Response': 'Failure',
                     'Message': 'Invalid username/password'
@@ -57,7 +45,7 @@ class Authenticate(Endpoint):
             key = str(shortuuid.uuid())
             CACHE[key] = auth
 
-            print_cache(key)
+            print "** attempting to authenticate: " + user + " --> token: " + key
             return {'Response': 'Ok', 'Token': key}
 
         return {
@@ -69,6 +57,7 @@ class Authenticate(Endpoint):
 
 class Environments(Endpoint):
     def authenticate(self, request):
+        print_cache(request)
         return is_valid(request)
 
     def get(self, request, *args, **kwargs):
@@ -116,8 +105,7 @@ class Environments(Endpoint):
 
 class Users(Endpoint):
     def authenticate(self, request):
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', 'auth token not passed')
-        print_cache(cache_key)
+        print_cache(request)
 
         return is_valid(request)
 
@@ -125,7 +113,7 @@ class Users(Endpoint):
         user = kwargs.get('user')
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
         auth = CACHE[cache_key]
-        
+
         if (user is None):
             return {
                 'Response': 'Failure',
@@ -204,6 +192,7 @@ class Users(Endpoint):
 
 class GrantRights(Endpoint):
     def authenticate(self, request):
+        print_cache(request)
         return is_valid(request)
 
     def post(self, request):
