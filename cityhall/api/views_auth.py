@@ -14,9 +14,12 @@
 
 from restless.views import Endpoint
 from .views import CONN, print_cache
-from api.cache import CACHE
+from api.cache import instance
 from .authenticate import is_valid, get_auth_from_request
 import shortuuid
+
+
+CACHE = instance()
 
 
 class Authenticate(Endpoint):

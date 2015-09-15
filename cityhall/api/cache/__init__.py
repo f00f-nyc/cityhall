@@ -24,10 +24,24 @@ class CacheDict(LRUCacheDict):
         return self[key] if self.has_key(key) else default  # noqa
 
 
-CACHE = CacheDict(
-    max_size=settings.ENV_CACHE['SIZE'],
-    expiration=settings.ENV_CACHE['EXPIRATION_SEC'],
-    thread_clear=False,
-    thread_clear_min_check=settings.ENV_CACHE['MULTI_THREAD_POLL_SEC'],
-    concurrent=settings.ENV_CACHE['MULTI_THREAD'],
-)
+_cache = None
+_instantiated = False
+
+
+def instance():
+    print "### getting cache instance"
+    global _instantiated
+
+    if not _instantiated:
+        print "### creating cache"
+        global _cache
+        _cache = CacheDict(
+            max_size=settings.ENV_CACHE['SIZE'],
+            expiration=settings.ENV_CACHE['EXPIRATION_SEC'],
+            thread_clear=False,
+            thread_clear_min_check=settings.ENV_CACHE['MULTI_THREAD_POLL_SEC'],
+            concurrent=settings.ENV_CACHE['MULTI_THREAD'],
+        )
+        _instantiated = True
+
+    return _cache

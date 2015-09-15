@@ -13,8 +13,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import HttpResponse
-from .views import CACHE, CONN, auth_token_in_cache
+from api.cache import instance
+from .views import CONN, auth_token_in_cache
 from lib.db.db import Rights
+
+
+CACHE = instance()
 
 
 def ensure_guest_exists():

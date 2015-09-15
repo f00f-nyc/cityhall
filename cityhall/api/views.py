@@ -17,12 +17,13 @@ from django.conf import settings
 
 from lib.db.connection import Connection
 from lib.db.db import Rights
-from api.cache import CACHE
+from api.cache import instance
 
 
 DB = settings.CITY_HALL_DATABASE
 CONN = Connection(DB)
 CONN.connect()
+CACHE = instance()
 
 
 def print_cache(request):
