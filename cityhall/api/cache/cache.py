@@ -11,13 +11,3 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-from lru import LRUCacheDict
-
-
-class CacheDict(LRUCacheDict):
-    def __contains__(self, item):
-        return self.has_key(item)  # noqa
-
-    def get(self, key, default):
-        return self[key] if self.has_key(key) else default  # noqa

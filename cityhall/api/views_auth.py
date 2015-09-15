@@ -13,7 +13,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from .views import CONN, CACHE, print_cache
+from .views import CONN, print_cache
+from api.cache import CACHE
 from .authenticate import is_valid, get_auth_from_request
 import shortuuid
 

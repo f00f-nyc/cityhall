@@ -13,19 +13,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint, HttpResponse
-from lib.db.connection import Connection
 from django.conf import settings
+
+from lib.db.connection import Connection
 from lib.db.db import Rights
-from .cache import CacheDict
+from api.cache import CACHE
 
 
-CACHE = CacheDict(
-    max_size=settings.ENV_CACHE['SIZE'],
-    expiration=settings.ENV_CACHE['EXPIRATION_SEC'],
-    thread_clear=False,
-    thread_clear_min_check=settings.ENV_CACHE['MULTI_THREAD_POLL_SEC'],
-    concurrent=settings.ENV_CACHE['MULTI_THREAD'],
-)
 DB = settings.CITY_HALL_DATABASE
 CONN = Connection(DB)
 CONN.connect()
