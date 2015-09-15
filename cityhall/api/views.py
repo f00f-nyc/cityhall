@@ -22,7 +22,7 @@ from .cache import CacheDict
 CACHE = CacheDict(
     max_size=settings.ENV_CACHE['SIZE'],
     expiration=settings.ENV_CACHE['EXPIRATION_SEC'],
-    thread_clear=settings.ENV_CACHE['MULTI_THREAD'],
+    thread_clear=False,
     thread_clear_min_check=settings.ENV_CACHE['MULTI_THREAD_POLL_SEC'],
     concurrent=settings.ENV_CACHE['MULTI_THREAD'],
 )
