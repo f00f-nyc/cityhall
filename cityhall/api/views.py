@@ -32,7 +32,7 @@ CONN.connect()
 
 
 def print_cache(request):
-    print "dumping cache:"
+    print "dumping cache {}:".format(str(CACHE))
 
     if request is None:
         print "  request is None.  What the heck??"
