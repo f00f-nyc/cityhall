@@ -13,13 +13,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from .views import CONN, print_cache
-from api.cache import instance
+from .views import CONN
+from django.core.cache import cache
 from .authenticate import is_valid, get_auth_from_request
 import shortuuid
-
-
-CACHE = instance()
 
 
 class Authenticate(Endpoint):
@@ -47,7 +44,7 @@ class Authenticate(Endpoint):
                 }
 
             key = str(shortuuid.uuid())
-            CACHE[key] = auth
+            cache.set(key, auth)
 
             print "** attempting to authenticate: " + user + " --> token: " + key
             return {'Response': 'Ok', 'Token': key}
@@ -61,7 +58,6 @@ class Authenticate(Endpoint):
 
 class Environments(Endpoint):
     def authenticate(self, request):
-        print_cache(request)
         return is_valid(request)
 
     def get(self, request, *args, **kwargs):
@@ -80,7 +76,7 @@ class Environments(Endpoint):
     def post(self, request, *args, **kwargs):
         name = kwargs.get('env', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = cache.get(cache_key)
 
         if name is None:
             return {
@@ -109,14 +105,12 @@ class Environments(Endpoint):
 
 class Users(Endpoint):
     def authenticate(self, request):
-        print_cache(request)
-
         return is_valid(request)
 
     def get(self, request, *args, **kwargs):
         user = kwargs.get('user')
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = cache.get(cache_key)
 
         if (user is None):
             return {
@@ -139,7 +133,7 @@ class Users(Endpoint):
         user = kwargs.get('user', None)
         passhash = request.data.get('passhash', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = cache.get(cache_key)
 
         if (user is None) or (passhash is None):
             return {
@@ -157,7 +151,7 @@ class Users(Endpoint):
         user = kwargs.get('user', None)
         passhash = request.data.get('passhash', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = cache.get(cache_key)
 
         if auth.name != user:
             return {
@@ -178,7 +172,7 @@ class Users(Endpoint):
             }
 
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = cache.get(cache_key)
 
         try:
             if auth.delete_user(user):
@@ -196,7 +190,6 @@ class Users(Endpoint):
 
 class GrantRights(Endpoint):
     def authenticate(self, request):
-        print_cache(request)
         return is_valid(request)
 
     def post(self, request):
@@ -204,7 +197,7 @@ class GrantRights(Endpoint):
         user = request.data.get('user', None)
         rights = request.data.get('rights', None)
         cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = cache.get(cache_key)
 
         if (user is None) or (env is None) or (rights is None):
             return {

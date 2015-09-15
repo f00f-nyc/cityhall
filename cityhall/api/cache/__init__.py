@@ -28,7 +28,7 @@ _cache = None
 _instantiated = False
 
 
-def instance():
+def prev_iteration():
     print "### getting cache instance"
     global _instantiated
 

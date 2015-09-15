@@ -13,22 +13,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import HttpResponse
-from api.cache import instance
 from .views import CONN, auth_token_in_cache
 from lib.db.db import Rights
-
-
-CACHE = instance()
+from django.core.cache import cache
 
 
 def ensure_guest_exists():
-    if 'guest' in CACHE:
+    have_guest = cache['guest']
+
+    if have_guest:
         return True
 
     guest_auth = CONN.get_auth('guest', '')
 
     if guest_auth:
-        CACHE['guest'] = guest_auth
+        cache.set('guest', guest_auth)
         return True
 
     return False
@@ -38,9 +37,9 @@ def authenticate_for_get(request):
     cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
 
     if cache_key is None:
-        auth = CACHE['guest'] if ensure_guest_exists() else None
+        auth = cache.get('guest') if ensure_guest_exists() else None
     else:
-        auth = CACHE.get(cache_key, None)
+        auth = cache.get(cache_key, None)
 
     if auth is None:
         if cache_key is None:
@@ -53,9 +52,9 @@ def authenticate_for_get(request):
 
 def get_auth_from_request(request, env):
     cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-    auth = CACHE['guest'] \
+    auth = cache.get('guest') \
         if (cache_key is None) and ensure_guest_exists() \
-        else CACHE[cache_key]
+        else cache.get(cache_key)
 
     if auth.get_permissions(env) < Rights.Read:
         return [

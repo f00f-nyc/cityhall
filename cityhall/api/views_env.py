@@ -15,7 +15,6 @@
 from restless.views import Endpoint
 from .authenticate import is_valid, get_auth_from_request
 from lib.db.db import Rights
-from .views import print_cache
 
 
 class EnvView(Endpoint):
@@ -52,7 +51,6 @@ class EnvView(Endpoint):
                 self.valid = True
 
     def authenticate(self, request):
-        print_cache(request)
         return is_valid(request)
 
     def delete(self, request, *args, **kwargs):

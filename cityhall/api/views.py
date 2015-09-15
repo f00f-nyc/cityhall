@@ -17,39 +17,18 @@ from django.conf import settings
 
 from lib.db.connection import Connection
 from lib.db.db import Rights
-from api.cache import instance
+from django.core.cache import cache
 
 
 DB = settings.CITY_HALL_DATABASE
 CONN = Connection(DB)
 CONN.connect()
-CACHE = instance()
-
-
-def print_cache(request):
-    print "dumping cache {}:".format(str(CACHE))
-
-    if request is None:
-        print "  request is None.  What the heck??"
-        return
-
-    method = request.method
-    url = request.path
-    print "    {} to url: {}".format(method, url)
-
-    token = request.META.get('HTTP_AUTH_TOKEN', 'request has no auth token')
-
-    for k in CACHE._LRUCacheDict__values:
-        print "    " + k + ".  name: " + CACHE[k].name
-
-    message = "in cache" if token in CACHE else "not in cache"
-    print "    token " + str(token) + " is " + message
 
 
 def auth_token_in_cache(request):
     cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
 
-    if cache_key in CACHE:
+    if cache_key in cache:
         return None
 
     if cache_key is None:
@@ -72,4 +51,4 @@ class Create(Endpoint):
         auth = CONN.get_auth('cityhall', '')
         auth.create_user('guest', '')
         auth.grant('auto', 'guest', Rights.Read)
-        CACHE['guest'] = CONN.get_auth('guest', '')
+        cache.set('guest', CONN.get_auth('guest', ''))

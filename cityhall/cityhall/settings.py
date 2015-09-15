@@ -143,6 +143,13 @@ ENV_CACHE = {
     'MULTI_THREAD_POLL_SEC': 60
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'cityhall-cache',
+    }
+}
+
 
 # in memory db
 # from lib.db.memory.cityhall_db_factory import CityHallDbFactory
