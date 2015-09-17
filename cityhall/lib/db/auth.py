@@ -12,6 +12,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from django.conf import settings
+from api.cache import CacheDict
 from .env import Env
 from .db import Rights
 
@@ -20,7 +22,9 @@ class Auth(object):
     def __init__(self, db, name, user_root):
         self.db = db
         self.name = name
-        self.roots_cache = {}
+        self.roots_cache = CacheDict(
+            capacity=settings.CACHE_OPTIONS['ENV_CAPACITY']
+        )
         self.user_root = user_root
         self.users_env = None
 

@@ -140,6 +140,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
         $scope.Logout = function() {
             $scope.loggedIn = false;
+            settings.loggedIn = false;
             $scope.dataForTheTree = [{
                 name: 'Not connected',
                 real_name: '/',

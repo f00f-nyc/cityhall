@@ -13,7 +13,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf import settings
-
 from api.cache import CacheDict
 from .db import Rights
 
@@ -38,11 +37,7 @@ class Env(object):
     def __init__(self, db, env, permissions, name, root_id):
         self.db = db
         self.cache = CacheDict(
-            max_size=settings.ENV_CACHE['SIZE'],
-            expiration=settings.ENV_CACHE['EXPIRATION_SEC'],
-            thread_clear=settings.ENV_CACHE['MULTI_THREAD'],
-            thread_clear_min_check=settings.ENV_CACHE['MULTI_THREAD_POLL_SEC'],
-            concurrent=settings.ENV_CACHE['MULTI_THREAD'],
+            capacity=settings.CACHE_OPTIONS['PATH_CAPACITY'],
         )
         self.env = env
         self.root_id = root_id
@@ -77,7 +72,7 @@ class Env(object):
          the form of /fully/sanatized/path/:override
         :return: the int() index_id or None
         """
-        return self.cache[cache_key] if cache_key in self.cache else None
+        return self.cache.get(cache_key, None)
 
     def _get_index_of(self, path, override=None,
                       parent_id=None, parent_path=None):

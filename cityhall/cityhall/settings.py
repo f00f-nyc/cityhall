@@ -136,18 +136,18 @@ STATICFILES_DIRS = [
 ]
 
 
-ENV_CACHE = {
-    'SIZE': 1000,
-    'EXPIRATION_SEC': 30*60,
-    'MULTI_THREAD': True,
-    'MULTI_THREAD_POLL_SEC': 60
-}
+CACHE_OPTIONS = {
+    # As a user looks at an environment, the index of paths is stored
+    # in the user session.  This value stores how many paths to store
+    # in session memory for a particular environment.
+    'PATH_CAPACITY': 50,
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'cityhall-cache',
-    }
+    # As a user looks at an environment, information about that
+    # environment is stored in the user session.  Things like the index
+    # of the root, the permissions to it, as well as PATH_CAPACITY
+    # number of indexes.  This value stores how the max number of
+    # environments to store in a session.
+    'ENV_CAPACITY': 10,
 }
 
 

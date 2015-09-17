@@ -12,11 +12,37 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from lru import LRUCacheDict
+import collections
 
-class CacheDict(LRUCacheDict):
+
+class CacheDict:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.values = collections.OrderedDict()
+
     def __contains__(self, item):
-        return self.has_key(item)  # noqa
+        return item in self.values
 
     def get(self, key, default):
-        return self[key] if self.has_key(key) else default  # noqa
+        try:
+            value = self.values.pop(key)
+            self.values[key] = value
+            return value
+        except KeyError:
+            if default:
+                return default
+            return None
+
+    def set(self, key, value):
+        try:
+            self.values.pop(key)
+        except KeyError:
+            if len(self.values) >= self.capacity:
+                self.values.popitem(last=False)
+        self.values[key] = value
+
+    def __setitem__(self, key, value):
+        return self.set(key, value)
+
+    def __getitem__(self, item):
+        return self.get(item, None)

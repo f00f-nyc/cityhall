@@ -12,11 +12,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import simplejson as json
 from restless.views import HttpResponse
-from .views import CONN
+
+from api.views import CONN
+from .serialize import serialize_auth, deserialize_auth
 from lib.db.db import Rights
-from lib.db.auth import Auth
 
 
 SESSION_AUTH = 'cityhall-auth'
@@ -24,28 +24,6 @@ NOT_AUTHENTICATED = HttpResponse(
     'Session is not authenticated, '
     'and could not obtain get a guest credentials'
 )
-
-
-def serialize_auth(auth):
-    auth_dict = {
-        'name': auth.name,
-        'roots_cache': {},
-        'user_root': auth.user_root,
-        'users_env': auth.users_env,
-    }
-    return json.dumps(auth_dict)
-
-
-def deserialize_auth(auth_json):
-    auth_dict = json.loads(auth_json)
-    ret = Auth(
-        db=CONN.db_connection.get_db(),
-        name=auth_dict['name'],
-        user_root=auth_dict['user_root']
-    )
-    ret.roots_cache = auth_dict['roots_cache']
-    ret.users_env = auth_dict['users_env']
-    return ret
 
 
 def get_auth_or_create_guest(request):
@@ -92,3 +70,7 @@ def is_valid(request):
     elif request.method == 'GET':
         return authenticate_for_get(request)
     raise HttpResponse("Unsupported method type")
+
+
+def end_request(request, auth):
+    request.session[SESSION_AUTH] = serialize_auth(auth)

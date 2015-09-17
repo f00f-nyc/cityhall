@@ -13,11 +13,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
+from api.session.serialize import serialize_auth
 from .views import CONN
-from django.core.cache import cache
-from .authenticate import (
+from session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
-    serialize_auth, SESSION_AUTH, NOT_AUTHENTICATED
+    end_request, NOT_AUTHENTICATED
 )
 
 
@@ -45,7 +45,7 @@ class Authenticate(Endpoint):
                     'Message': 'Invalid username/password'
                 }
 
-            request.session[SESSION_AUTH] = serialize_auth(auth)
+            end_request(request, auth)
             return {'Response': 'Ok'}
 
         return {
@@ -91,6 +91,8 @@ class Environments(Endpoint):
                 'Response': 'Failure',
                 'Message': 'Environment "'+name+'" already exists',
             }
+
+        end_request(request, auth)
         return {
             'Response': 'Ok',
             'Message': 'Environment "'+name+'" created successfully',
@@ -126,6 +128,7 @@ class Users(Endpoint):
 
     def post(self, request, *args, **kwargs):
         user = kwargs.get('user', None)
+        passhash = request.data.get('passhash', None)
         if (user is None) or (passhash is None):
             return {
                 'Response': 'Failure',
@@ -138,6 +141,7 @@ class Users(Endpoint):
 
         try:
             auth.create_user(user, passhash)
+            end_request(request, auth)
             return {'Response': 'Ok'}
         except Exception as ex:
             return {'Response': 'Failure', 'Message': ex.message}
@@ -157,6 +161,7 @@ class Users(Endpoint):
             }
 
         auth.update_user(user, passhash)
+        end_request(request, auth)
         return {'Response': 'Ok'}
 
     def delete(self, request, *args, **kwargs):
@@ -174,6 +179,7 @@ class Users(Endpoint):
 
         try:
             if auth.delete_user(user):
+                end_request(request, auth)
                 return {'Response': 'Ok'}
             else:
                 return {
@@ -213,4 +219,5 @@ class GrantRights(Endpoint):
             }
 
         ret = auth.grant(env, user, rights)
+        end_request(request, auth)
         return {'Response': ret[0], 'Message': ret[1]}
