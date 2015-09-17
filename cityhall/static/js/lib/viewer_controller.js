@@ -66,7 +66,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.selected_can_create = true;
 
         $scope.status = 'Ready.';
-        $scope.token = '';
+        $scope.loggedIn = false;
 
         $scope.move_key_env = '';
         $scope.move_key_sub = false;
@@ -87,7 +87,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
         $scope.Login = function() {
             var error = function(data) {
-                $scope.token = undefined;
+                $scope.loggedIn = false;
                 $scope.status = 'Failed to login for: ' + $scope.user;
                 console.log(data);
                 if (data.Message != undefined) {
@@ -100,7 +100,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             settings.url = cityhall_url;
             settings.login($scope.user, $scope.pass,
                 function(data) {
-                    $scope.token = data['Token'];
+                    $scope.loggedIn = true;
                     $scope.status = data['Response'];
                     $scope.pass = '';
                     $scope.dataForTheTree[0].valid = true;
@@ -139,7 +139,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.Logout = function() {
-            $scope.token = '';
+            $scope.loggedIn = false;
             $scope.dataForTheTree = [{
                 name: 'Not connected',
                 real_name: '/',
@@ -156,7 +156,6 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             }];
             $scope.selected_node = $scope.dataForTheTree[0];
             $scope.selected_history = [];
-            settings.token = undefined;
             settings.environment = undefined;
             $scope.status = "Logged out";
         };
@@ -174,7 +173,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.Selected = function(node, expanded) {
-            if (node.valid && $scope.token && !node.complete) {
+            if (node.valid && $scope.loggedIn && !node.complete) {
                 node.complete = true;
 
                 settings
@@ -238,7 +237,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             var value = ($scope.selected_value != node.value) ? $scope.selected_value : undefined;
             var protect = ($scope.selected_protected != node.protect) ? $scope.selected_protected : undefined;
 
-            if ($scope.token && (value || protect)) {
+            if ($scope.loggedIn && (value || protect)) {
                 settings.saveValue(node.env, node.real_path, node.override, value, protect,
                     function() {
                         node.value = $scope.selected_value;
@@ -267,7 +266,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 return;
             }
 
-            if (!$scope.token || !$scope.selected_can_create) {
+            if (!$scope.loggedIn || !$scope.selected_can_create) {
                 return;
             }
 

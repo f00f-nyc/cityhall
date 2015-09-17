@@ -37,12 +37,12 @@
         <div class="row">
             <div class="col-sm-7"></div>
             <div class="col-sm-5">
-                <div ng-show="(token == undefined) || (token.length == 0)">
+                <div ng-show="!loggedIn">
                     <form ng-submit="Login()">
                         <input type="text" ng-model="user" size="12" />&nbsp;<input type="password" ng-model="pass" size="12">&nbsp;<input type="submit" value="Login">
                     </form>
                 </div>
-                <div ng-show="token.length > 1">
+                <div ng-show="loggedIn">
                     <form ng-submit="Logout()">
                         <input type="submit" value="Logout">
                     </form>

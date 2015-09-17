@@ -2,15 +2,7 @@ angular.module('cityhall', ['angular-md5'])
 .factory('settings', ['$http', 'md5',
     function(http, md5) {
         return {
-            /**
-             * This is the authorization token for this session.
-             * If it has some value, the user is logged in, and all of the calls
-             * to City Hall will use it.  If it isn't all functions except login
-             * will fail.
-             *
-             * The user should not, in regular usage, interact with this value.
-             */
-            token: undefined,
+            loggedIn: false,
 
             /**
              * This is the default environment for this session.
@@ -61,7 +53,7 @@ angular.module('cityhall', ['angular-md5'])
              * @returns {boolean} - true if logged in, false otherwise
              */
             ensureLoggedIn: function(failure) {
-                if (this.token == undefined) {
+                if (!this.loggedIn) {
                     if ((failure != undefined) && (failure instanceof Function)) {
                         failure({Response: 'Failure', Message: 'Not logged in, yet.'});
                     } else {
@@ -82,10 +74,7 @@ angular.module('cityhall', ['angular-md5'])
             getReq: function(method, url) {
                 return {
                     method: method,
-                    url: url,
-                    headers: {
-                        'Auth-Token': this.token
-                    }
+                    url: url
                 };
             },
 
@@ -130,7 +119,7 @@ angular.module('cityhall', ['angular-md5'])
             login: function(user, password, success, failure) {
                 var self = this;
 
-                if (this.token == undefined) {
+                if (!this.loggedIn) {
                     var hash = this.getHashFromCleartext(password);
                     var auth_data = {'username': user, 'passhash': hash};
                     var auth_url = this.url + 'auth/';
@@ -138,10 +127,9 @@ angular.module('cityhall', ['angular-md5'])
                     http.post(auth_url, auth_data)
                         .success(function (data) {
                             if (data['Response'] == 'Ok') {
-                                self.token = data['Token'];
+                                self.loggedIn = true;
                                 self.safeCall(success, data);
-
-                                console.log('logged in for: ' + user + ', token: ' + self.token);
+                                console.log('logged in for: ' + user);
 
                                 //by convention, /connect/{username} will store
                                 //the default environment from which to get values
