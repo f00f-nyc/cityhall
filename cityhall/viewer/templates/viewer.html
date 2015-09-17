@@ -190,6 +190,22 @@
                     <input type="text" ng-model="delete_user">&nbsp;<input type="submit" value="Delete">
                 </form></p>
             </div>
+            <br><br>
+            <div class="value_input" ng-style="UnsavedDefaultEnv()">
+                <h4>Default Environment</h4>
+                <p><form ng-submit="SetDefaultEnv()">
+                    <input type="text" ng-model="default_env">&nbsp;<input type="submit" value="Update">
+                </form></p>
+            </div>
+
+
+
+
+
+
+
+
+
         </div>
 
 
@@ -213,6 +229,8 @@
         </div>
     </div>
 
+    <br><br><br><br><br>
+    <br><br><br><br><br>
     <footer class="footer"></footer>
     </div>
     {% endverbatim %}

@@ -100,16 +100,15 @@ class Environments(Endpoint):
 
 
 class Users(Endpoint):
+    NO_USER = {'Response': 'Failure', 'Message': 'Expected a user to retrieve'}
+
     def authenticate(self, request):
         return is_valid(request)
 
     def get(self, request, *args, **kwargs):
-        user = kwargs.get('user')
+        user = kwargs.get('user', None)
         if not user:
-            return {
-                'Response': 'Failure',
-                'Message': 'Expected a user to retrieve'
-            }
+            return Users.NO_USER
 
         auth = get_auth_or_create_guest(request)
         if not auth:
@@ -190,6 +189,35 @@ class Users(Endpoint):
                 }
         except Exception as ex:
             return {'Response': 'Failure', 'Message': ex.message}
+
+
+class UserDefaultEnv(Endpoint):
+    def authenticate(self, request):
+        return is_valid(request)
+
+    def get(self, request, *args, **kwargs):
+        user = kwargs.get('user', None)
+        if not user:
+            return Users.NO_USER
+        auth = get_auth_or_create_guest(request)
+        return {
+            'Response': 'Ok',
+            'value': auth.get_default_env()
+        }
+
+    def post(self, request, *args, **kwargs):
+        user = kwargs.get('user')
+        if not user:
+            return Users.NO_USER
+        auth = get_auth_or_create_guest(request)
+        default_env = request.data.get('env', None)
+        if not default_env:
+            return {
+                'Response': 'Failure',
+                'Message': 'Expected an "env" value to set.'
+            }
+        auth.set_default_env(default_env)
+        return {'Response': 'Ok', 'Message': 'Default set to: ' + default_env}
 
 
 class GrantRights(Endpoint):

@@ -153,3 +153,14 @@ class Auth(object):
         return {
             val['name']: val['value'] for val in children
         }
+
+    def set_default_env(self, env):
+        root_id = self.db.get_env_root('auto')
+        auto = Env(self.db, 'auto', Rights.Write, self.name, root_id)
+        auto.set('/connect/' + self.name, env, override='')
+
+    def get_default_env(self):
+        root_id = self.db.get_env_root('auto')
+        auto = Env(self.db, 'auto', Rights.Write, self.name, root_id)
+        val = auto.get_explicit('/connect/' + self.name, override='')
+        return val[0] if val else None

@@ -5,6 +5,11 @@ angular.module('cityhall', ['angular-md5'])
             loggedIn: false,
 
             /**
+             * This is the current logged in user, if you are logged in.
+             */
+            user_name: '',
+
+            /**
              * This is the default environment for this session.
              * The calls to getVal() and getValOverride() will use this value.
              * The user should not, in regular usage, interact with this value.
@@ -128,21 +133,17 @@ angular.module('cityhall', ['angular-md5'])
                         .success(function (data) {
                             if (data['Response'] == 'Ok') {
                                 self.loggedIn = true;
-                                self.safeCall(success, data);
+                                self.user_name = user;
                                 console.log('logged in for: ' + user);
 
-                                //by convention, /connect/{username} will store
-                                //the default environment from which to get values
-                                self.get(
-                                        '/connect/'+user, 'auto', undefined,
-                                        function(data) {
-                                            self.environment = data['value'];
-                                        },
-                                        function (data) {
-                                            //try to signal the user that getting this value has failed
-                                            self.environment = 'unable_to_set_from_auto';
-                                            throw 'Failed to get auto environment for: ' + user + ': ' + data['Message'];
-                                        });
+                                self.getDefaultEnv(
+                                    function(data) {
+                                        self.environment = data['value'];
+                                        console.log('default environment: ' + self.environment);
+                                        self.safeCall(success, data);
+                                    },
+                                    failure
+                                );
                             } else {
                                 self.safeCall(failure, data['Message']);
                             }
@@ -152,6 +153,50 @@ angular.module('cityhall', ['angular-md5'])
                 } else {
                     this.safeCall(failure, 'Already Logged in');
                 }
+            },
+
+            /**
+             * Returns the default environment for the current user.
+             *
+             * @param success - optional function to execute on success.
+             * @param failure - optional function to execute on failure.
+             */
+            getDefaultEnv: function(success, failure) {
+                if (!this.ensureLoggedIn(failure)) { return; }
+
+                var url = this.url + 'auth/user/' + this.user_name + '/default/';
+                var req = this.getReq('GET', url);
+                var self = this;
+                this.wrapHttpCall(req,
+                    function (data) {
+                        self.environment = data['value'];
+                        success(data);
+                    },
+                    failure);
+            },
+
+            /**
+             * This is a call to set the default environment.  If the user has
+             * permissions, he can also update the /connect/[[user_name]] value
+             * since that is what is read.
+             *
+             * @param default_env - the environment to set as default
+             * @param success - optional function to execute on success.
+             * @param failure - optional function to execute on failure.
+             */
+            setDefaultEnv: function(default_env, success, failure) {
+                if (!this.ensureLoggedIn(failure)) { return; }
+
+                var url = this.url + 'auth/user/' + this.user_name + '/default/';
+                var req = this.getReq('POST', url);
+                req['data'] = {env: default_env};
+                var self = this;
+                this.wrapHttpCall(req,
+                    function (data) {
+                        self.environment = default_env;
+                        success(data);
+                    },
+                    failure);
             },
 
             /**

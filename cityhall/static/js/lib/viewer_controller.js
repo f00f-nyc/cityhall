@@ -85,6 +85,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
         $scope.env_search = '';
 
+        $scope.default_env = '';
+        $scope.prev_default_env = '';
+
         $scope.Login = function() {
             var error = function(data) {
                 $scope.loggedIn = false;
@@ -102,6 +105,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 function(data) {
                     $scope.loggedIn = true;
                     $scope.status = data['Response'];
+                    $scope.prev_default_env =  $scope.default_env = settings.environment;
                     $scope.pass = '';
                     $scope.dataForTheTree[0].valid = true;
 
@@ -141,6 +145,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.Logout = function() {
             $scope.loggedIn = false;
             settings.loggedIn = false;
+            settings.user_name = '';
             $scope.dataForTheTree = [{
                 name: 'Not connected',
                 real_name: '/',
@@ -554,6 +559,25 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.hiddenDataForTheTree.push(node);
                 }
             }
+        };
+
+        $scope.UnsavedDefaultEnv = function() {
+            if ($scope.default_env != $scope.prev_default_env) {
+                return {background: 'lightpink'};
+            }
+
+            return {};
+        };
+
+        $scope.SetDefaultEnv = function() {
+            settings.setDefaultEnv($scope.default_env,
+                function () {
+                    $scope.prev_default_env = $scope.default_env;
+                    $scope.UnloadEnv('auto');
+                },
+                function(data) {
+                    alert('Failed to set default environment: ' + data.Message);
+                });
         };
     }
 ]);
