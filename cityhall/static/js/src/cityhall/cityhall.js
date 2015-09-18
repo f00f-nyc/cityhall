@@ -424,6 +424,15 @@ angular.module('cityhall', ['angular-md5'])
                 var users_url = this.url + 'auth/env/' + env + '/';
                 var req = this.getReq('GET', users_url);
                 this.wrapHttpCall(req, success, failure);
+            },
+
+            updatePassword: function(password, success, failure) {
+                if (!this.ensureLoggedIn(failure)) { return; }
+
+                var delete_url = this.url + 'auth/user/' + this.user_name + '/';
+                var req = this.getReq('PUT', delete_url);
+                req.data = {'passhash': this.getHashFromCleartext(password)};
+                this.wrapHttpCall(req, success, failure);
             }
         };
     }

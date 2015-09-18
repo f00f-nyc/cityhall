@@ -21,7 +21,7 @@ var INCOMPLETE_MARKER = "...";
 
 app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
     function($scope, md5, settings) {
-        $scope.user = 'cityhall';
+        $scope.user = '';
         $scope.pass = '';
         $scope.env = 'dev';
         $scope.selected_value = '';
@@ -87,6 +87,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
         $scope.default_env = '';
         $scope.prev_default_env = '';
+
+        $scope.update_pass1 = '';
+        $scope.update_pass2 ='';
 
         $scope.Login = function() {
             var error = function(data) {
@@ -578,6 +581,22 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 function(data) {
                     alert('Failed to set default environment: ' + data.Message);
                 });
+        };
+
+        $scope.UpdatePassword = function () {
+            if ($scope.update_pass1 != $scope.update_pass2) {
+                alert("Two passwords do not match");
+                return;
+            }
+
+            settings.updatePassword($scope.update_pass2,
+                function (data) {
+                    alert("Password updated successfully");
+                },
+                function (data) {
+                    alert("Failed to update password: " + data.Message);
+                }
+            );
         };
     }
 ]);
