@@ -79,7 +79,7 @@ class Auth(object):
         already_deleted = True
 
         for right in delete_rights:
-            if right['value'] > Rights.DontExist:
+            if int(right['value']) > Rights.DontExist:
                 already_deleted = False
 
         if not already_deleted:
@@ -105,7 +105,7 @@ class Auth(object):
 
         rights = self.db.get_child(self.user_root, env)
         if rights:
-            return rights['value']
+            return int(rights['value'])
         return Rights.DontExist
 
     def grant(self, env, user, rights):
@@ -123,7 +123,7 @@ class Auth(object):
                     "Rights for '{}' created".format(user),
                 )
 
-            if existing['value'] == rights:
+            if int(existing['value']) == int(rights):
                 return (
                     'Ok',
                     "Rights for '{}' already at set level".format(user),
