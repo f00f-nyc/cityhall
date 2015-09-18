@@ -1,9 +1,16 @@
 from lib.db.db import DbFactory
 from api.cityhall.db import Db
-from api.models import User
+from api.models import User, Value
 
 
 class Factory(DbFactory):
+    def __str__(self):
+        return "cityhall.Factory (users: {}, active values: {}"\
+            .format(
+                User.objects.count(),
+                Value.objects.filter(active=True).count(),
+            )
+
     def open(self):
         pass
 

@@ -151,11 +151,6 @@ CACHE_OPTIONS = {
 }
 
 
-# in memory db
-# from lib.db.memory.cityhall_db_factory import CityHallDbFactory
-# CITY_HALL_DATABASE = CityHallDbFactory()
-
-# django db
 from api.cityhall.factory import Factory
 CITY_HALL_DATABASE = Factory()
 

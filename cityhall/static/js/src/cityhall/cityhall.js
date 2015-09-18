@@ -436,8 +436,8 @@ angular.module('cityhall', ['angular-md5'])
             updatePassword: function(password, success, failure) {
                 if (!this.ensureLoggedIn(failure)) { return; }
 
-                var delete_url = this.url + 'auth/user/' + this.user_name + '/';
-                var req = this.getReq('PUT', delete_url);
+                var update_url = this.url + 'auth/user/' + this.user_name + '/';
+                var req = this.getReq('PUT', update_url);
                 req.data = {'passhash': this.getHashFromCleartext(password)};
                 this.wrapHttpCall(req, success, failure);
             }

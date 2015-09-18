@@ -1,0 +1,380 @@
+This is the initial Python implementation of City Hall.
+
+ABOUT
+
+This project is written in Python 2.7, and uses Django 1.8
+
+The intention is for this to be an Enterprise Settings Server, to allow users
+to use this instead of keeping such settings in files or purpose-made tables.
+City Hall is meant to be entirely behind the firewall and speaks REST to its
+clients.
+
+
+
+INSTALL
+
+1. Create and install all of the requirements
+
+virtualenv env
+source env/bin/activate
+pip install -r requirements.txt
+
+2. Configure
+
+City Hall will needs to have configured a class which implements the abstract
+class Db in lib.db.db.  The current options are:
+   api.cityhall.factory.Factory - 
+   		The actual api implementation for City Hall. It relies upon models
+   		defined in api.cityhall.models.
+  lib.db.memory.cityhall_db_factory.CityHallDbFactory
+  		An in-memory, per process instance database.  This is here to help 
+  		explain in real terms the expected contract for a DB interface.
+  		It will be moved to the test folder in the near future.
+
+
+
+GETTING STARTED
+
+1. Create the virtual environment and install the requirements.txt
+2. Run the migrations:
+    python manage.py migrate
+3. Run the server:
+	python manage.py runserver 5000
+3. Check to see that it is alive by going to:
+		curl http://localhost:5000/api/info/
+   this will return: 
+  		{"Status": "Alive", "Database": "cityhall.Factory (users: 1, active values: 6"}
+3a. You may wish to step through code to see what effect different calls
+    have.  In that case, you'll have to set CITY_HALL_DATABASE in cityhall/settings.py,
+    and then run:
+		curl http://localhost:5000/api/create_default/
+    Which is a no-op if the default tables.
+
+
+
+API
+
+The API calls in this guide will be written like this:
+	POST	http://localhost:5000/api/auth/
+	{"name": "dev"}
+The first line is the verb and URL, the second line is the sample JSON
+to follow along with the guide. The idea is to translate these to a
+call from the program that will be using City Hall or, for the purposes
+of this guide, a curl call from the command line:
+	curl -X POST -H "Content-Type: application/json" -c cookie -d '{"username": "cityhall", "passhash": ""}' http://localhost:5000/api/auth/
+
+An important thing to note here is that logging in is session based,
+so in order to follow along with this guide, you will need to feed that
+back into the calls.  In the case above, for example, another call you
+could do is:
+    curl -X GET -H "Content-Type: application/json" --cookie cookie http://localhost:5000/api/env/auto/
+which will return:
+    {"protect": false, "Response": "Ok", "value": ""}
+Note that attempting to call it without the cookie, will return:
+    {"Message": "Do not have read permissions to auto", "Response": "Failure"}
+    
+	
+	
+API - AUTHORIZATION
+
+Everything hanging off of http://localhost:5000/api/auth/
+is related to users and user rights.  There is a simple scheme for 
+rights:
+	0) None - The user has neither read nor write
+	1) Read - The user can read un-protected values
+	2) Read Protect - The user can read un-protected values and history
+	3) Write - The user can write values
+	4) Grant - The user can grant rights to this environment
+	
+There is another consideration here: Since user permissions are stored
+in cityhall itself (in the 'users' environment'), having write
+permissions to that environment is the same thing as being an 
+administrator of the system.  
+
+You will also need to hit here first, in order to start the session.
+This is preferable to passing credentials on every transaction, since it
+avoids unnecessary trips to the database.  It also has the drawback of
+only reflecting data as it was when the session was started, so new 
+permissions are not reflected until the user logs in again.
+
+
+Authenticate:
+	POST	http://localhost:5000/api/auth/
+	{"username": "cityhall", "passhash": ""}
+Returns: {"Response": "Ok"}
+You may change the user by hitting that URL multiple times.
+	 
+Create environment:
+	POST	http://localhost:5000/api/auth/env/dev/
+Returns: {"Response": "Ok"}
+This creates an environment named "dev" (if one doesn't already exist), 
+and gives the current user Grant permissions on that environment
+
+Note here that an environment can be created without having write
+permissions to the 'users' environment, even though the end result is
+a value written into that environment.
+
+
+View environment:
+	GET		http://localhost:5000/api/auth/env/dev/
+Returns: {"Response": "Ok", "Users": {"cityhall": 5, "alex": 1}}
+This returns authentication info about "dev".  For example, the users who
+are authorized for it, and their permissions.  Note that in order to use
+this, you must have read permissions for "dev".
+
+Also note that, as of this writing, this is the most expensive call 
+in City Hall, and it requires joining the two tables.
+
+Create user:
+	POST	http://localhost:5000/api/auth/user/alex/
+	{"passhash": ""}
+Returns: {"Response": "Ok"}
+This creates a user named "alex" with no permissions on any environment.  
+Again, this call will affect the users environment.  The folder named 
+for that user will be created in 'users' environment, and subsequent
+permissions will be added as children of that folder.  You do not need to
+have write permission to "users" in order to successfully run this.
+
+Grant permissions:
+	POST	http://localhost:5000/api/auth/grant/
+	{"env": "dev", "user": "alex", "rights": 1}
+Returns: {"Response": "Ok"}
+This will grant user "alex" read permissions for environment "dev".
+
+
+
+DEFAULT ENVIRONMENT
+
+This part won't necessarily make sense in the context of this guide, but
+libraries for City Hall, rely on the concept of the default environment.
+That's so that a user will only specify the path, and let the City Hall
+library choose which environment to query for that path.
+
+The benefit of this is that a piece of code can move from development to
+QA to UAT to production without ever changing the code that access settings
+and allow each of those environments to have permissions that are specific
+to themselves.
+
+Set a default environment:
+	POST	http://localhost:5000/api/auth/user/alex/default/
+	{"env": "dev"}
+Returns:  {"Response": "Ok", "Message": "Default set to: dev"}
+
+Note here that this will write to the "auto" environment, without needing
+to check if the user has any permissions to it.
+
+Get the default environment:
+	GET	http://localhost:5000/api/auth/user/alex/default/
+	{"env": "dev"}
+Returns:  {"Response": "Ok", "value": "dev"}
+
+
+
+API - ENVIRONMENT
+
+Everything hanging off of http://localhost:5000/api/env/
+is related to getting and storing values or history for a particular
+environment.  The next part of the URL should be the environment and
+that is followed by the path to the value.
+
+Create a value:
+	POST	http://localhost:5000/api/env/dev/some_app/
+	{"value": ""}
+Returns: {"Response": "Ok"}
+
+Create a child value:
+	POST	http://localhost:5000/api/env/dev/some_app/value1/
+	{"value": "abc"}
+Returns: {"Response": "Ok"}
+
+Create an override child value:
+	POST	http://localhost:5000/api/env/dev/some_app/value1/?override=cityhall
+	{"value": "def"}
+Returns: {"Response": "Ok"}
+
+Get a value:
+	GET		http://localhost:5000/api/env/dev/some_app/value1/
+Returns: {"Response": "Ok", "value": "def"}
+
+Get the global value, specifically:
+	GET		http://localhost:5000/api/env/dev/some_app/value1/?override=
+Returns: {"Response": "Ok", "value": "abc"}
+
+Get an override value, specifically:
+	GET		http://localhost:5000/api/env/dev/some_app/value1/?override=cityhall
+Returns: {"Response": "Ok", "value": "def"}
+
+Delete a value:
+	DEL		http://localhost:5000/api/env/dev/some_app/value1/
+Returns: {"Response": "Ok"}
+
+NOTE: While this works, this is a dangerous way of working. Values 
+should be deleted explicitly, by specifying the override request 
+parameter.
+
+Delete the global override. NOTE: this also deletes all overrides for
+that value.
+	DEL		http://localhost:5000/api/env/dev/some_app/value1/?override=
+Returns: {"Response": "Ok"}
+
+Delete a specific override:
+	DEL		http://localhost:5000/api/env/dev/some_app/value1/?override=cityhall
+Returns: {"Response": "Ok"}
+
+Protect a specific override:
+	POST	http://localhost:5000/api/env/dev/some_app/value1/
+	{"protect": "true"}
+Returns: {"Response": "Ok"}
+
+NOTE: This is the exact same API to set a value, which means that you
+can do both at the same time.  You can pass:
+	{"value": "def", "protect": "true"}
+and this will cause two operations, it will protect the value, then it
+will set the value. 
+	
+
+
+API - AUTHORIZATION (part 2)
+
+There are a few more things that you can do, which are related to user
+management which are covered here:
+
+
+Delete a User:
+
+
+This will delete user "alex". Note that in order to delete a user, you must 
+have Grant permissions to all environments that user has permissions to, or 
+you have to have write permission to the "users" environment, which is 
+essentially the same thing.
+
+View User info:
+	GET		http://localhost:5000/api/auth/user/alex/	
+Returns:  {"Response": "Ok", "Environments": {"dev": 3, "auto": 1}}
+This returns all the permissions for environments that user "alex" has.
+
+Update Your Password:
+	GET		http://localhost:5000/api/auth/user/alex/
+	{"passhash": ""}
+Returns:  {"Response": "Ok"}
+This will update the passhash for the user "alex", if that who is currently
+authenticated.  You cannot update another user's password.
+
+
+	
+API - GUEST USER
+
+You can use GET to retrieve values without an authenticated session, but an
+account named 'guest' (with no password) must be created and be granted
+permissions to that environment.
+
+The guest account was already created in the GETTING STARTED section
+so we first have to give it access to the dev environment
+	POST	http://localhost:5000/api/auth/grant/
+	{"env": "dev", "user": "guest", "rights": 1}
+
+Then, the following call will work regardless of session:
+	GET		http://localhost:5000/api/env/dev/some_app/value1/
+The call above will return: {"Response": "Ok", "value": "abc"}
+
+Note here that the response at the same URL has returned two different
+values.  When we used the cityhall authorization, City Hall preferred
+the override that matched its name.  When we used guest, it defaulted
+to the no override value.
+
+
+
+API - ENVIRONMENT OTHER
+
+These are here for extended functionality of City Hall.  For example,
+all of these end points are used by the Viewer app, but they're not
+meant to be part of the day-to-day usage of City Hall (the intent is to
+use a web or graphical user interface to set/create values, and then
+consume it using a library).
+
+View children:
+	GET		http://localhost:5000/api/env/dev/some_app/?viewchildren=true
+Returns: {
+	"Response": "Ok", 
+	"path": "/dev/some_app/", 
+	"children": [
+		{
+			"override": "", 
+			"path": "/dev/some_app/value1", 
+			"name": "value1", 
+			"value": "abc", 
+			"id": 6
+		},
+		{
+			"override": "cityhall", 
+			"path": "/dev/some_app/value1", 
+			"name": "value1", 
+			"value": "def", 
+			"id": 7
+		},
+	]}
+	
+View history:
+	GET 	http://localhost:5000/api/env/dev/some_app/value1?override=cityhall&viewhistory=true
+Returns: {
+	"Response": "Ok", 
+	"History": [
+		{
+			"protect": 0, 
+			"name": "value1", 
+			"override": "cityhall",
+			"author": "cityhall", 
+			"value": "val1", 
+			"datetime": "2015-06-02T14:13:03", 
+			"active": 1,
+			"first_last": 1,
+			"id": 4
+		}
+	]
+	
+	Some notes on the values here. 
+	'id' is the internal, database id which is used for this key. Each
+key has an id, but a user will only be using the env and path to access
+a key. The uses of this value are mostly internal and in determining if
+a key has had its name changed or we are looking at a child key (see 
+below).
+	'first_last' is the marker of when a key is created or deleted.
+This will be set to true for the fist item, and it will be set to true
+for every child node that is part of the history. (Creation and
+deletion of child keys is included in the history.)
+
+
+
+
+API - AUTHORIZATION OTHER
+
+Like the section above, these are here for extended functionality of 
+City Hall.  They are not meant for day-to-day usage.
+
+Delete User:
+	DEL		http://localhost:5000/api/auth/user/alex/
+Returns: {"Response": "Ok"}
+
+This will delete the user "alex". The operation will fail if the
+session doesn't have Grant permission to all of the environments 
+which the specified user is a part of.  Of course, if the session
+has Write permissions to the "users" environment, that's effectively
+the same as having Grant to all of the users' environments.
+
+View User info:
+	GET		http://localhost:5000/api/auth/user/alex/	
+Returns:  {"Response": "Ok", "Environments": {"dev": 3, "auto": 1}}
+This returns all the permissions for environments that user "alex" has.
+
+Update Your Password:
+	GET		http://localhost:5000/api/auth/user/alex/
+	{"passhash": ""}
+Returns:  {"Response": "Ok"}
+This will update the passhash for the user "alex", if that who is currently
+authenticated.  You cannot update another user's password.
+
+
+
+LICENSE
+
+  City Hall source files are made available under the terms of the GNU Affero General Public License (AGPL).

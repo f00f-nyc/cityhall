@@ -118,8 +118,6 @@ class Users(Endpoint):
             envs = auth.get_user(user)
             return {'Response': 'Ok', 'Environments': envs}
         except Exception as ex:
-            print "caught exception while getting user: " + ex.message
-
             return {
                 'Response': 'Failure',
                 'Message': ex.message,
