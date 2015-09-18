@@ -426,13 +426,6 @@ angular.module('cityhall', ['angular-md5'])
                 this.wrapHttpCall(req, success, failure);
             },
 
-            /**
-             * Update the password for the logged in user.
-             *
-             * @param password - cleartext of the password, it will be hashed
-             * @param success - function to call on success
-             * @param failure - function to call on failure
-             */
             updatePassword: function(password, success, failure) {
                 if (!this.ensureLoggedIn(failure)) { return; }
 
