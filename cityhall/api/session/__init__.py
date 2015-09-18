@@ -30,7 +30,8 @@ def get_auth_or_create_guest(request):
     auth_json = request.session.get(SESSION_AUTH, None)
     if auth_json is None:
         auth = CONN.get_auth('guest', '')
-        request.session[SESSION_AUTH] = serialize_auth(auth)
+        if auth is not None:
+            request.session[SESSION_AUTH] = serialize_auth(auth)
     else:
         auth = deserialize_auth(auth_json)
     return auth
