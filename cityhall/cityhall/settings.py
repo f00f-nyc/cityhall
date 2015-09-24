@@ -39,8 +39,6 @@ SECRET_KEY = '!ggs-f&a09lno$ikl)okp^s-ylw2gbomq3n^xh-ft@fh#zv9k6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-TEMPLATE_DEBUG = True
-
 ALLOWED_HOSTS = []
 
 
@@ -120,6 +118,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
+
 
 ENV_CACHE = {
     'SIZE': 1000,
