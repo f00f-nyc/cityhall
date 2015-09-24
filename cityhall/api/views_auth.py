@@ -13,11 +13,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from api.session.serialize import serialize_auth
 from .views import CONN
 from session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
-    end_request, NOT_AUTHENTICATED
+    end_request, NOT_AUTHENTICATED, SESSION_AUTH
 )
 
 
@@ -53,6 +52,18 @@ class Authenticate(Endpoint):
             'Message': 'Request was incomplete, expected "username" and '
                        '"passhash"'
         }
+
+    def delete(self, request, *args, **kwargs):
+        auth_json = request.session.get(SESSION_AUTH, None)
+        if auth_json is None:
+            return {
+                "Response": "Failure",
+                "Message": "Not currently logged in"
+            }
+
+        del request.session[SESSION_AUTH]
+        request.session.modified = True
+        return {"Response": "Ok"}
 
 
 class Environments(Endpoint):

@@ -155,6 +155,24 @@ angular.module('cityhall', ['angular-md5'])
                 }
             },
 
+            logout: function(success, failure) {
+                if (!this.ensureLoggedIn(failure)) { return; }
+
+                var req = this.getReq('DELETE', this.url + 'auth/');
+                var self = this;
+
+                this.wrapHttpCall(req,
+                    function (data) {
+                        self.loggedIn = false;
+                        self.user_name = '';
+                        self.environment = '';
+
+                        success(data);
+                    },
+                    failure
+                );
+            },
+
             /**
              * Returns the default environment for the current user.
              *
@@ -426,18 +444,11 @@ angular.module('cityhall', ['angular-md5'])
                 this.wrapHttpCall(req, success, failure);
             },
 
-            /**
-             * Update the password for the logged in user.
-             *
-             * @param password - cleartext of the password, it will be hashed
-             * @param success - function to call on success
-             * @param failure - function to call on failure
-             */
             updatePassword: function(password, success, failure) {
                 if (!this.ensureLoggedIn(failure)) { return; }
 
-                var update_url = this.url + 'auth/user/' + this.user_name + '/';
-                var req = this.getReq('PUT', update_url);
+                var delete_url = this.url + 'auth/user/' + this.user_name + '/';
+                var req = this.getReq('PUT', delete_url);
                 req.data = {'passhash': this.getHashFromCleartext(password)};
                 this.wrapHttpCall(req, success, failure);
             }

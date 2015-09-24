@@ -155,6 +155,24 @@ angular.module('cityhall', ['angular-md5'])
                 }
             },
 
+            logout: function(success, failure) {
+                if (!this.ensureLoggedIn(failure)) { return; }
+
+                var req = this.getReq('DELETE', this.url + 'auth/');
+                var self = this;
+
+                this.wrapHttpCall(req,
+                    function (data) {
+                        self.loggedIn = false;
+                        self.user_name = '';
+                        self.environment = '';
+
+                        success(data);
+                    },
+                    failure
+                );
+            },
+
             /**
              * Returns the default environment for the current user.
              *

@@ -103,6 +103,12 @@ Authenticate:
 	{"username": "cityhall", "passhash": ""}
 Returns: {"Response": "Ok"}
 You may change the user by hitting that URL multiple times.
+
+Terminate your session:
+	DEL		http://localhost:5000/api/auth/
+Returns: {"Response": "Ok"}
+Use this to log out.  Subsequent calls will attempt to authenticate using
+guest account, if it is available. More on the guest account below.
 	 
 Create environment:
 	POST	http://localhost:5000/api/auth/env/dev/

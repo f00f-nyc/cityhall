@@ -146,27 +146,32 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.Logout = function() {
-            $scope.loggedIn = false;
-            settings.loggedIn = false;
-            settings.user_name = '';
-            $scope.dataForTheTree = [{
-                name: 'Not connected',
-                real_name: '/',
-                protect: false,
-                override: '',
-                valid: false,
-                complete: false,
-                value: '',
-                real_path: '',
-                env: '',
-                children: [],
-                parent: null,
-                order: 0
-            }];
-            $scope.selected_node = $scope.dataForTheTree[0];
-            $scope.selected_history = [];
-            settings.environment = undefined;
-            $scope.status = "Logged out";
+            settings.logout(
+                function (data) {
+                    $scope.loggedIn = false;
+                    settings.loggedIn = false;
+                    settings.user_name = '';
+                    $scope.dataForTheTree = [{
+                        name: 'Not connected',
+                        real_name: '/',
+                        protect: false,
+                        override: '',
+                        valid: false,
+                        complete: false,
+                        value: '',
+                        real_path: '',
+                        env: '',
+                        children: [],
+                        parent: null,
+                        order: 0
+                    }];
+                    $scope.selected_node = $scope.dataForTheTree[0];
+                    $scope.selected_history = [];
+                    settings.environment = undefined;
+                    $scope.status = "Logged out";
+                },
+                function (data) { alert(data.Message); }
+            );
         };
 
         $scope.CreateEnv = function() {
