@@ -186,3 +186,36 @@ class TestAuthentication(TestCase):
         self.assertIsNotNone(test_auth_before)
         self.assertIsNone(test_auth_after_wrong_pass)
         self.assertIsNotNone(test_auth_after_correct_pass)
+
+    def test_set_get_default_env(self):
+        """
+        This is a back door entry to the auto environment, so that a user
+        can still set a default environment without getting read/write
+        permissions to 'auto'.
+        """
+        self.auth.create_env('dev')
+        self.env.set('/connect', '')
+        self.auth.create_user('test', '123')
+        test_auth = self.conn.get_auth('test', '123')
+
+        env = test_auth.get_default_env()
+        self.assertEqual(None, env)
+
+        test_auth.set_default_env('dev')
+        env = test_auth.get_default_env()
+        self.assertEqual('dev', env)
+
+        self.assertEqual(
+            ('dev', False),
+            self.env.get_explicit('/connect/test')
+        )
+
+    def test_get_default_env_doesnt_honor_overrides(self):
+        self.auth.create_env('dev')
+        self.env.set('/connect', '')
+        self.auth.create_user('test', '123')
+        test_auth = self.conn.get_auth('test', '123')
+        test_auth.set_default_env('dev')
+
+        self.env.set('/connect/test', 'some other val', 'test')
+        self.assertEqual('dev', test_auth.get_default_env())

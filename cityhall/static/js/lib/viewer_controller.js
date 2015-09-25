@@ -21,7 +21,7 @@ var INCOMPLETE_MARKER = "...";
 
 app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
     function($scope, md5, settings) {
-        $scope.user = 'cityhall';
+        $scope.user = '';
         $scope.pass = '';
         $scope.env = 'dev';
         $scope.selected_value = '';
@@ -66,7 +66,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.selected_can_create = true;
 
         $scope.status = 'Ready.';
-        $scope.token = '';
+        $scope.loggedIn = false;
 
         $scope.move_key_env = '';
         $scope.move_key_sub = false;
@@ -85,9 +85,15 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
         $scope.env_search = '';
 
+        $scope.default_env = '';
+        $scope.prev_default_env = '';
+
+        $scope.update_pass1 = '';
+        $scope.update_pass2 ='';
+
         $scope.Login = function() {
             var error = function(data) {
-                $scope.token = undefined;
+                $scope.loggedIn = false;
                 $scope.status = 'Failed to login for: ' + $scope.user;
                 console.log(data);
                 if (data.Message != undefined) {
@@ -100,8 +106,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             settings.url = cityhall_url;
             settings.login($scope.user, $scope.pass,
                 function(data) {
-                    $scope.token = data['Token'];
+                    $scope.loggedIn = true;
                     $scope.status = data['Response'];
+                    $scope.prev_default_env =  $scope.default_env = settings.environment;
                     $scope.pass = '';
                     $scope.dataForTheTree[0].valid = true;
 
@@ -139,26 +146,32 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.Logout = function() {
-            $scope.token = '';
-            $scope.dataForTheTree = [{
-                name: 'Not connected',
-                real_name: '/',
-                protect: false,
-                override: '',
-                valid: false,
-                complete: false,
-                value: '',
-                real_path: '',
-                env: '',
-                children: [],
-                parent: null,
-                order: 0
-            }];
-            $scope.selected_node = $scope.dataForTheTree[0];
-            $scope.selected_history = [];
-            settings.token = undefined;
-            settings.environment = undefined;
-            $scope.status = "Logged out";
+            settings.logout(
+                function (data) {
+                    $scope.loggedIn = false;
+                    settings.loggedIn = false;
+                    settings.user_name = '';
+                    $scope.dataForTheTree = [{
+                        name: 'Not connected',
+                        real_name: '/',
+                        protect: false,
+                        override: '',
+                        valid: false,
+                        complete: false,
+                        value: '',
+                        real_path: '',
+                        env: '',
+                        children: [],
+                        parent: null,
+                        order: 0
+                    }];
+                    $scope.selected_node = $scope.dataForTheTree[0];
+                    $scope.selected_history = [];
+                    settings.environment = undefined;
+                    $scope.status = "Logged out";
+                },
+                function (data) { alert(data.Message); }
+            );
         };
 
         $scope.CreateEnv = function() {
@@ -174,7 +187,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.Selected = function(node, expanded) {
-            if (node.valid && $scope.token && !node.complete) {
+            if (node.valid && $scope.loggedIn && !node.complete) {
                 node.complete = true;
 
                 settings
@@ -215,7 +228,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                                 "override": "",
                                 "valid": false,
                                 "complete": true,
-                                "value": "error with: " + url + ": " + data.toString(),
+                                "value": "error with: " + node.env + node.real_path + ": " + data.toString(),
                                 "real_path": "/",
                                 "env": node.env,
                                 "children": [],
@@ -238,7 +251,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             var value = ($scope.selected_value != node.value) ? $scope.selected_value : undefined;
             var protect = ($scope.selected_protected != node.protect) ? $scope.selected_protected : undefined;
 
-            if ($scope.token && (value || protect)) {
+            if ($scope.loggedIn && (value || protect)) {
                 settings.saveValue(node.env, node.real_path, node.override, value, protect,
                     function() {
                         node.value = $scope.selected_value;
@@ -267,7 +280,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 return;
             }
 
-            if (!$scope.token || !$scope.selected_can_create) {
+            if (!$scope.loggedIn || !$scope.selected_can_create) {
                 return;
             }
 
@@ -554,6 +567,41 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.hiddenDataForTheTree.push(node);
                 }
             }
+        };
+
+        $scope.UnsavedDefaultEnv = function() {
+            if ($scope.default_env != $scope.prev_default_env) {
+                return {background: 'lightpink'};
+            }
+
+            return {};
+        };
+
+        $scope.SetDefaultEnv = function() {
+            settings.setDefaultEnv($scope.default_env,
+                function () {
+                    $scope.prev_default_env = $scope.default_env;
+                    $scope.UnloadEnv('auto');
+                },
+                function(data) {
+                    alert('Failed to set default environment: ' + data.Message);
+                });
+        };
+
+        $scope.UpdatePassword = function () {
+            if ($scope.update_pass1 != $scope.update_pass2) {
+                alert("Two passwords do not match");
+                return;
+            }
+
+            settings.updatePassword($scope.update_pass2,
+                function (data) {
+                    alert("Password updated successfully");
+                },
+                function (data) {
+                    alert("Failed to update password: " + data.Message);
+                }
+            );
         };
     }
 ]);

@@ -13,45 +13,41 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import HttpResponse
-from .views import CACHE, CONN, auth_token_in_cache
+
+from api.views import CONN
+from .serialize import serialize_auth, deserialize_auth
 from lib.db.db import Rights
 
 
-def ensure_guest_exists():
-    if 'guest' in CACHE:
-        return True
+SESSION_AUTH = 'cityhall-auth'
+NOT_AUTHENTICATED = HttpResponse(
+    'Session is not authenticated, '
+    'and could not obtain get a guest credentials'
+)
 
-    guest_auth = CONN.get_auth('guest', '')
 
-    if guest_auth:
-        CACHE['guest'] = guest_auth
-        return True
-
-    return False
+def get_auth_or_create_guest(request):
+    auth_json = request.session.get(SESSION_AUTH, None)
+    if auth_json is None:
+        auth = CONN.get_auth('guest', '')
+        if auth is not None:
+            request.session[SESSION_AUTH] = serialize_auth(auth)
+    else:
+        auth = deserialize_auth(auth_json)
+    return auth
 
 
 def authenticate_for_get(request):
-    cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-
-    if cache_key is None:
-        auth = CACHE['guest'] if ensure_guest_exists() else None
-    else:
-        auth = CACHE.get(cache_key, None)
+    auth = get_auth_or_create_guest(request)
 
     if auth is None:
-        if cache_key is None:
-            return HttpResponse('No guest account was created')
-        else:
-            return HttpResponse('Auth-Token specified is invalid/expired')
+        return NOT_AUTHENTICATED
 
     return None
 
 
 def get_auth_from_request(request, env):
-    cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-    auth = CACHE['guest'] \
-        if (cache_key is None) and ensure_guest_exists() \
-        else CACHE[cache_key]
+    auth = get_auth_or_create_guest(request)
 
     if auth.get_permissions(env) < Rights.Read:
         return [
@@ -69,7 +65,13 @@ def is_valid(request):
     if (request.method == 'POST') \
             or (request.method == 'DELETE')\
             or (request.method == 'PUT'):
-        return auth_token_in_cache(request)
+        return None \
+            if SESSION_AUTH in request.session \
+            else HttpResponse('Must log in, first')
     elif request.method == 'GET':
         return authenticate_for_get(request)
     raise HttpResponse("Unsupported method type")
+
+
+def end_request(request, auth):
+    request.session[SESSION_AUTH] = serialize_auth(auth)

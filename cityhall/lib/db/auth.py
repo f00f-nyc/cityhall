@@ -12,6 +12,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from django.conf import settings
+from api.cache import CacheDict
 from .env import Env
 from .db import Rights
 
@@ -20,7 +22,9 @@ class Auth(object):
     def __init__(self, db, name, user_root):
         self.db = db
         self.name = name
-        self.roots_cache = {}
+        self.roots_cache = CacheDict(
+            capacity=settings.CACHE_OPTIONS['ENV_CAPACITY']
+        )
         self.user_root = user_root
         self.users_env = None
 
@@ -75,7 +79,7 @@ class Auth(object):
         already_deleted = True
 
         for right in delete_rights:
-            if right['value'] > Rights.DontExist:
+            if int(right['value']) > Rights.DontExist:
                 already_deleted = False
 
         if not already_deleted:
@@ -101,7 +105,7 @@ class Auth(object):
 
         rights = self.db.get_child(self.user_root, env)
         if rights:
-            return rights['value']
+            return int(rights['value'])
         return Rights.DontExist
 
     def grant(self, env, user, rights):
@@ -119,7 +123,7 @@ class Auth(object):
                     "Rights for '{}' created".format(user),
                 )
 
-            if existing['value'] == rights:
+            if int(existing['value']) == int(rights):
                 return (
                     'Ok',
                     "Rights for '{}' already at set level".format(user),
@@ -149,3 +153,14 @@ class Auth(object):
         return {
             val['name']: val['value'] for val in children
         }
+
+    def set_default_env(self, env):
+        root_id = self.db.get_env_root('auto')
+        auto = Env(self.db, 'auto', Rights.Write, self.name, root_id)
+        auto.set('/connect/' + self.name, env, override='')
+
+    def get_default_env(self):
+        root_id = self.db.get_env_root('auto')
+        auto = Env(self.db, 'auto', Rights.Write, self.name, root_id)
+        val = auto.get_explicit('/connect/' + self.name, override='')
+        return val[0] if val else None

@@ -13,9 +13,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from .views import CONN, CACHE
-from .authenticate import is_valid, get_auth_from_request
-import shortuuid
+from .views import CONN
+from session import (
+    is_valid, get_auth_from_request, get_auth_or_create_guest,
+    end_request, NOT_AUTHENTICATED, SESSION_AUTH
+)
 
 
 class Authenticate(Endpoint):
@@ -36,20 +38,32 @@ class Authenticate(Endpoint):
             auth = CONN.get_auth(user, passhash)
 
             if auth is None:
+                print "** attempting to authenticate: " + user + "  -> invalid auth"
                 return {
                     'Response': 'Failure',
                     'Message': 'Invalid username/password'
                 }
 
-            key = str(shortuuid.uuid())
-            CACHE[key] = auth
-            return {'Response': 'Ok', 'Token': key}
+            end_request(request, auth)
+            return {'Response': 'Ok'}
 
         return {
             'Response': 'Failure',
             'Message': 'Request was incomplete, expected "username" and '
                        '"passhash"'
         }
+
+    def delete(self, request, *args, **kwargs):
+        auth_json = request.session.get(SESSION_AUTH, None)
+        if auth_json is None:
+            return {
+                "Response": "Failure",
+                "Message": "Not currently logged in"
+            }
+
+        del request.session[SESSION_AUTH]
+        request.session.modified = True
+        return {"Response": "Ok"}
 
 
 class Environments(Endpoint):
@@ -71,21 +85,16 @@ class Environments(Endpoint):
 
     def post(self, request, *args, **kwargs):
         name = kwargs.get('env', None)
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
-
         if name is None:
             return {
                 'Response': 'Failure',
                 'Message': 'Expected a name for environment to create'
             }
 
+
+        auth = get_auth_or_create_guest(request)
         if auth is None:
-            return {
-                'Response': 'Failure',
-                'Message': 'Given token "' + cache_key +
-                           '" could not be found in cache'
-            }
+            return NOT_AUTHENTICATED
 
         created = auth.create_env(name)
         if not created:
@@ -93,6 +102,8 @@ class Environments(Endpoint):
                 'Response': 'Failure',
                 'Message': 'Environment "'+name+'" already exists',
             }
+
+        end_request(request, auth)
         return {
             'Response': 'Ok',
             'Message': 'Environment "'+name+'" created successfully',
@@ -100,19 +111,19 @@ class Environments(Endpoint):
 
 
 class Users(Endpoint):
+    NO_USER = {'Response': 'Failure', 'Message': 'Expected a user to retrieve'}
+
     def authenticate(self, request):
         return is_valid(request)
 
     def get(self, request, *args, **kwargs):
-        user = kwargs.get('user')
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        user = kwargs.get('user', None)
+        if not user:
+            return Users.NO_USER
 
-        if (user is None):
-            return {
-                'Response': 'Failure',
-                'Message': 'Expected a user to retrieve'
-            }
+        auth = get_auth_or_create_guest(request)
+        if not auth:
+            return NOT_AUTHENTICATED
 
         try:
             envs = auth.get_user(user)
@@ -126,17 +137,19 @@ class Users(Endpoint):
     def post(self, request, *args, **kwargs):
         user = kwargs.get('user', None)
         passhash = request.data.get('passhash', None)
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
-
         if (user is None) or (passhash is None):
             return {
                 'Response': 'Failure',
                 'Message': 'Expected a user and passhash to create user'
             }
 
+        auth = get_auth_or_create_guest(request)
+        if not auth:
+            return NOT_AUTHENTICATED
+
         try:
             auth.create_user(user, passhash)
+            end_request(request, auth)
             return {'Response': 'Ok'}
         except Exception as ex:
             return {'Response': 'Failure', 'Message': ex.message}
@@ -144,8 +157,10 @@ class Users(Endpoint):
     def put(self, request, *args, **kwargs):
         user = kwargs.get('user', None)
         passhash = request.data.get('passhash', None)
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = get_auth_or_create_guest(request)
+
+        if not auth:
+            return NOT_AUTHENTICATED
 
         if auth.name != user:
             return {
@@ -154,6 +169,7 @@ class Users(Endpoint):
             }
 
         auth.update_user(user, passhash)
+        end_request(request, auth)
         return {'Response': 'Ok'}
 
     def delete(self, request, *args, **kwargs):
@@ -165,11 +181,13 @@ class Users(Endpoint):
                 'Message': 'Delete API call is invalid, no user specified'
             }
 
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
+        auth = get_auth_or_create_guest(request)
+        if not auth:
+            return NOT_AUTHENTICATED
 
         try:
             if auth.delete_user(user):
+                end_request(request, auth)
                 return {'Response': 'Ok'}
             else:
                 return {
@@ -182,6 +200,35 @@ class Users(Endpoint):
             return {'Response': 'Failure', 'Message': ex.message}
 
 
+class UserDefaultEnv(Endpoint):
+    def authenticate(self, request):
+        return is_valid(request)
+
+    def get(self, request, *args, **kwargs):
+        user = kwargs.get('user', None)
+        if not user:
+            return Users.NO_USER
+        auth = get_auth_or_create_guest(request)
+        return {
+            'Response': 'Ok',
+            'value': auth.get_default_env()
+        }
+
+    def post(self, request, *args, **kwargs):
+        user = kwargs.get('user')
+        if not user:
+            return Users.NO_USER
+        auth = get_auth_or_create_guest(request)
+        default_env = request.data.get('env', None)
+        if not default_env:
+            return {
+                'Response': 'Failure',
+                'Message': 'Expected an "env" value to set.'
+            }
+        auth.set_default_env(default_env)
+        return {'Response': 'Ok', 'Message': 'Default set to: ' + default_env}
+
+
 class GrantRights(Endpoint):
     def authenticate(self, request):
         return is_valid(request)
@@ -190,21 +237,15 @@ class GrantRights(Endpoint):
         env = request.data.get('env', None)
         user = request.data.get('user', None)
         rights = request.data.get('rights', None)
-        cache_key = request.META.get('HTTP_AUTH_TOKEN', None)
-        auth = CACHE[cache_key]
-
         if (user is None) or (env is None) or (rights is None):
             return {
                 'Response': 'Failure',
                 'Message': 'Expected a user, env, and rights for grant'
             }
 
+        auth = get_auth_or_create_guest(request)
         if auth is None:
-            return {
-                'Response': 'Failure',
-                'Message': 'Given token "' + cache_key +
-                           '" could not be found in cache'
-            }
+            return NOT_AUTHENTICATED
 
         try:
             rights = int(rights)
@@ -215,4 +256,5 @@ class GrantRights(Endpoint):
             }
 
         ret = auth.grant(env, user, rights)
+        end_request(request, auth)
         return {'Response': ret[0], 'Message': ret[1]}

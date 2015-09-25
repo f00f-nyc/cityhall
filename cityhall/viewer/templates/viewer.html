@@ -37,12 +37,12 @@
         <div class="row">
             <div class="col-sm-7"></div>
             <div class="col-sm-5">
-                <div ng-show="(token == undefined) || (token.length == 0)">
+                <div ng-show="!loggedIn">
                     <form ng-submit="Login()">
                         <input type="text" ng-model="user" size="12" />&nbsp;<input type="password" ng-model="pass" size="12">&nbsp;<input type="submit" value="Login">
                     </form>
                 </div>
-                <div ng-show="token.length > 1">
+                <div ng-show="loggedIn">
                     <form ng-submit="Logout()">
                         <input type="submit" value="Logout">
                     </form>
@@ -190,6 +190,29 @@
                     <input type="text" ng-model="delete_user">&nbsp;<input type="submit" value="Delete">
                 </form></p>
             </div>
+            <br><br>
+            <div class="value_input" ng-style="UnsavedDefaultEnv()">
+                <h4>Default Environment</h4>
+                <p><form ng-submit="SetDefaultEnv()">
+                    <input type="text" ng-model="default_env">&nbsp;<input type="submit" value="Update">
+                </form></p>
+            </div>
+            <br><br>
+            <div>
+                <h4>Update Password</h4>
+                <p><form ng-submit="UpdatePassword()">
+                    <input type="password" ng-model="update_pass1">&nbsp;<input type="password" ng-model="update_pass2">&nbsp;&nbsp;&nbsp;<input type="submit" value="Update">
+                </form></p>
+            </div>
+
+
+
+
+
+
+
+
+
         </div>
 
 
@@ -213,14 +236,9 @@
         </div>
     </div>
 
-    <footer class="footer">
-        <br><br><br><br><br>
-        <br><br><br><br><br>
-        <div class="container">
-            <p class="text-muted">Token: {{ token }}</p>
-            <p>{{ status }}</p>
-        </div>
-    </footer>
+    <br><br><br><br><br>
+    <br><br><br><br><br>
+    <footer class="footer"></footer>
     </div>
     {% endverbatim %}
 {% endblock %}
