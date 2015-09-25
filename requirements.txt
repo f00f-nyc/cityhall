@@ -2,6 +2,7 @@ dj-database-url==0.3.0
 dj-static==0.0.6
 Django==1.8.1
 django-nose==1.4
+django-postgrespool==0.3.0
 DjangoRestless==0.0.10
 funcsigs==0.4
 gunicorn==19.3.0
