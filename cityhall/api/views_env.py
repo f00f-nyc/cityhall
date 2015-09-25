@@ -13,7 +13,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from .authenticate import is_valid, get_auth_from_request
+from session import is_valid, get_auth_from_request, end_request
 from lib.db.db import Rights
 
 
@@ -61,6 +61,7 @@ class EnvView(Endpoint):
         env = info.auth.get_env(info.env)
         try:
             env.delete(info.path, info.override)
+            end_request(request, info.auth)
             return {'Response': 'Ok'}
         except Exception as e:
             return {'Response': 'Failure', 'Message': e.message}
@@ -102,6 +103,8 @@ class EnvView(Endpoint):
                 env.set_protect(protect, info.path, info.override)
             if value is not None:
                 env.set(info.path, value, info.override)
+
+            end_request(request, info.auth)
             return {'Response': 'Ok'}
         except Exception as e:
             return {'Response': 'Failure', 'Message': e.message}
@@ -114,11 +117,14 @@ class EnvView(Endpoint):
         call_args = [info.auth, info.env, info.path, info.override]
 
         if 'viewchildren' in request.GET:
-            return EnvView.get_children_for(*call_args)
+            ret = EnvView.get_children_for(*call_args)
         elif 'viewhistory' in request.GET:
-            return EnvView.get_history_for(*call_args)
+            ret = EnvView.get_history_for(*call_args)
+        else:
+            ret = EnvView.get_value_for(*call_args)
 
-        return EnvView.get_value_for(*call_args)
+        end_request(request, info.auth)
+        return ret
 
     @staticmethod
     def _sanitize(env, path):

@@ -15,7 +15,7 @@
 from django.conf.urls import patterns, url
 from .views import (Info, Create)
 from .views_auth import (
-    Authenticate, Environments, Users, GrantRights
+    Authenticate, Environments, Users, GrantRights, UserDefaultEnv
 )
 from .views_env import EnvView
 
@@ -29,6 +29,11 @@ urlpatterns = patterns(
         r"^auth/env/(?P<env>[0-9a-zA-Z\-_.$]+)/$",
         Environments.as_view(),
         name="create_env"
+    ),
+    url(
+        r"^auth/user/(?P<user>[0-9a-zA-Z\-_.$]+)/default/$",
+        UserDefaultEnv.as_view(),
+        name="user_default_env"
     ),
     url(
         r"^auth/user/(?P<user>[0-9a-zA-Z\-_.$]+)/$",

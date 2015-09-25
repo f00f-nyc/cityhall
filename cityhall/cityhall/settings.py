@@ -120,21 +120,19 @@ STATICFILES_DIRS = [
 ]
 
 
-ENV_CACHE = {
-    'SIZE': 1000,
-    'EXPIRATION_SEC': 3600,
-    'MULTI_THREAD': False,
-    'MULTI_THREAD_POLL_SEC': 60
+CACHE_OPTIONS = {
+    # As a user looks at an environment, the index of paths is stored
+    # in the user session.  This value stores how many paths to store
+    # in session memory for a particular environment.
+    'PATH_CAPACITY': 50,
+
+    # As a user looks at an environment, information about that
+    # environment is stored in the user session.  Things like the index
+    # of the root, the permissions to it, as well as PATH_CAPACITY
+    # number of indexes.  This value stores how the max number of
+    # environments to store in a session.
+    'ENV_CAPACITY': 10,
 }
 
-# in memory db
-# from lib.db.memory.cityhall_db_factory import CityHallDbFactory
-# CITY_HALL_DATABASE = CityHallDbFactory()
-
-# sqlite3 db
-# from lib.db.sqllite.sqlite_db_factory import SqliteDbFactory
-# CITY_HALL_DATABASE = SqliteDbFactory('db.sqlite3')
-
-# django db
 from api.cityhall.factory import Factory
 CITY_HALL_DATABASE = Factory()
