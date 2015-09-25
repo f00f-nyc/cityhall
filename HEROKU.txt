@@ -1,0 +1,64 @@
+This is a quick guide on how to get set up on Heroku.  It assumes that you have
+a Heroku login which you can use.  Heroku offers a free-tier dyno which will be
+more than enough to run City Hall for testing purposes.
+
+
+
+	GET THE SOURCE CODE
+
+You will have to get the source code, and set up the virtual environment.
+The important part here is that cityhall/master will not run Heroku, you will
+have to fetch the branch specifically made for Heroku.
+
+$ git clone https://github.com/f00f-nyc/cityhall.git
+$ git fetch origin runon/heroku
+
+
+
+    PRE SET UP
+
+If you won't be running locally, you can ignore this step.
+
+You will need to have to have Python, virtualenv,  and pip installed.  
+In addition to the standard fare of Python, you will to have had installed
+Postgres and set up a database URL (which will be used dj-database-url 
+library).  For example, in order to write this guide, that value was:
+   DATABASE_URL=postgres://localhost/cityhall
+   
+You will also need to create and set up a virtual environment
+
+$ cd cityhall
+$ virtualenv env
+$ source env/bin/activate
+(env)$ pip install -r requirements.txt
+
+
+
+    SET UP HEROKU
+
+You will need to download the toolbelt for your OS.
+https://devcenter.heroku.com/articles/getting-started-with-python
+
+(env)$ heroku login
+(env)$ heroku create digitalborderlands
+  Here, we are giving the app a name, but if you leave it blank, Heorku
+  will create a name for you
+
+(env)$ git push heroku runon/heroku:master
+  Note that we have specify our existing branch to be pushed
+  
+(env)$ heroku run python cityhall/manage.py syncdb
+  This has to be done in order to create the database.  If this command times
+  out, you might see a connection timeout error, which usually happens before
+  you're behind a firewall of some kind and that port (5000) is blocked.
+  
+
+(env)$ heroku open
+You will now be able to use the app.  Log in with "cityhall" and no password.
+
+    
+
+    RUN LOCALLY
+    
+(env)$ heroku local
+This will open the app on your own machine, or port 5000.

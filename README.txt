@@ -4,6 +4,11 @@ ABOUT
 
 This project is written in Python 2.7, and uses Django 1.8
 
+You are currently on the Heroku branch of City Hall.  This branch is specially
+made so that you can easily deploy to Heroku, for more information on that,
+see HEROKU.txt.  Everything else in the guide, including GETTING.STARTED.txt
+still applies.
+
 The intention is for this to be an Enterprise Settings Server, to allow users
 to use this instead of keeping such settings in files or purpose-made tables.
 City Hall is meant to be entirely behind the firewall and speaks REST to its
