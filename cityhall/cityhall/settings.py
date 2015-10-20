@@ -134,3 +134,5 @@ CACHE_OPTIONS = {
 
 from api.cityhall.factory import Factory
 CITY_HALL_DATABASE = Factory()
+
+API_VERSION = 1

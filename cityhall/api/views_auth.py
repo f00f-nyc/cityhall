@@ -13,6 +13,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
+from django.conf import settings
 from .views import CONN
 from session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
@@ -44,7 +45,7 @@ class Authenticate(Endpoint):
                 }
 
             end_request(request, auth)
-            return {'Response': 'Ok'}
+            return {'Response': 'Ok', 'version': settings.API_VERSION}
 
         return {
             'Response': 'Failure',
