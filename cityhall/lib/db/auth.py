@@ -76,6 +76,7 @@ class Auth(object):
             return False
 
         delete_rights = self.db.get_children_of(delete_root['id'])
+        is_empty_user = len(delete_rights) == 0
         already_deleted = True
 
         for right in delete_rights:
@@ -96,6 +97,9 @@ class Auth(object):
                     if self_rights[env] < Rights.Grant:
                         return False
                 self._delete_user(delete, delete_rights, delete_root)
+            return True
+        elif is_empty_user:
+            self._delete_user(delete, delete_rights, delete_root)
             return True
         return False
 
