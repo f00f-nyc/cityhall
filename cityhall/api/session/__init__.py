@@ -12,11 +12,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import simplejson as json
 from restless.views import HttpResponse
-
 from api.views import CONN
 from .serialize import serialize_auth, deserialize_auth
 from lib.db.db import Rights
+from six import text_type
 
 
 SESSION_AUTH = 'cityhall-auth'
@@ -61,7 +62,22 @@ def get_auth_from_request(request, env):
     return [True, auth]
 
 
+def clean_data(request):
+    if isinstance(request.data, dict):
+        return True
+    if request.data is None:
+        return True
+    try:
+        request.data = json.loads(text_type(request.data))
+        return True
+    except:
+        return False
+
+
 def is_valid(request):
+    if not clean_data(request):
+        return HttpResponse('Invalid request. Body: ' + str(request.data))
+
     if (request.method == 'POST') \
             or (request.method == 'DELETE')\
             or (request.method == 'PUT'):
@@ -75,3 +91,6 @@ def is_valid(request):
 
 def end_request(request, auth):
     request.session[SESSION_AUTH] = serialize_auth(auth)
+
+
+
