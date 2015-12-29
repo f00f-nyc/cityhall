@@ -31,12 +31,13 @@
     <div class="container" id="content" >
 
         <div class="row">
-            <h1>City Hall Enterprise Settings</h1>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-7"></div>
-            <div class="col-sm-5">
+            <div class="col-sm-7">
+                <h3>
+                    {% endverbatim %}<img src="{% static "images/lib/city.hall.png" %}">{% verbatim %}
+                    City Hall Enterprise Settings
+                </h3>
+            </div>
+            <div class="col-sm-5" style="padding-top: 100px">
                 <div ng-show="!loggedIn">
                     <form ng-submit="Login()">
                         <input type="text" ng-model="user" size="12" />&nbsp;<input type="password" ng-model="pass" size="12">&nbsp;<input type="submit" value="Login">
@@ -49,8 +50,15 @@
                 </div>
             </div>
         </div>
+        <div class="row">&nbsp;</div>
+        <div class="row" ng-show="!loggedIn">
+            <h4>Welcome!</h4>
+            <p>On this page you'll be able to administer all the settings for your application. From here, you can view the settings for every application in the enterprise, the permissions for all the users/machines, and an audit trail for everything. Please log in at the top; if this is your first time, use "cityhall" with no password, then click the "Users" tab to update the password.</p>
+            <p>The intended usage is to have one virtual environment per actual, physical environment. The code should only refer to the path within an environment, and each machine mapped to an environment. Usage of City Hall should be analogous to idiomatic settings files in whichever language is being used, in the sense that it ties a string (here, a path within an environment) to a value. The value in this centralized settings server is in allowing multiple settings to exist side-by-side without any extra work on the part of the programmer.</p>
+            <p>For more information about City Hall, please visit <a href="http://digitalborderlands.com/cityhall">our homepage</a>.</p>
+        </div>
 
-        <div class="row">
+        <div class="row" ng-show="loggedIn">
             <div class="col-sm-12">
                 <ul class="nav nav-tabs">
                     <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Environment</a></li>
@@ -61,7 +69,7 @@
             </div>
         </div>
 
-        <div class="row" id="env-top" ng-show="view_mode < 10">
+        <div class="row" id="env-top" ng-show="loggedIn && (view_mode < 10)">
             <div class="col-sm-4">
                 <input ng-model="env_search" ng-change="EnvSearch()">
                 <br>
