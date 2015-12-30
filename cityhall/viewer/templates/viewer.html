@@ -105,7 +105,7 @@
                 <div id="env-manage" ng-show="view_mode == 2">
                     <a href ng-click="view_mode = 1">Back</a>
                     <div ng-show="selected_can_create">
-                        <h4>Create Subkey</h4>
+                        <h4>Create Child Setting</h4>
                         <form ng-submit="Create()">
                             Name:&nbsp;<input type="text" ng-model="create_name" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">&nbsp;&nbsp;
                             Override:&nbsp;<input type="text" ng-model="create_override" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
@@ -115,17 +115,17 @@
                     </div>
                     <br><br>
                     <div>
-                        <h4>Delete Key</h4>
+                        <h4>Delete Selected Setting</h4>
                         <form ng-submit="Delete()">
                             <input type="submit" value="Delete">
                         </form>
                     </div>
                     <br><br>
                     <div>
-                        <h4>Move Key</h4>
+                        <h4>Copy Selected Setting</h4>
                             <form ng-submit="MoveKey()">
-                                <input type="text" ng-model="move_key_env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
-                                <input type="checkbox" ng-model="move_key_sub">Include children&nbsp;&nbsp;&nbsp;<input type="submit" value="Move">
+                                <p>To Environment: <input type="text" ng-model="move_key_env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"></p>
+                                <p><input type="checkbox" ng-model="move_key_sub">Include children&nbsp;&nbsp;&nbsp;<input type="submit" value="Copy"></p>
                             </form>
                     </div>
                 </div>

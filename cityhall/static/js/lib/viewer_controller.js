@@ -227,6 +227,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             settings.createEnvironment($scope.env,
                 function (data) {
                     $scope.UnloadEnv('users');
+                    $scope.logged_in_permissions.push({environment: $scope.env, rights: int_to_rights_str(4)});
                     alert(data.Message);
                 },
                 function (data) {
@@ -338,6 +339,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 function(data) {
                     node.complete = false;
                     node.children = [];
+                    $scope.view_mode = 1;
                     $scope.Selected(node, false);
                 },
                 function(data) {
@@ -450,6 +452,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                         }
                     }
 
+                    $scope.view_mode = 1;
                     $scope.Selected(parent);
                 },
                 function(data) {

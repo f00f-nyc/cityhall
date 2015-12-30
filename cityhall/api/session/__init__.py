@@ -67,6 +67,8 @@ def clean_data(request):
         return True
     if request.data is None:
         return True
+    if request.data == "":
+        return True
     try:
         request.data = json.loads(text_type(request.data))
         return True
