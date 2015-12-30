@@ -44,9 +44,7 @@
                     </form>
                 </div>
                 <div ng-show="loggedIn">
-                    <form ng-submit="Logout()">
-                        <input type="submit" value="Logout">
-                    </form>
+                    Logged in as: {{ logged_in_user }}
                 </div>
             </div>
         </div>
@@ -61,9 +59,10 @@
         <div class="row" ng-show="loggedIn">
             <div class="col-sm-12">
                 <ul class="nav nav-tabs">
-                    <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Environment</a></li>
-                    <li ng-class="{active: view_mode == 11}"><a href ng-click="view_mode = 11">Management</a></li>
+                    <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Properties</a></li>
+                    <li ng-class="{active: view_mode == 11}"><a href ng-click="view_mode = 11">Environments</a></li>
                     <li ng-class="{active: view_mode == 21}"><a href ng-click="view_mode = 21">Users</a></li>
+                    <li ng-class="{active: view_mode == 31}"><a href ng-click="view_mode = 31">Logout</a></li>
                 </ul>
                 <br>
             </div>
@@ -153,7 +152,6 @@
                     </table>
                 </div>
 
-
             </div>
         </div>
 
@@ -225,22 +223,48 @@
 
 
         <div id="view-top" ng-show="view_mode == 21">
-            <p><form ng-submit="ViewUsers()">
-                Environment&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View Users"><br>
-                <br>
+            <p>
+                <form ng-submit="ViewUsers()">
+                    Environment&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View Users"><br>
+                </form>
+            </p>
+            <p>
                 <table class="table table-striped">
                     <thead>
                         <tr>
                             <th width="50%">User</th>
                             <th width="50%">Permissions</th>
                         </tr>
-                        <tr ng-repeat="user in view_users">
-                            <td class="history_text">{{ user.environment }}</td>
-                            <td class="history_text">{{ user.rights }}</td>
+                    </thead>
+                    <tr ng-repeat="user in view_users">
+                        <td class="history_text">{{ user.environment }}</td>
+                        <td class="history_text">{{ user.rights }}</td>
+                    </tr>
+                </table>
+            </p>
+        </div>
+
+        <div id="logout-top" ng-show="view_mode == 31">
+            <p>
+                <form ng-submit="Logout()">
+                    Confirm log out: <input type="submit" value="Logout">
+                </form>
+            </p>
+            <p>Default Environment: {{ prev_default_env || 'not yet set' }}</p>
+            <p>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th width="50%">Environment</th>
+                            <th width="50%">Permissions</th>
                         </tr>
                     </thead>
+                    <tr ng-repeat="env in logged_in_permissions">
+                        <td class="history_text">{{ env.environment }}</td>
+                        <td class="history_text">{{ env.rights }}</td>
+                    </tr>
                 </table>
-            </form></p>
+            </p>
         </div>
     </div>
 

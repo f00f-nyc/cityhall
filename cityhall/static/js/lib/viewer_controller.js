@@ -28,6 +28,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.selected_protected = false;
 
         $scope.view_mode = 1;
+        $scope.logged_in_user = "";
+        $scope.logged_in_permissions = [];
 
         $scope.dataForTheTree = [{
                 name: 'Not connected',
@@ -91,6 +93,22 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.update_pass1 = '';
         $scope.update_pass2 ='';
 
+        var int_to_rights_str = function(int) {
+            switch (int){
+                case "0":
+                case 0: return "None";
+                case "1":
+                case 1: return "Read";
+                case "2":
+                case 2: return "Read Protected";
+                case "3":
+                case 3: return "Write";
+                case "4":
+                case 4: return "Grant";
+            }
+            return "Unknown";
+        };
+
         $scope.Login = function() {
             var error = function(data) {
                 $scope.loggedIn = false;
@@ -107,6 +125,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             settings.login($scope.user, $scope.pass,
                 function(data) {
                     $scope.loggedIn = true;
+                    $scope.logged_in_user = $scope.user;
                     $scope.status = data['Response'];
                     $scope.prev_default_env =  $scope.default_env = settings.environment;
                     $scope.pass = '';
@@ -116,8 +135,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                         function (data) {
                             $scope.dataForTheTree = [];
                             var order = 0;
+                            var environments = data['Environments'];
 
-                            for (var env in data['Environments']) {
+                            for (var env in environments) {
                                 $scope.dataForTheTree.push({
                                     name: env + INCOMPLETE_MARKER,
                                     real_name: env,
@@ -133,6 +153,13 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                                     real_path: '/'
                                 });
                                 order++;
+
+                                console.log('adding: ' + env + ': ' + int_to_rights_str(environments[env]));
+
+                                $scope.logged_in_permissions.push({
+                                    environment: env,
+                                    rights: int_to_rights_str(environments[env])
+                                });
                             }
                         },
                         error
@@ -169,6 +196,10 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.selected_history = [];
                     settings.environment = undefined;
                     $scope.status = "Logged out";
+                    $scope.logged_in_user = "";
+                    $scope.logged_in_permissions = [];
+                    $scope.view_mode = 1;
+
                 },
                 function (data) { alert(data.Message); }
             );
@@ -516,21 +547,6 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.ViewUsers = function() {
-            var int_to_str = function(int) {
-                    switch (int){
-                        case "0":
-                        case 0: return "None";
-                        case "1":
-                        case 1: return "Read";
-                        case "2":
-                        case 2: return "Read Protected";
-                        case "3":
-                        case 3: return "Write";
-                        case "4":
-                        case 4: return "Grant";
-                    }
-                    return "Unknown";
-                };
             settings.viewUsers($scope.view_env,
                 function(data) {
                     $scope.view_users = [];
@@ -539,7 +555,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     for (var env in users) {
                         $scope.view_users.push({
                             environment: env,
-                            rights: int_to_str(users[env])
+                            rights: int_to_rights_str(users[env])
                         });
                     }
                 },
