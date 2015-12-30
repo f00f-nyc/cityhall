@@ -70,15 +70,16 @@
 
         <div class="row" id="env-top" ng-show="loggedIn && (view_mode < 10)">
             <div class="col-sm-4">
-                <input ng-model="env_search" ng-change="EnvSearch()">
-                <br>
-                <div treecontrol class="tree-classic"
-                        tree-model="dataForTheTree"
-                        options="treeOptions"
-                        on-selection="Selected(node, expanded)"
-                        selected-node="node1">
-                          {{ node.name }}
-                </div>
+                <p><input ng-model="env_search" ng-change="EnvSearch()"></p>
+                <p>
+                    <div treecontrol class="tree-classic"
+                            tree-model="dataForTheTree"
+                            options="treeOptions"
+                            on-selection="Selected(node, expanded)"
+                            selected-node="node1">
+                              {{ node.name }}
+                    </div>
+                </p>
             </div>
 
             <div class="col-sm-8">
