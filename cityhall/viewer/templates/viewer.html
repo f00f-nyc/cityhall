@@ -59,16 +59,16 @@
         <div class="row" ng-show="loggedIn">
             <div class="col-sm-12">
                 <ul class="nav nav-tabs">
-                    <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Properties</a></li>
+                    <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Settings</a></li>
                     <li ng-class="{active: view_mode == 11}"><a href ng-click="view_mode = 11">Environments</a></li>
                     <li ng-class="{active: view_mode == 21}"><a href ng-click="view_mode = 21">Users</a></li>
-                    <li ng-class="{active: view_mode == 31}"><a href ng-click="view_mode = 31">Logout</a></li>
+                    <li ng-class="{active: view_mode == 31}"><a href ng-click="view_mode = 31">Logout/Info</a></li>
                 </ul>
                 <br>
             </div>
         </div>
 
-        <div class="row" id="env-top" ng-show="loggedIn && (view_mode < 10)">
+        <div class="row" id="settings-top" ng-show="loggedIn && (view_mode < 10)">
             <div class="col-sm-4">
                 <p><input ng-model="env_search" ng-change="EnvSearch()"></p>
                 <p>
@@ -197,29 +197,6 @@
                     <input type="text" ng-model="delete_user">&nbsp;<input type="submit" value="Delete">
                 </form></p>
             </div>
-            <br><br>
-            <div class="value_input" ng-style="UnsavedDefaultEnv()">
-                <h4>Default Environment</h4>
-                <p><form ng-submit="SetDefaultEnv()">
-                    <input type="text" ng-model="default_env">&nbsp;<input type="submit" value="Update">
-                </form></p>
-            </div>
-            <br><br>
-            <div>
-                <h4>Update Password</h4>
-                <p><form ng-submit="UpdatePassword()">
-                    <input type="password" ng-model="update_pass1">&nbsp;<input type="password" ng-model="update_pass2">&nbsp;&nbsp;&nbsp;<input type="submit" value="Update">
-                </form></p>
-            </div>
-
-
-
-
-
-
-
-
-
         </div>
 
 
@@ -246,12 +223,28 @@
         </div>
 
         <div id="logout-top" ng-show="view_mode == 31">
-            <p>
-                <form ng-submit="Logout()">
+            <div>
+                <h4>Update Password</h4>
+                <p><form ng-submit="UpdatePassword()">
+                    <input type="password" ng-model="update_pass1">&nbsp;<input type="password" ng-model="update_pass2">&nbsp;&nbsp;&nbsp;<input type="submit" value="Update">
+                </form></p>
+            </div>
+            <br><br>
+            <div class="value_input" ng-style="UnsavedDefaultEnv()">
+                <h4>Default Environment</h4>
+                <p>Default Environment: {{ prev_default_env || 'not yet set' }}</p>
+                <p><form ng-submit="SetDefaultEnv()">
+                    <input type="text" ng-model="default_env">&nbsp;<input type="submit" value="Update">
+                </form></p>
+            </div>
+            <br><br>
+            <div>
+                <h4>Logout</h4>
+                <p><form ng-submit="Logout()">
                     Confirm log out: <input type="submit" value="Logout">
-                </form>
-            </p>
-            <p>Default Environment: {{ prev_default_env || 'not yet set' }}</p>
+                </form></p>
+            </div>
+            <br><br>
             <p>
                 <table class="table table-striped">
                     <thead>

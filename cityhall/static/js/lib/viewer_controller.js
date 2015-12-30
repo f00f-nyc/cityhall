@@ -199,6 +199,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.logged_in_user = "";
                     $scope.logged_in_permissions = [];
                     $scope.view_mode = 1;
+                    $scope.value = '';
+                    $scope.selected_value = '';
+                    $scope.selected_protected = false;
 
                 },
                 function (data) { alert(data.Message); }
