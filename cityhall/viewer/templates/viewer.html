@@ -156,7 +156,7 @@
             </div>
         </div>
 
-        <div class="row" id="manage-top" ng-show="view_mode == 11">
+        <div class="row" id="environments-top" ng-show="view_mode == 11">
             <div>
                 <h4>Create Environment</h4>
                 <p><form ng-submit="CreateEnv()">
@@ -165,8 +165,27 @@
                         <input type="submit" value="Create">
                     </form>
                 </p>
+                <br><br>
+                <form ng-submit="ViewUsers()">
+                    View Environment Info&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View"><br>
+                </form>
+                <br><br>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th width="50%">User</th>
+                            <th width="50%">Permissions</th>
+                        </tr>
+                    </thead>
+                    <tr ng-repeat="user in view_users">
+                        <td class="history_text">{{ user.environment }}</td>
+                        <td class="history_text">{{ user.rights }}</td>
+                    </tr>
+                </table>
             </div>
-            <br><br>
+        </div>
+
+        <div id="users-top" ng-show="view_mode == 21">
             <div>
                 <h4>Create User</h4>
                 <p><form ng-submit="CreateUser()">
@@ -197,29 +216,27 @@
                     <input type="text" ng-model="delete_user">&nbsp;<input type="submit" value="Delete">
                 </form></p>
             </div>
-        </div>
-
-
-        <div id="view-top" ng-show="view_mode == 21">
-            <p>
-                <form ng-submit="ViewUsers()">
-                    Environment&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View Users"><br>
-                </form>
-            </p>
-            <p>
+            <br><br>
+            <div>
+                <h4>View User Info</h4>
+                <p><form ng-submit="ViewUserInfo()">
+                    Information about user:&nbsp<input type="text" ng-model="view_user_name">&nbsp;<input type="submit" value="View">
+                </form></p>
+                <p>
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th width="50%">User</th>
+                            <th width="50%">Environment</th>
                             <th width="50%">Permissions</th>
                         </tr>
                     </thead>
-                    <tr ng-repeat="user in view_users">
-                        <td class="history_text">{{ user.environment }}</td>
-                        <td class="history_text">{{ user.rights }}</td>
+                    <tr ng-repeat="env in view_user_envs">
+                        <td class="history_text">{{ env.environment }}</td>
+                        <td class="history_text">{{ env.rights }}</td>
                     </tr>
                 </table>
             </p>
+            </div>
         </div>
 
         <div id="logout-top" ng-show="view_mode == 31">

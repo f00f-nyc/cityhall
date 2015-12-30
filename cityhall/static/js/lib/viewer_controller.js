@@ -91,7 +91,10 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.prev_default_env = '';
 
         $scope.update_pass1 = '';
-        $scope.update_pass2 ='';
+        $scope.update_pass2 = '';
+
+        $scope.view_user_name = '';
+        $scope.view_user_envs = [];
 
         var int_to_rights_str = function(int) {
             switch (int){
@@ -107,6 +110,17 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 case 4: return "Grant";
             }
             return "Unknown";
+        };
+
+        var user_info_to_table = function(data, table) {
+            $scope[table] = [];
+
+            for (var env in data) {
+                $scope[table].push({
+                    environment: env,
+                    rights: int_to_rights_str(data[env])
+                });
+            }
         };
 
         $scope.Login = function() {
@@ -137,6 +151,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                             var order = 0;
                             var environments = data['Environments'];
 
+                            user_info_to_table(environments, 'logged_in_permissions');
+
                             for (var env in environments) {
                                 $scope.dataForTheTree.push({
                                     name: env + INCOMPLETE_MARKER,
@@ -156,10 +172,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
                                 console.log('adding: ' + env + ': ' + int_to_rights_str(environments[env]));
 
-                                $scope.logged_in_permissions.push({
-                                    environment: env,
-                                    rights: int_to_rights_str(environments[env])
-                                });
+
                             }
                         },
                         error
@@ -202,6 +215,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.value = '';
                     $scope.selected_value = '';
                     $scope.selected_protected = false;
+                    $scope.view_user_envs = [];
+                    $scope.view_user_name = '';
 
                 },
                 function (data) { alert(data.Message); }
@@ -622,5 +637,15 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 }
             );
         };
+
+        $scope.ViewUserInfo = function () {
+            settings.getUser($scope.view_user_name,
+                function (data) {   user_info_to_table(data['Environments'], 'view_user_envs')},
+                function (err) {
+                    $scope.view_user_envs = [];
+                    alert('Failed to get user info for '+$scope.view_user_name+': '+ err.Message);
+                }
+            );
+        }
     }
 ]);

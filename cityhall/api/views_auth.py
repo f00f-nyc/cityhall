@@ -133,7 +133,9 @@ class Users(Endpoint):
         except Exception as ex:
             return {
                 'Response': 'Failure',
-                'Message': ex.message,
+                'Message': "Retrieval failed. Most likely, that user doesn't "
+                           "exist, please check users environment.  Failure: "
+                           + ex.message,
             }
 
     def post(self, request, *args, **kwargs):
