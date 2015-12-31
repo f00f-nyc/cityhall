@@ -25,7 +25,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
     function($scope, md5, settings) {
         $scope.user = '';
         $scope.pass = '';
-        $scope.env = 'dev';
+        $scope.env = '';
         $scope.selected_value = '';
         $scope.selected_protected = false;
         $scope.protect_button = UNPROTECTED;
@@ -232,6 +232,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.selected_protected = false;
                     $scope.view_user_envs = [];
                     $scope.view_user_name = '';
+                    $scope.env = '';
 
                 },
                 function (data) { alert(data.Message); }
@@ -243,6 +244,21 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 function (data) {
                     $scope.UnloadEnv('users');
                     $scope.logged_in_permissions.push({environment: $scope.env, rights: int_to_rights_str(4)});
+                    $scope.dataForTheTree.push({
+                        name: $scope.env + INCOMPLETE_MARKER,
+                        real_name: $scope.env,
+                        protect: false,
+                        override: '',
+                        valid: true,
+                        complete: false,
+                        value: '',
+                        children: [],
+                        parent: null,
+                        order: $scope.dataForTheTree.length,
+                        env: $scope.env,
+                        real_path: '/'
+                    });
+                    
                     alert(data.Message);
                 },
                 function (data) {
