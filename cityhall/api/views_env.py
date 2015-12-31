@@ -34,7 +34,9 @@ class EnvView(Endpoint):
                 self.valid = False
                 self.error_message = {
                     'Response': 'Failure',
-                    'Message': 'Expected the path to include environment name'
+                    'Message': 'Expected the path to include environment name. '
+                                'This error occurs often when no default '
+                                'environment is specified for the user.'
                 }
                 return
 

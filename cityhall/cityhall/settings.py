@@ -157,3 +157,5 @@ CITY_HALL_DATABASE = Factory()
 # https://warehouse.python.org/project/whitenoise/
 
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+API_VERSION = 1

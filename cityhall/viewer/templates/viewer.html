@@ -31,73 +31,81 @@
     <div class="container" id="content" >
 
         <div class="row">
-            <h1>City Hall Enterprise Settings</h1>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-7"></div>
-            <div class="col-sm-5">
+            <div class="col-sm-7">
+                <h3>
+                    {% endverbatim %}<img src="{% static "images/lib/city.hall.png" %}">{% verbatim %}
+                    City Hall Enterprise Settings
+                </h3>
+            </div>
+            <div class="col-sm-5" style="padding-top: 100px">
                 <div ng-show="!loggedIn">
                     <form ng-submit="Login()">
                         <input type="text" ng-model="user" size="12" />&nbsp;<input type="password" ng-model="pass" size="12">&nbsp;<input type="submit" value="Login">
                     </form>
                 </div>
                 <div ng-show="loggedIn">
-                    <form ng-submit="Logout()">
-                        <input type="submit" value="Logout">
-                    </form>
+                    Logged in as: {{ logged_in_user }}
                 </div>
             </div>
         </div>
+        <div class="row">&nbsp;</div>
+        <div class="row" ng-show="!loggedIn">
+            <h4>Welcome!</h4>
+            <p>On this page you'll be able to administer all the settings for your application. From here, you can view the settings for every application in the enterprise, the permissions for all the users/machines, and an audit trail for everything. Please log in at the top; if this is your first time, use "cityhall" with no password, then click the "Users" tab to update the password.</p>
+            <p>The intended usage is to have one virtual environment per actual, physical environment. The code should only refer to the path within an environment, and each machine mapped to an environment. Usage of City Hall should be analogous to idiomatic settings files in whichever language is being used, in the sense that it ties a string (here, a path within an environment) to a value. The value in this centralized settings server is in allowing multiple settings to exist side-by-side without any extra work on the part of the programmer.</p>
+            <p>For more information about City Hall, please visit <a href="http://digitalborderlands.com/cityhall">our homepage</a>.</p>
+        </div>
 
-        <div class="row">
+        <div class="row" ng-show="loggedIn">
             <div class="col-sm-12">
                 <ul class="nav nav-tabs">
-                    <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Environment</a></li>
-                    <li ng-class="{active: view_mode == 11}"><a href ng-click="view_mode = 11">Management</a></li>
+                    <li ng-class="{active: view_mode < 10}"><a href ng-click="view_mode = 1">Settings</a></li>
+                    <li ng-class="{active: view_mode == 11}"><a href ng-click="view_mode = 11">Environments</a></li>
                     <li ng-class="{active: view_mode == 21}"><a href ng-click="view_mode = 21">Users</a></li>
+                    <li ng-class="{active: view_mode == 31}"><a href ng-click="view_mode = 31">Logout/Info</a></li>
                 </ul>
                 <br>
             </div>
         </div>
 
-        <div class="row" id="env-top" ng-show="view_mode < 10">
+        <div class="row" id="settings-top" ng-show="loggedIn && (view_mode < 10)">
             <div class="col-sm-4">
-                <input ng-model="env_search" ng-change="EnvSearch()">
-                <br>
-                <div treecontrol class="tree-classic"
-                        tree-model="dataForTheTree"
-                        options="treeOptions"
-                        on-selection="Selected(node, expanded)"
-                        selected-node="node1">
-                          {{ node.name }}
-                </div>
+                <p><input ng-model="env_search" ng-change="EnvSearch()"></p>
+                <p>
+                    <div treecontrol class="tree-classic"
+                            tree-model="dataForTheTree"
+                            options="treeOptions"
+                            on-selection="Selected(node, expanded)"
+                            selected-node="node1">
+                              {{ node.name }}
+                    </div>
+                </p>
             </div>
 
             <div class="col-sm-8">
                 <div id="env-value" ng-show="view_mode == 1">
-                    <a href ng-click="view_mode = 2">Manage</a>&nbsp;&nbsp;<a href ng-click="GetHistory()">Audit</a>
                     <div class="value_input" ng-style="UnsavedContent()">
                         <br>
-                        &nbsp;<textarea rows="1" cols="80" width="100%" ng-model="selected_value"></textarea>
-
                         <div class="row">
-                            <div class="col-sm-7"></div>
-                            <div class="col-sm-5">
-                                    <form ng-submit="Save()">
-                                        Protected:&nbsp;<input type="checkbox" ng-checked="selected_protected" ng-model="selected_protected">
-                                        &nbsp;<input type="submit" value="Save">
-                                    </form>
+                            <div class="col-sm-9">
+                                &nbsp;<textarea rows="1" cols="70" width="100%" ng-model="selected_value"></textarea>
                             </div>
-                            <div class="col-sm-1"></div>
+                            <div class="col-sm-2">
+                                <form ng-submit="view_mode = 2"><input type="submit" value="Manage" style="width: 125px;"></form>
+                                <p><form ng-submit="GetHistory()"><input type="submit" value="Audit" style="width: 125px;"></form></p>
+                                <button ng-click="selected_protected = !selected_protected" style="width: 125px;">{{ protect_button }}</button>
+                                <p><form ng-submit="Save()"><input type="submit" value="Save" style="width: 125px;"></form></p>
+                            </div>
                         </div>
+
+
                     </div>
                 </div>
 
                 <div id="env-manage" ng-show="view_mode == 2">
                     <a href ng-click="view_mode = 1">Back</a>
                     <div ng-show="selected_can_create">
-                        <h4>Create Subkey</h4>
+                        <h4>Create Child Setting</h4>
                         <form ng-submit="Create()">
                             Name:&nbsp;<input type="text" ng-model="create_name" ng-pattern="/^[^\/'&quot;\t\r\n]+$/">&nbsp;&nbsp;
                             Override:&nbsp;<input type="text" ng-model="create_override" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
@@ -107,17 +115,17 @@
                     </div>
                     <br><br>
                     <div>
-                        <h4>Delete Key</h4>
+                        <h4>Delete Selected Setting</h4>
                         <form ng-submit="Delete()">
                             <input type="submit" value="Delete">
                         </form>
                     </div>
                     <br><br>
                     <div>
-                        <h4>Move Key</h4>
+                        <h4>Copy Selected Setting</h4>
                             <form ng-submit="MoveKey()">
-                                <input type="text" ng-model="move_key_env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"><br>
-                                <input type="checkbox" ng-model="move_key_sub">Include children&nbsp;&nbsp;&nbsp;<input type="submit" value="Move">
+                                <p>To Environment: <input type="text" ng-model="move_key_env" ng-pattern="/^[^\/'&quot;\t\r\n]+$/"></p>
+                                <p><input type="checkbox" ng-model="move_key_sub">Include children&nbsp;&nbsp;&nbsp;<input type="submit" value="Copy"></p>
                             </form>
                     </div>
                 </div>
@@ -145,11 +153,10 @@
                     </table>
                 </div>
 
-
             </div>
         </div>
 
-        <div class="row" id="manage-top" ng-show="view_mode == 11">
+        <div class="row" id="environments-top" ng-show="view_mode == 11">
             <div>
                 <h4>Create Environment</h4>
                 <p><form ng-submit="CreateEnv()">
@@ -158,8 +165,27 @@
                         <input type="submit" value="Create">
                     </form>
                 </p>
+                <br><br>
+                <form ng-submit="ViewUsers()">
+                    View Environment Info&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View"><br>
+                </form>
+                <br><br>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th width="50%">User</th>
+                            <th width="50%">Permissions</th>
+                        </tr>
+                    </thead>
+                    <tr ng-repeat="user in view_users">
+                        <td class="history_text">{{ user.environment }}</td>
+                        <td class="history_text">{{ user.rights }}</td>
+                    </tr>
+                </table>
             </div>
-            <br><br>
+        </div>
+
+        <div id="users-top" ng-show="view_mode == 21">
             <div>
                 <h4>Create User</h4>
                 <p><form ng-submit="CreateUser()">
@@ -191,48 +217,65 @@
                 </form></p>
             </div>
             <br><br>
-            <div class="value_input" ng-style="UnsavedDefaultEnv()">
-                <h4>Default Environment</h4>
-                <p><form ng-submit="SetDefaultEnv()">
-                    <input type="text" ng-model="default_env">&nbsp;<input type="submit" value="Update">
+            <div>
+                <h4>View User Info</h4>
+                <p><form ng-submit="ViewUserInfo()">
+                    Information about user:&nbsp<input type="text" ng-model="view_user_name">&nbsp;<input type="submit" value="View">
                 </form></p>
+                <p>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th width="50%">Environment</th>
+                            <th width="50%">Permissions</th>
+                        </tr>
+                    </thead>
+                    <tr ng-repeat="env in view_user_envs">
+                        <td class="history_text">{{ env.environment }}</td>
+                        <td class="history_text">{{ env.rights }}</td>
+                    </tr>
+                </table>
+            </p>
             </div>
-            <br><br>
+        </div>
+
+        <div id="logout-top" ng-show="view_mode == 31">
             <div>
                 <h4>Update Password</h4>
                 <p><form ng-submit="UpdatePassword()">
                     <input type="password" ng-model="update_pass1">&nbsp;<input type="password" ng-model="update_pass2">&nbsp;&nbsp;&nbsp;<input type="submit" value="Update">
                 </form></p>
             </div>
-
-
-
-
-
-
-
-
-
-        </div>
-
-
-        <div id="view-top" ng-show="view_mode == 21">
-            <p><form ng-submit="ViewUsers()">
-                Environment&nbsp;<input type="text" ng-model="view_env">&nbsp;<input type="submit" value="View Users"><br>
-                <br>
+            <br><br>
+            <div class="value_input" ng-style="UnsavedDefaultEnv()">
+                <h4>Default Environment</h4>
+                <p>Default Environment: {{ prev_default_env || 'not yet set' }}</p>
+                <p><form ng-submit="SetDefaultEnv()">
+                    <input type="text" ng-model="default_env">&nbsp;<input type="submit" value="Update">
+                </form></p>
+            </div>
+            <br><br>
+            <div>
+                <h4>Logout</h4>
+                <p><form ng-submit="Logout()">
+                    Confirm log out: <input type="submit" value="Logout">
+                </form></p>
+            </div>
+            <br><br>
+            <p>
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th width="50%">User</th>
+                            <th width="50%">Environment</th>
                             <th width="50%">Permissions</th>
                         </tr>
-                        <tr ng-repeat="user in view_users">
-                            <td class="history_text">{{ user.environment }}</td>
-                            <td class="history_text">{{ user.rights }}</td>
-                        </tr>
                     </thead>
+                    <tr ng-repeat="env in logged_in_permissions">
+                        <td class="history_text">{{ env.environment }}</td>
+                        <td class="history_text">{{ env.rights }}</td>
+                    </tr>
                 </table>
-            </form></p>
+            </p>
         </div>
     </div>
 

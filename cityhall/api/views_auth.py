@@ -12,11 +12,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from restless.views import Endpoint
+from restless.views import Endpoint, HttpResponse
+from django.conf import settings
 from .views import CONN
 from session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
-    end_request, NOT_AUTHENTICATED, SESSION_AUTH
+    end_request, NOT_AUTHENTICATED, SESSION_AUTH, clean_data
 )
 
 
@@ -28,6 +29,8 @@ class Authenticate(Endpoint):
         :param request: The method is expected to take this, but it is unused
         :return: True
         """
+        if not clean_data(request):
+            return HttpResponse('Invalid request. Body: ' + str(request.data))
         return None
 
     def post(self, request):
@@ -45,7 +48,7 @@ class Authenticate(Endpoint):
                 }
 
             end_request(request, auth)
-            return {'Response': 'Ok'}
+            return {'Response': 'Ok', 'version': settings.API_VERSION}
 
         return {
             'Response': 'Failure',
@@ -131,7 +134,9 @@ class Users(Endpoint):
         except Exception as ex:
             return {
                 'Response': 'Failure',
-                'Message': ex.message,
+                'Message': "Retrieval failed. Most likely, that user doesn't "
+                           "exist, please check users environment.  Failure: "
+                           + ex.message,
             }
 
     def post(self, request, *args, **kwargs):
