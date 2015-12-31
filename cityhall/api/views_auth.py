@@ -41,6 +41,7 @@ class Authenticate(Endpoint):
             auth = CONN.get_auth(user, passhash)
 
             if auth is None:
+                print "** attempting to authenticate: " + user + "  -> invalid auth"
                 return {
                     'Response': 'Failure',
                     'Message': 'Invalid username/password'
