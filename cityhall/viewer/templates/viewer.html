@@ -84,21 +84,21 @@
 
             <div class="col-sm-8">
                 <div id="env-value" ng-show="view_mode == 1">
-                    <a href ng-click="view_mode = 2">Manage</a>&nbsp;&nbsp;<a href ng-click="GetHistory()">Audit</a>
                     <div class="value_input" ng-style="UnsavedContent()">
                         <br>
-                        &nbsp;<textarea rows="1" cols="80" width="100%" ng-model="selected_value"></textarea>
-
                         <div class="row">
-                            <div class="col-sm-7"></div>
-                            <div class="col-sm-5">
-                                    <form ng-submit="Save()">
-                                        Protected:&nbsp;<input type="checkbox" ng-checked="selected_protected" ng-model="selected_protected">
-                                        &nbsp;<input type="submit" value="Save">
-                                    </form>
+                            <div class="col-sm-9">
+                                &nbsp;<textarea rows="1" cols="70" width="100%" ng-model="selected_value"></textarea>
                             </div>
-                            <div class="col-sm-1"></div>
+                            <div class="col-sm-2">
+                                <form ng-submit="view_mode = 2"><input type="submit" value="Manage" style="width: 125px;"></form>
+                                <p><form ng-submit="GetHistory()"><input type="submit" value="Audit" style="width: 125px;"></form></p>
+                                <button ng-click="selected_protected = !selected_protected" style="width: 125px;">{{ protect_button }}</button>
+                                <p><form ng-submit="Save()"><input type="submit" value="Save" style="width: 125px;"></form></p>
+                            </div>
                         </div>
+
+
                     </div>
                 </div>
 

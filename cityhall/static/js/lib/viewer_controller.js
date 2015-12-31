@@ -18,6 +18,8 @@ String.prototype.endsWith = function(suffix) {
 };
 
 var INCOMPLETE_MARKER = "...";
+var UNPROTECTED = 'Visibility: Public';
+var PROTECTED = 'Visibility: Private';
 
 app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
     function($scope, md5, settings) {
@@ -26,6 +28,7 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.env = 'dev';
         $scope.selected_value = '';
         $scope.selected_protected = false;
+        $scope.protect_button = UNPROTECTED;
 
         $scope.view_mode = 1;
         $scope.logged_in_user = "";
@@ -169,10 +172,6 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                                     real_path: '/'
                                 });
                                 order++;
-
-                                console.log('adding: ' + env + ': ' + int_to_rights_str(environments[env]));
-
-
                             }
                         },
                         error
@@ -649,6 +648,10 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     alert('Failed to get user info for '+$scope.view_user_name+': '+ err.Message);
                 }
             );
-        }
+        };
+
+        $scope.$watch('selected_protected', function () {
+            $scope.protect_button = $scope.selected_protected ? PROTECTED : UNPROTECTED;
+        });
     }
 ]);
