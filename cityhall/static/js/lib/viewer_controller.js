@@ -126,6 +126,22 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             }
         };
 
+        var node_to_user_friendly_name = function(node, loaded) {
+            var ret = loaded ? node.real_name : node.name;
+
+            if (node.override.length > 0) {
+                ret = ret + " [" + node.override + "]";
+            } else if (!loaded) {
+                ret = ret + INCOMPLETE_MARKER;
+            }
+
+            if (node.protect) {
+                ret = "* " + ret;
+            }
+
+            return ret;
+        };
+
         $scope.Login = function() {
             var error = function(data) {
                 $scope.loggedIn = false;
@@ -248,15 +264,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
                             for (var i = 0; i < data.children.length; i++) {
                                 var child = data.children[i];
-                                var node_name = child.name;
-                                if (child.override.length > 0) {
-                                    node_name = node_name + " [" + child.override + "]";
-                                } else {
-                                    node_name = node_name + INCOMPLETE_MARKER;
-                                }
 
                                 node.children.push({
-                                    "name": node_name,
+                                    "name": node_to_user_friendly_name(child, false),
                                     "real_name": child.name,
                                     "override": child.override,
                                     "valid": true,
@@ -297,14 +307,18 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
         $scope.Save = function() {
             var node = $scope.selected_node;
-            var value = ($scope.selected_value != node.value) ? $scope.selected_value : undefined;
-            var protect = ($scope.selected_protected != node.protect) ? $scope.selected_protected : undefined;
+            var have_value = $scope.selected_value != node.value;
+            var have_protect = $scope.selected_protected != node.protect;
 
-            if ($scope.loggedIn && (value || protect)) {
-                settings.saveValue(node.env, node.real_path, node.override, value, protect,
+            if ($scope.loggedIn && (have_value || have_protect)) {
+                var value = have_value ? $scope.selected_value : undefined;
+                var protect = have_protect ? $scope.selected_protected : undefined;
+                settings.saveValue(
+                    node.env, node.real_path, node.override, value, protect,
                     function() {
                         node.value = $scope.selected_value;
                         node.protect = $scope.selected_protected;
+                        node.name = node_to_user_friendly_name(node, true);
                     },
                     function(data) {
                         alert(data['Message']);
