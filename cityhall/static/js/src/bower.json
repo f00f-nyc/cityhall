@@ -8,7 +8,7 @@
   "description": "Enterprise Settings Server",
   "license": "AGPL",
   "dependencies": {
-    "angular-md5": "0.1.7",
+    "cityhall": "0.0.3",
     "angular-tree-control": "0.2.9",
     "bootstrap": "~3.3.5"
   },
