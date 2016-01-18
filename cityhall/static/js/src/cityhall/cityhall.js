@@ -1,8 +1,78 @@
 angular.module('cityhall', ['angular-md5'])
 .factory('settings', ['$http', 'md5',
     function(http, md5) {
+        /**
+         * Internal function.  Checks to see if func exists, and if it does,
+         * call it using data.
+         *
+         * @param func - the function to call
+         * @param err - the first parameter to pass to func
+         * @param data - the second parameter to pass to func
+         */
+        var safeCall = function(func, err, data) {
+            if ((func != undefined) && (func instanceof Function)) {
+                func(err, data);
+            }
+        };
+
+        var loggedIn = false;
+
+        /**
+         * Internal function.  Ensures that the user is logged in.
+         * If he isn't, and he has passed through a failure() func, call
+         * that. Otherwise, throw an exception to log in.
+         *
+         * @param failure - function to call with the error, if it exists
+         * @returns {boolean} - true if logged in, false otherwise
+         */
+        var ensureLoggedIn = function(callback) {
+            if (!loggedIn) {
+                safeCall(callback, 'Not logged in, yet');
+                return false;
+            }
+            return true;
+        };
+
+        /**
+         * Internal function.  Returns a req object to be passed to http()
+         *
+         * @param method - the method to use 'GET', 'POST'
+         * @param url - the url to use
+         */
+        var getReq = function(method, url) {
+            return {
+                method: method,
+                url: url
+            };
+        };
+
+        /**
+         * Internal call to wrap a call to http and route response to success/failure
+         *
+         * @param req - the request to wrap
+         * @param callback - the function to call when data comes back
+         */
+        var wrapHttpCall = function(req, callback) {
+            http(req)
+                .success(function (data) {
+                    if (data['Response'] == 'Ok') {
+                        safeCall(callback, undefined, data);
+                    } else {
+                        safeCall(callback, data, undefined);
+                    }
+                });
+        };
+
+        var getHashFromCleartext = function(password) {
+            if (password.length > 0) {
+                return md5.createHash(password);
+            }
+
+            return '';    //by convention, no password also gets no hash
+        };
+
         return {
-            loggedIn: false,
+            isLoggedIn: function() { return loggedIn; },
 
             /**
              * This is the current logged in user, if you are logged in.
@@ -37,80 +107,6 @@ angular.module('cityhall', ['angular-md5'])
             },
 
             /**
-             * Internal function.  Checks to see if func exists, and if it does,
-             * call it using data.
-             *
-             * @param func - the function to call
-             * @param data - the data to pass to the
-             */
-            safeCall: function(func, data) {
-                if ((func != undefined) && (func instanceof Function)) {
-                    func(data);
-                }
-            },
-
-            /**
-             * Internal function.  Ensures that the user is logged in.
-             * If he isn't, and he has passed through a failure() func, call
-             * that. Otherwise, throw an exception to log in.
-             *
-             * @param failure - function to call with the error, if it exists
-             * @returns {boolean} - true if logged in, false otherwise
-             */
-            ensureLoggedIn: function(failure) {
-                if (!this.loggedIn) {
-                    if ((failure != undefined) && (failure instanceof Function)) {
-                        failure({Response: 'Failure', Message: 'Not logged in, yet.'});
-                    } else {
-                        throw 'Not logged in, yet';
-                    }
-
-                    return false;
-                }
-                return true;
-            },
-
-            /**
-             * Internal function.  Returns a req object to be passed to http()
-             *
-             * @param method - the method to use 'GET', 'POST'
-             * @param url - the url to use
-             */
-            getReq: function(method, url) {
-                return {
-                    method: method,
-                    url: url
-                };
-            },
-
-            /**
-             * Internal call to wrap a call to http and route response to success/failure
-             *
-             * @param req - the request to wrap
-             * @param success - the function to call on success
-             * @param failure - the function to call on failure
-             */
-            wrapHttpCall: function(req, success, failure, data) {
-                safeCallRef = this.safeCall;
-                http(req)
-                    .success(function (data) {
-                        if (data['Response'] == 'Ok') {
-                            safeCallRef(success, data);
-                        } else {
-                            safeCallRef(failure, data);
-                        }
-                    });
-            },
-
-            getHashFromCleartext: function(password) {
-                if (password.length > 0) {
-                    return md5.createHash(password);
-                }
-
-                return '';    //by convention, no password also gets no hash
-            },
-
-            /**
              * This function logs into City Hall.
              *
              * It is required in order for anything to work, and should be the
@@ -118,79 +114,80 @@ angular.module('cityhall', ['angular-md5'])
              *
              * @param user -the user name.
              * @param password - plaintext password.
-             * @param success - optional function to execute on success.
-             * @param failure - optional function to execute on failure.
+             * @param callback - callback of the form `function (err, data)`
              */
-            login: function(user, password, success, failure) {
+            login: function(user, password, callback) {
                 var self = this;
 
-                if (!this.loggedIn) {
-                    var hash = this.getHashFromCleartext(password);
+                if (!this.isLoggedIn()) {
+                    var hash = getHashFromCleartext(password);
                     var auth_data = {'username': user, 'passhash': hash};
                     var auth_url = this.url + 'auth/';
 
                     http.post(auth_url, auth_data)
                         .success(function (data) {
                             if (data['Response'] == 'Ok') {
-                                self.loggedIn = true;
+                                loggedIn = true;
                                 self.user_name = user;
                                 console.log('logged in for: ' + user);
 
                                 self.getDefaultEnv(
-                                    function(data) {
+                                    function(err, data) {
+                                        if (err) { safeCall(callback, err); return; }
+
                                         self.environment = data['value'];
                                         console.log('default environment: ' + self.environment);
-                                        self.safeCall(success, data);
-                                    },
-                                    failure
+                                        safeCall(callback, undefined, data);
+                                    }
                                 );
                             } else {
-                                self.safeCall(failure, data['Message']);
+                                safeCall(callback, data['Message']);
                             }
                         }).error(function (data) {
-                            self.safeCall(failure, data);
+                            safeCall(callback, data);
                         });
                 } else {
-                    this.safeCall(failure, 'Already Logged in');
+                    safeCall(callback, 'Already Logged in');
                 }
             },
 
-            logout: function(success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            logout: function(callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
-                var req = this.getReq('DELETE', this.url + 'auth/');
+                var req = getReq('DELETE', this.url + 'auth/');
                 var self = this;
 
-                this.wrapHttpCall(req,
-                    function (data) {
-                        self.loggedIn = false;
+                wrapHttpCall(req,
+                    function (err, data) {
+                        if (err) { safeCall(callback, err); return; }
+
+                        loggedIn = false;
                         self.user_name = '';
                         self.environment = '';
 
-                        success(data);
-                    },
-                    failure
+                        safeCall(callback);
+                    }
                 );
             },
 
             /**
              * Returns the default environment for the current user.
              *
-             * @param success - optional function to execute on success.
-             * @param failure - optional function to execute on failure.
+             * @param callback - callback of the form `function (err, data)`
              */
-            getDefaultEnv: function(success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            getDefaultEnv: function(callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var url = this.url + 'auth/user/' + this.user_name + '/default/';
-                var req = this.getReq('GET', url);
+                var req = getReq('GET', url);
                 var self = this;
-                this.wrapHttpCall(req,
-                    function (data) {
+                wrapHttpCall(req,
+                    function (err, data) {
+                        if (err) { safeCall(callback, err); return; }
+
                         self.environment = data['value'];
-                        success(data);
-                    },
-                    failure);
+                        safeCall(callback, undefined, data);
+                    });
             },
 
             /**
@@ -199,22 +196,22 @@ angular.module('cityhall', ['angular-md5'])
              * since that is what is read.
              *
              * @param default_env - the environment to set as default
-             * @param success - optional function to execute on success.
-             * @param failure - optional function to execute on failure.
+             * @param callback - callback of the form `function (err, data)`
              */
-            setDefaultEnv: function(default_env, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            setDefaultEnv: function(default_env, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var url = this.url + 'auth/user/' + this.user_name + '/default/';
-                var req = this.getReq('POST', url);
+                var req = getReq('POST', url);
                 req['data'] = {env: default_env};
                 var self = this;
-                this.wrapHttpCall(req,
-                    function (data) {
+                wrapHttpCall(req,
+                    function (err, data) {
+                        if (err) { safeCall(callback, err); return; }
+
                         self.environment = default_env;
-                        success(data);
-                    },
-                    failure);
+                        safeCall(callback, undefined, data);
+                    });
             },
 
             /**
@@ -224,16 +221,15 @@ angular.module('cityhall', ['angular-md5'])
              * @param env - the environment in which to look
              * @param override - the override to use.
              *      If this is undefined, the appropriate user default is retrieved
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            get: function(path, env, override, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            get: function(path, env, override, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var get_url = this.url +'env/' + env + path;
                 get_url += (override != undefined) ? '?override=' + override : '';
-                var req = this.getReq('GET', get_url);
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('GET', get_url);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -258,27 +254,29 @@ angular.module('cityhall', ['angular-md5'])
              * @param item - the member of the object to actually be updated
              */
             getValOverride: function(path, override, obj, item) {
-                this.get(path, this.environment, undefined,
-                function(data) {
-                    obj[item] = data['value'];
-                },
-                function(data) {
-                    console.log('An error occurred retrieving ' + path);
-                    console.log(data);
-                });
+                this.get(path, this.environment, override,
+                    function(err, data) {
+                        if (err) {
+                            console.log('An error occurred retrieving ' + path);
+                            console.log(err);
+                            return;
+                        }
+
+                        obj[item] = data['value'];
+                    });
             },
 
             /**
              * This function will return all user rights
              *
              * @param user - the user to query for
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            getUser: function(user, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
-                var req = this.getReq('GET', this.url + 'auth/user/' + user);
-                this.wrapHttpCall(req, success, failure);
+            getUser: function(user, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
+
+                var req = getReq('GET', this.url + 'auth/user/' + user);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -286,16 +284,15 @@ angular.module('cityhall', ['angular-md5'])
              *
              * @param env - the environment to look in, if undefined, default
              * @param path - the path to search
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            getChildren: function(env, path, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            getChildren: function(env, path, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 env = env == undefined ? this.environment : env;
                 var get_url = this.url + 'env/' + env + path + '?viewchildren=true';
-                var req = this.getReq('GET', get_url);
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('GET', get_url);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -308,20 +305,19 @@ angular.module('cityhall', ['angular-md5'])
              * @param override - the override to save to, may not be undefined
              * @param value - value to save, this can be undefined if you only wish to set protect
              * @param protect - protect status, this can be undefined if you only wish to set value
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            saveValue: function(env, path, override, value, protect, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            saveValue: function(env, path, override, value, protect, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var data = {};
                 if (value != undefined) { data.value = value; }
                 if (protect != undefined) { data.protect = protect ? true : false; }
 
                 var post_url = this.url + 'env/' + env + path + '?override='+ override;
-                var req = this.getReq('POST', post_url);
+                var req = getReq('POST', post_url);
                 req['data'] = data;
-                this.wrapHttpCall(req, success, failure);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -329,14 +325,13 @@ angular.module('cityhall', ['angular-md5'])
              * When it succeeds, the user will be set to Grant permissions on it.
              *
              * @param env - the environment to create
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            createEnvironment: function(env, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            createEnvironment: function(env, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
-                var req = this.getReq('POST', this.url + 'auth/env/' + env + '/');
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('POST', this.url + 'auth/env/' + env + '/');
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -345,15 +340,14 @@ angular.module('cityhall', ['angular-md5'])
              * @param env - environment to query
              * @param path - path within the environment
              * @param override - override for the path, this is required
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            getHistory: function(env, path, override, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            getHistory: function(env, path, override, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var url = this.url + 'env/' + env + path + '?override=' + override + '&viewhistory=true';
-                var req = this.getReq('GET', url);
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('GET', url);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -361,15 +355,14 @@ angular.module('cityhall', ['angular-md5'])
              * @param env - the environment for this key
              * @param path - the path for this key
              * @param override - the override for this key, this is required
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            delete: function(env, path, override, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            delete: function(env, path, override, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var url = this.url + 'env/' + env + path + '?override=' + override;
-                var req = this.getReq('DELETE', url);
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('DELETE', url);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -381,17 +374,16 @@ angular.module('cityhall', ['angular-md5'])
              *
              * @param user - the new user to be created
              * @param password - the plaintext password for the new user
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            createUser: function(user, password, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            createUser: function(user, password, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
-                var hash = this.getHashFromCleartext(password);
+                var hash = getHashFromCleartext(password);
                 var create_url = this.url + 'auth/user/' + user + '/';
-                req = this.getReq('POST', create_url);
+                req = getReq('POST', create_url);
                 req['data'] = {'passhash': hash};
-                this.wrapHttpCall(req, success, failure);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -400,31 +392,29 @@ angular.module('cityhall', ['angular-md5'])
              * @param user - the user to which to grant rights
              * @param env - the environment on which rights will be granted
              * @param rights - a value from this.Rights
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            grantUser: function(user, env, rights, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            grantUser: function(user, env, rights, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var url = cityhall_url + 'auth/grant/';
-                var req = this.getReq('POST', url);
+                var req = getReq('POST', url);
                 req['data'] = {'env': env, 'user': user, 'rights': rights};
-                this.wrapHttpCall(req, success, failure);
+                wrapHttpCall(req, callback);
             },
 
             /**
              * This function will delete a user.
              *
              * @param user - the user to delete
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            deleteUser: function(user, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            deleteUser: function(user, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var delete_url = this.url + 'auth/user/' + user + '/';
-                var req = this.getReq('DELETE', delete_url);
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('DELETE', delete_url);
+                wrapHttpCall(req, callback);
             },
 
             /**
@@ -433,24 +423,29 @@ angular.module('cityhall', ['angular-md5'])
              * user will be listed here.
              *
              * @param env - the environment to query
-             * @param success - function to call on success
-             * @param failure - function to call on failure
+             * @param callback - callback of the form `function (err, data)`
              */
-            viewUsers: function(env, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            viewUsers: function(env, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var users_url = this.url + 'auth/env/' + env + '/';
-                var req = this.getReq('GET', users_url);
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('GET', users_url);
+                wrapHttpCall(req, callback);
             },
 
-            updatePassword: function(password, success, failure) {
-                if (!this.ensureLoggedIn(failure)) { return; }
+            /**
+             * This function will update the current logged in user's password
+             *
+             * @param password - the plaintext password to update to
+             * @param callback - callback of the form `function (err, data)`
+             */
+            updatePassword: function(password, callback) {
+                if (!ensureLoggedIn(callback)) { return; }
 
                 var delete_url = this.url + 'auth/user/' + this.user_name + '/';
-                var req = this.getReq('PUT', delete_url);
-                req.data = {'passhash': this.getHashFromCleartext(password)};
-                this.wrapHttpCall(req, success, failure);
+                var req = getReq('PUT', delete_url);
+                req.data = {'passhash': getHashFromCleartext(password)};
+                wrapHttpCall(req, callback);
             }
         };
     }

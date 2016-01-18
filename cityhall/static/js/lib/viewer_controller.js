@@ -21,8 +21,8 @@ var INCOMPLETE_MARKER = "...";
 var UNPROTECTED = 'Visibility: Public';
 var PROTECTED = 'Visibility: Private';
 
-app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
-    function($scope, md5, settings) {
+app.controller('CityHallCtrl', ['$scope', 'settings',
+    function($scope, settings) {
         $scope.user = '';
         $scope.pass = '';
         $scope.env = '';
@@ -77,7 +77,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.move_key_sub = false;
 
         $scope.create_user = '';
-        $scope.create_pass = '';
+        $scope.create_pass2 = '';
+        $scope.create_pass1 = '';
 
         $scope.delete_user = '';
 
@@ -156,7 +157,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
             settings.url = cityhall_url;
             settings.login($scope.user, $scope.pass,
-                function(data) {
+                function(err, data) {
+                    if (err) { error(err); return; }
+
                     $scope.loggedIn = true;
                     $scope.logged_in_user = $scope.user;
                     $scope.status = data['Response'];
@@ -165,7 +168,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.dataForTheTree[0].valid = true;
 
                     settings.getUser($scope.user,
-                        function (data) {
+                        function (err, data) {
+                            if (err) { error(err); return; }
+
                             $scope.dataForTheTree = [];
                             var order = 0;
                             var environments = data['Environments'];
@@ -189,22 +194,21 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                                 });
                                 order++;
                             }
-                        },
-                        error
-                    );
+                        });
 
-                },
-                error
-            );
+                });
 
             //TODO: implement an extra get override ?viewprotect=true to set protect status of root
         };
 
         $scope.Logout = function() {
             settings.logout(
-                function (data) {
+                function (err, data) {
+                    if (err) {
+                        alert(err);
+                    }
+
                     $scope.loggedIn = false;
-                    settings.loggedIn = false;
                     settings.user_name = '';
                     $scope.dataForTheTree = [{
                         name: 'Not connected',
@@ -234,14 +238,14 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     $scope.view_user_name = '';
                     $scope.env = '';
 
-                },
-                function (data) { alert(data.Message); }
-            );
+                });
         };
 
         $scope.CreateEnv = function() {
             settings.createEnvironment($scope.env,
-                function (data) {
+                function (err, data) {
+                    if (err) { alert(err); return; }
+
                     $scope.UnloadEnv('users');
                     $scope.logged_in_permissions.push({environment: $scope.env, rights: int_to_rights_str(4)});
                     $scope.dataForTheTree.push({
@@ -260,9 +264,6 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                     });
                     
                     alert(data.Message);
-                },
-                function (data) {
-                    alert(data.Message);
                 }
             );
         };
@@ -271,32 +272,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             if (node.valid && $scope.loggedIn && !node.complete) {
                 node.complete = true;
 
-                settings
-                    .getChildren(node.env, node.real_path,
-                        function success(data) {
-                            if (node.name.endsWith(INCOMPLETE_MARKER)) {
-                                node.name = node.name.substring(0, node.name.length-3);
-                            }
-
-                            for (var i = 0; i < data.children.length; i++) {
-                                var child = data.children[i];
-
-                                node.children.push({
-                                    "name": node_to_user_friendly_name(child, false),
-                                    "real_name": child.name,
-                                    "override": child.override,
-                                    "valid": true,
-                                    "complete": child.override.length != 0,     // non-default overrides can't have children
-                                    "value": child.value,
-                                    "env": node.env,
-                                    "real_path": child.path,
-                                    "children": [],
-                                    "parent": node,
-                                    "protect": child.protect
-                                });
-                            }
-                        },
-                        function failure(data) {
+                settings.getChildren(
+                    node.env, node.real_path, function success(err, data) {
+                        if (err) {
                             node.children.push({
                                 "name": "[ERROR]",
                                 "real_name": "",
@@ -309,9 +287,33 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                                 "children": [],
                                 "parent": node,
                                 "protect": false
+                            });
+                            return;
                         }
-                    );
-                });
+
+                        if (node.name.endsWith(INCOMPLETE_MARKER)) {
+                            node.name = node.name.substring(0, node.name.length-3);
+                        }
+
+                        for (var i = 0; i < data.children.length; i++) {
+                            var child = data.children[i];
+
+                            node.children.push({
+                                "name": node_to_user_friendly_name(child, false),
+                                "real_name": child.name,
+                                "override": child.override,
+                                "valid": true,
+                                "complete": child.override.length != 0,     // non-default overrides can't have children
+                                "value": child.value,
+                                "env": node.env,
+                                "real_path": child.path,
+                                "children": [],
+                                "parent": node,
+                                "protect": child.protect
+                            });
+                        }
+                    }
+                );
             }
 
             $scope.selected_value = node.value;
@@ -331,13 +333,12 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 var protect = have_protect ? $scope.selected_protected : undefined;
                 settings.saveValue(
                     node.env, node.real_path, node.override, value, protect,
-                    function() {
+                    function(err, data) {
+                        if (err) { alert(err); return; }
+
                         node.value = $scope.selected_value;
                         node.protect = $scope.selected_protected;
                         node.name = node_to_user_friendly_name(node, true);
-                    },
-                    function(data) {
-                        alert(data['Message']);
                     }
                 );
             }
@@ -365,14 +366,13 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
             var node = $scope.selected_node;
             settings.saveValue(node.env, node.real_path + $scope.create_name, $scope.create_override, '', false,
-                function(data) {
+                function(err, data) {
+                    if (err) {  alert('Create value failed: ' + err); return; }
+
                     node.complete = false;
                     node.children = [];
                     $scope.view_mode = 1;
                     $scope.Selected(node, false);
-                },
-                function(data) {
-                    alert('Create value failed: ' + data.Message);
                 }
             );
         };
@@ -391,7 +391,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             var node = $scope.selected_node;
             settings.getHistory(
                 node.env, node.real_path, node.override,
-                function (data) {
+                function (err, data) {
+                    if (err) { alert('Get History failed: ' + err); return; }
+
                     var first = data.History[0];
                     $scope.selected_history = [
                         {
@@ -443,11 +445,8 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                                 type: type,
                                 value: current.value,
                                 public: (current.protect > 0) ? "N" : "Y"
-                            })
+                            });
                     }
-                },
-                function(data) {
-                    alert('Get History failed: ' + data.Message);
                 }
             );
         };
@@ -455,7 +454,9 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         $scope.Delete = function() {
             var node = $scope.selected_node;
             settings.delete(node.env, node.real_path, node.override,
-                function(data) {
+                function(err, data) {
+                    if (err) { alert('Delete key failed: ' + err); return; }
+
                     var should_remove = function(current) {
                         if (current.real_name == node.real_name) {
                             if (node.override == '') {
@@ -483,9 +484,6 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
 
                     $scope.view_mode = 1;
                     $scope.Selected(parent);
-                },
-                function(data) {
-                    alert('Delete key failed: ' + data.Message);
                 }
             );
         };
@@ -527,32 +525,34 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
             var unloadEnv = this.UnloadEnv;
             var move = function(path, override, children) {
                 settings.get(path, env_from, override,
-                    function(data) {
+                    function(err, data) {
+                        if (err) {
+                            throw 'Unable to get value for ' + env_from + path +': ' + err;
+                        }
+
                         settings.saveValue(
                             env_to, path, override, data['value'], data['protect'],
-                            function(data) {
+                            function(err, data) {
+                                if (err) {
+                                    throw "Unable to set value for " + env_from + path + ": " + err;
+                                }
                                 $scope.view_mode = 1;
-                            },
-                            function(data) {
-                                throw "Unable to set value for " + env_from + path + ": " + data['Message'];
                             });
                         unloadEnv(env_to);
-                    },
-                    function(data) {
-                        throw 'Unable to get value for ' + env_from + path +': ' + data['Message'];
                     }
                 );
 
                 if (children && (override == '')) {
                     settings.getChildren(env_from, path,
-                        function(data) {
+                        function(err, data) {
+                            if (err) {
+                                throw "error while attempting to move subkeys of: " + path + ': ' + err;
+                            }
+
                             for (var i=0; i<data.children.length; i++) {
                                 var child = data.children[i];
                                 move(child.path, child.override, children);
                             }
-                        },
-                        function (data) {
-                            throw "error while attempting to move subkeys of: " + path + ': ' + data['Message'];
                         });
                 }
             };
@@ -561,44 +561,45 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.CreateUser = function() {
-            settings.createUser($scope.create_user, $scope.create_pass,
-                function (data) {
+            if ($scope.create_pass1 != $scope.create_pass2) {
+                alert("Two passwords do not match");
+                return;
+            }
+
+            settings.createUser($scope.create_user, $scope.create_pass1,
+                function (err, data) {
+                    if (err) { alert('Failed to crate user: ' + err); return; }
+
                     $scope.UnloadEnv('users');
                     alert('User ' + $scope.create_user + ' created successfully');
-                },
-                function (data) {
-                    alert('Failed to crate user: ' + data.Message);
                 }
             );
         };
 
         $scope.DeleteUser = function() {
-            settings.deleteUser($scope.delete_user,
-                function (data) {
-                    $scope.UnloadEnv('users');
-                    alert('User ' + $scope.delete_user + ' deleted successfully.');
-                },
-                function(data) {
-                    alert('Failed to delete user ' + $scope.delete_user + ': ' + data.Message);
-                }
-            );
+            settings.deleteUser($scope.delete_user, function (err, data) {
+                if (err) { alert('Failed to delete user ' + $scope.delete_user + ': ' + err); return; }
+
+                $scope.UnloadEnv('users');
+                alert('User ' + $scope.delete_user + ' deleted successfully.');
+            });
         };
 
         $scope.GrantUser = function() {
             settings.grantUser($scope.grant_user, $scope.grant_env, $scope.grant_rights,
-                function(data) {
+                function(err, data) {
+                    if (err) { alert('Failed to grant rights: ' + err); return; }
+
                     $scope.UnloadEnv('users');
                     alert(data['Message']);
-                },
-                function(data) {
-                    alert('Failed to grant rights: ' + data['Message']);
                 }
             );
         };
 
         $scope.ViewUsers = function() {
-            settings.viewUsers($scope.view_env,
-                function(data) {
+            settings.viewUsers($scope.view_env, function(err, data) {
+                    if (err) { alert('Failed to view users: ' + err); return; }
+
                     $scope.view_users = [];
                     var users = data['Users'];
 
@@ -608,9 +609,6 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                             rights: int_to_rights_str(users[env])
                         });
                     }
-                },
-                function(data) {
-                    alert('Failed to view users: ' + data.Message);
                 }
             );
         };
@@ -644,14 +642,12 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
         };
 
         $scope.SetDefaultEnv = function() {
-            settings.setDefaultEnv($scope.default_env,
-                function () {
-                    $scope.prev_default_env = $scope.default_env;
-                    $scope.UnloadEnv('auto');
-                },
-                function(data) {
-                    alert('Failed to set default environment: ' + data.Message);
-                });
+            settings.setDefaultEnv($scope.default_env, function (err, data) {
+                if (err) { alert('Failed to set default environment: ' + err); return; }
+
+                $scope.prev_default_env = $scope.default_env;
+                $scope.UnloadEnv('auto');
+            });
         };
 
         $scope.UpdatePassword = function () {
@@ -660,24 +656,25 @@ app.controller('CityHallCtrl', ['$scope', 'md5', 'settings',
                 return;
             }
 
-            settings.updatePassword($scope.update_pass2,
-                function (data) {
-                    alert("Password updated successfully");
-                },
-                function (data) {
-                    alert("Failed to update password: " + data.Message);
+            settings.updatePassword($scope.update_pass2, function (err, data) {
+                    if (err) {
+                        alert("Failed to update password: " + err);
+                    } else {
+                        alert("Password updated successfully");
+                    }
                 }
             );
         };
 
         $scope.ViewUserInfo = function () {
-            settings.getUser($scope.view_user_name,
-                function (data) {   user_info_to_table(data['Environments'], 'view_user_envs')},
-                function (err) {
+            settings.getUser($scope.view_user_name, function (err, data) {
+                if (err) {
                     $scope.view_user_envs = [];
                     alert('Failed to get user info for '+$scope.view_user_name+': '+ err.Message);
+                } else {
+                    user_info_to_table(data['Environments'], 'view_user_envs');
                 }
-            );
+            });
         };
 
         $scope.$watch('selected_protected', function () {
