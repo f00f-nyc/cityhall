@@ -232,6 +232,7 @@ class Env(object):
             return self._honor_permissions(
                 self.db.get_value_for(parent_id, value_name, self.name)
             )
+        return None, None
 
     def get_children(self, path):
         index = self._get_index_of(path)
