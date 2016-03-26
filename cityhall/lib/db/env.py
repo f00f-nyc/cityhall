@@ -219,6 +219,7 @@ class Env(object):
         index = self._get_index_of(path, override)
         if index >= 0:
             return self._honor_permissions(self.db.get_value(index))
+        return None, None
 
     def get(self, path):
         if path == '/':

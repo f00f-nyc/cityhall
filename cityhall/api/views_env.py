@@ -135,8 +135,13 @@ class EnvView(Endpoint):
 
     @staticmethod
     def get_value_for(auth, env, path, override):
-        value = auth.get_env(env).get(path) if override is None \
-            else auth.get_env(env).get_explicit(path, override)
+        env = auth.get_env(env)
+
+        if override is  None:
+            value = env.get(path)
+        else:
+            value = env.get_explicit(path, override)
+
         return {
             'Response': 'Ok',
             'value': value[0],
