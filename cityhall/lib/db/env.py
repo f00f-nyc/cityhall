@@ -168,8 +168,13 @@ class Env(object):
         cached = self._index_from_cache(cache_key)
 
         if cached is not None:
-            self.db.update(self.name, cached, value)
-            return True
+            # An item might have been deleted, but still lingers in cache
+            current = self.db.get_value(cached)
+            if current == (None, None):
+                self.cache.delete(cache_key)
+            else:
+                self.db.update(self.name, cached, value)
+                return True
 
         parent_index = self._get_parent_id(path)
 

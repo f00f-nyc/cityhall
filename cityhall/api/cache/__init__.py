@@ -41,6 +41,12 @@ class CacheDict:
                 self.values.popitem(last=False)
         self.values[key] = value
 
+    def delete(self, key):
+        try:
+            del self.values[key]
+        except KeyError:
+            pass
+
     def __setitem__(self, key, value):
         return self.set(key, value)
 
