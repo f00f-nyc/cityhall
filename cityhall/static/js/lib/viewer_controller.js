@@ -677,8 +677,17 @@ app.controller('CityHallCtrl', ['$scope', 'settings',
             });
         };
 
+        $scope.ReloadNode = function () {
+            var node = $scope.selected_node;
+            node.name =  node_to_user_friendly_name(node, false);
+            node.complete = false;
+            node.children = [];
+            this.Selected(node);
+        };
+
         $scope.$watch('selected_protected', function () {
             $scope.protect_button = $scope.selected_protected ? PROTECTED : UNPROTECTED;
         });
+
     }
 ]);
