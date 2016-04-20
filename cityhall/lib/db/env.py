@@ -244,13 +244,13 @@ class Env(object):
         index = self._get_index_of(path)
         path = sanitize_path(path)
         can_read = lambda i: True
-
+		
         if self.permissions < Rights.Read:
             return []
         elif self.permissions == Rights.Read:
             can_read = lambda i: not i['protect']
 
-        if index:
+        if index >= 0:
             return [
                 {
                     'name': child['name'],
