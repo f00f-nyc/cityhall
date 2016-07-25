@@ -588,7 +588,7 @@ app.controller('CityHallCtrl', ['$scope', 'settings',
         $scope.GrantUser = function() {
             settings.grantUser($scope.grant_user, $scope.grant_env, $scope.grant_rights,
                 function(err, data) {
-                    if (err) { alert('Failed to grant rights: ' + err); return; }
+                    if (err) { alert('Failed to grant rights: ' + err.Message); return; }
 
                     $scope.UnloadEnv('users');
                     alert(data['Message']);
