@@ -168,8 +168,13 @@ class Env(object):
         cached = self._index_from_cache(cache_key)
 
         if cached is not None:
-            self.db.update(self.name, cached, value)
-            return True
+            # An item might have been deleted, but still lingers in cache
+            current = self.db.get_value(cached)
+            if current == (None, None):
+                self.cache.delete(cache_key)
+            else:
+                self.db.update(self.name, cached, value)
+                return True
 
         parent_index = self._get_parent_id(path)
 
@@ -219,6 +224,7 @@ class Env(object):
         index = self._get_index_of(path, override)
         if index >= 0:
             return self._honor_permissions(self.db.get_value(index))
+        return None, None
 
     def get(self, path):
         if path == '/':
@@ -238,13 +244,13 @@ class Env(object):
         index = self._get_index_of(path)
         path = sanitize_path(path)
         can_read = lambda i: True
-
+		
         if self.permissions < Rights.Read:
             return []
         elif self.permissions == Rights.Read:
             can_read = lambda i: not i['protect']
 
-        if index:
+        if index >= 0:
             return [
                 {
                     'name': child['name'],

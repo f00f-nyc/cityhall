@@ -588,7 +588,7 @@ app.controller('CityHallCtrl', ['$scope', 'settings',
         $scope.GrantUser = function() {
             settings.grantUser($scope.grant_user, $scope.grant_env, $scope.grant_rights,
                 function(err, data) {
-                    if (err) { alert('Failed to grant rights: ' + err); return; }
+                    if (err) { alert('Failed to grant rights: ' + err.Message); return; }
 
                     $scope.UnloadEnv('users');
                     alert(data['Message']);
@@ -677,8 +677,17 @@ app.controller('CityHallCtrl', ['$scope', 'settings',
             });
         };
 
+        $scope.ReloadNode = function () {
+            var node = $scope.selected_node;
+            node.name =  node_to_user_friendly_name(node, false);
+            node.complete = false;
+            node.children = [];
+            this.Selected(node);
+        };
+
         $scope.$watch('selected_protected', function () {
             $scope.protect_button = $scope.selected_protected ? PROTECTED : UNPROTECTED;
         });
+
     }
 ]);

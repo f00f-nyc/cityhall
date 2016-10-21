@@ -118,6 +118,13 @@ class Auth(object):
         if curr >= Rights.Grant:
             self._ensure_users_env()
             user_folder = self.db.get_child(self.users_env, user)
+
+            if user_folder is None:
+                return (
+                    'Failure',
+                    "Specified user `{}` doesn't exist, or has no user folder".format(user)
+                )
+
             existing = self.db.get_child(user_folder['id'], env)
 
             if not existing:
