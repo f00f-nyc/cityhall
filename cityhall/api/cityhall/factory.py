@@ -5,7 +5,7 @@ from api.models import User, Value
 
 class Factory(DbFactory):
     def __str__(self):
-        return "cityhall.Factory (users: {}, active values: {}"\
+        return "cityhall.Factory (users: {}, active values: {})"\
             .format(
                 User.objects.count(),
                 Value.objects.filter(active=True).count(),
