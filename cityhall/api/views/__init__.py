@@ -14,8 +14,8 @@
 
 from restless.views import Endpoint
 from django.conf import settings
-from lib.db.connection import Connection
-from lib.db.db import Rights
+from api.db.connection import Connection
+from api.db.constants import Rights
 
 
 DB = settings.CITY_HALL_DATABASE

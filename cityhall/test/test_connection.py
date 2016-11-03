@@ -14,7 +14,7 @@
 
 from django.test import TestCase
 from api.db.memory.db_factory import CityHallDbFactory
-from lib.db.connection import Connection
+from api.db.connection import Connection
 
 
 class TestConnection(TestCase):

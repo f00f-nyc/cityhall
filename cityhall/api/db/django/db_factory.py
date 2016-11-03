@@ -1,4 +1,4 @@
-from lib.db.db import DbFactory
+from api.db.constants import DbFactory
 from api.db.django.db import Db
 from api.models import User, Value
 

@@ -13,8 +13,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import simplejson as json
-from lib.db.auth import Auth
-from lib.db.env import Env
+from api.db.auth import Auth
+from api.db.env import Env
 from api.views import CONN
 
 

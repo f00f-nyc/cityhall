@@ -12,13 +12,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from lib.db import db
-from lib.db.db import DbState
+from api.db.constants import DbFactory, DbState
 from datetime import datetime
 from api.db.memory.db import CityHallDb
 
 
-class CityHallDbFactory(db.DbFactory):
+class CityHallDbFactory(DbFactory):
     def __init__(self):
         self.state = DbState.Closed
         self.authTable = None

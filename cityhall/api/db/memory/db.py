@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from lib.db.db import Db
+from api.db.constants import Db
 from datetime import datetime
 
 
@@ -29,7 +29,7 @@ class CityHallDb(Db):
 
     @property
     def __str__(self):
-        from lib.db.memory.cityhall_db_factory import CityHallDbFactory
+        from api.db.memory.db_factory import CityHallDbFactory
         assert isinstance(self.db, CityHallDbFactory)
         return "(In-Memory Db): Values: {}, Authorizations: {}".format(
             len(self.db.valsTable) if self.db.valsTable else 'None',
