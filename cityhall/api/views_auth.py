@@ -114,6 +114,7 @@ class Environments(Endpoint):
 
 class Users(Endpoint):
     NO_USER = {'Response': 'Failure', 'Message': 'Expected a user to retrieve'}
+    INVALID_USER = {'Response': 'Failure', 'Message': 'Given user was incorrect or missing'}
 
     def authenticate(self, request):
         return is_valid(request)
@@ -161,6 +162,13 @@ class Users(Endpoint):
     def put(self, request, *args, **kwargs):
         user = kwargs.get('user', None)
         passhash = request.data.get('passhash', None)
+
+        if passhash is None:
+            return {
+                'Response': 'Failure',
+                'Message': 'Incomplete update, expected passhash'
+            }
+
         auth = get_auth_or_create_guest(request)
 
         if not auth:
@@ -222,13 +230,18 @@ class UserDefaultEnv(Endpoint):
         user = kwargs.get('user')
         if not user:
             return Users.NO_USER
-        auth = get_auth_or_create_guest(request)
         default_env = request.data.get('env', None)
         if not default_env:
             return {
                 'Response': 'Failure',
                 'Message': 'Expected an "env" value to set.'
             }
+
+        auth = get_auth_or_create_guest(request)
+
+        if auth.name == 'guest' or auth.name != user:
+            return Users.INVALID_USER
+
         auth.set_default_env(default_env)
         return {'Response': 'Ok', 'Message': 'Default set to: ' + default_env}
 

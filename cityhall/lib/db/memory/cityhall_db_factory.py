@@ -88,7 +88,20 @@ class CityHallDbFactory(db.DbFactory):
                 'value': '4',
                 'protect': False,
 
-            }]
+            },
+            {
+                'id': 6,
+                'parent': 1,
+                'active': True,
+                'name': 'connect',
+                'override': '',
+                'author': 'cityhall',
+                'datetime': datetime.now(),
+                'value': '4',
+                'protect': False,
+
+            },
+        ]
         self.authTable = [{
             'id': 0,
             'active': True,
