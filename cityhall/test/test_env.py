@@ -261,7 +261,7 @@ class TestEnvironment(TestCase):
         self.env.set('/value1', 'def', 'cityhall')
         self.env.delete('/value1', '')
         get = self.env.get_explicit('/value1', 'cityhall')
-        self.assertIsNone(get)
+        self.assertEqual((None, None), get)
 
     def test_deleted_values_no_longer_returned(self):
         self.env.set('/value1', 'abc')
