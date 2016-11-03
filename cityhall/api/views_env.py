@@ -92,7 +92,7 @@ class EnvView(Endpoint):
         if int(env.permissions) < Rights.Write:
             return {
                 'Response': 'Failure',
-                'Message': 'Do not have write permissions to ' + info.env
+                'Message': 'Do not have write permissions to {}'.format(info.env)
             }
 
         try:
@@ -137,7 +137,7 @@ class EnvView(Endpoint):
     def get_value_for(auth, env, path, override):
         env = auth.get_env(env)
 
-        if override is  None:
+        if override is None:
             value = env.get(path)
         else:
             value = env.get_explicit(path, override)

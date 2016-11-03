@@ -22,8 +22,9 @@ from six import text_type
 
 SESSION_AUTH = 'cityhall-auth'
 NOT_AUTHENTICATED = HttpResponse(
-    'Session is not authenticated, '
-    'and could not obtain get a guest credentials'
+    content='{"Response": "Failure",'
+    '"Message": "Session is not authenticated, and could not obtain get a guest credentials"}',
+    content_type='application/json',
 )
 
 

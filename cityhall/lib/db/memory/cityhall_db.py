@@ -134,7 +134,7 @@ class CityHallDb(Db):
                 'datetime': datetime.now(),
                 'value': value,
                 'first_last': False,
-                'protect': False,
+                'protect': original['protect'],
             })
 
     def delete(self, user, index):

@@ -20,7 +20,6 @@ from lib.db.memory.cityhall_db_factory import CityHallDbFactory
 
 @override_settings(CITY_HALL_DATABASE=CityHallDbFactory())
 class ApiTestCase(TestCase):
-
     def result_to_dict(self, result):
         try:
             return json.loads(result.content)
@@ -69,5 +68,10 @@ class TestApiCreate(ApiTestCase):
         self.client.get('/api/v1/create_default/')
         after = self.client.get('/api/v1/env/auto/')
 
-        self.assertEqual('Session is not authenticated, and could not obtain get a guest credentials', before.content)
+        before_dict = self.result_to_dict(before)
+        self.assertEqual('Failure', before_dict['Response'])
+        self.assertEqual(
+            'Session is not authenticated, and could not obtain get a guest credentials',
+            before_dict['Message'],
+        )
         self.check_value(after, '')

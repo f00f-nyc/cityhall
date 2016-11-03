@@ -42,6 +42,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '',
                 'protect': False,
+                'first_last': True,
             },
             {
                 'id': 2,
@@ -53,6 +54,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '',
                 'protect': False,
+                'first_last': True,
             },
             {
                 'id': 3,
@@ -64,6 +66,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '',
                 'protect': False,
+                'first_last': True,
             },
             {
                 'id': 4,
@@ -75,7 +78,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '4',
                 'protect': False,
-
+                'first_last': True,
             },
             {
                 'id': 5,
@@ -87,7 +90,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '4',
                 'protect': False,
-
+                'first_last': True,
             },
             {
                 'id': 6,
@@ -99,7 +102,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '4',
                 'protect': False,
-
+                'first_last': True,
             },
         ]
         self.authTable = [{
