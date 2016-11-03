@@ -14,7 +14,7 @@
 
 from django.test import TestCase
 from lib.db.db import DbState, Rights
-from lib.db.memory.cityhall_db_factory import CityHallDbFactory
+from api.db.memory.db_factory import CityHallDbFactory
 
 
 class TestMemoryDb(TestCase):

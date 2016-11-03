@@ -15,7 +15,7 @@
 import simplejson as json
 from simplejson.decoder import JSONDecodeError
 from django.test import TestCase, override_settings
-from lib.db.memory.cityhall_db_factory import CityHallDbFactory
+from api.db.memory.db_factory import CityHallDbFactory
 
 
 @override_settings(CITY_HALL_DATABASE=CityHallDbFactory())

@@ -15,7 +15,7 @@
 from lib.db import db
 from lib.db.db import DbState
 from datetime import datetime
-from .cityhall_db import CityHallDb
+from api.db.memory.db import CityHallDb
 
 
 class CityHallDbFactory(db.DbFactory):
