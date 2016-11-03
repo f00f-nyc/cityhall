@@ -1,5 +1,5 @@
 from lib.db.db import DbFactory
-from api.cityhall.db import Db
+from api.db.django.db import Db
 from api.models import User, Value
 
 

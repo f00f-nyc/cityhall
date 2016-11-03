@@ -12,9 +12,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from api.cityhall.environments import Environments
-from api.cityhall.users import Users
-from api.cityhall.values import Values
+from api.db.django.environments import Environments
+from api.db.django.users import Users
+from api.db.django.values import Values
 
 
 class Db(Environments, Users, Values):

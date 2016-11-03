@@ -132,7 +132,7 @@ CACHE_OPTIONS = {
     'ENV_CAPACITY': 10,
 }
 
-from api.cityhall.factory import Factory
+from api.db.django.db_factory import Factory
 CITY_HALL_DATABASE = Factory()
 
 API_VERSION = 1
