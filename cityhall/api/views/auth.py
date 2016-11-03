@@ -14,8 +14,8 @@
 
 from restless.views import Endpoint, HttpResponse
 from django.conf import settings
-from .views import CONN
-from session import (
+from api.views import CONN
+from api.session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
     end_request, NOT_AUTHENTICATED, SESSION_AUTH, clean_data
 )

@@ -13,7 +13,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from session import is_valid, get_auth_from_request, end_request
+from api.session import is_valid, get_auth_from_request, end_request
 from lib.db.db import Rights
 
 
