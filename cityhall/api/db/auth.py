@@ -12,7 +12,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import cityhall.settings as settings
 from api.cache import CacheDict
 from api.db.env import Env
 from api.db import Rights
@@ -23,7 +22,7 @@ class Auth(object):
         self.db = db
         self.name = name
         self.roots_cache = CacheDict(
-            capacity=settings.CACHE_OPTIONS['ENV_CAPACITY']
+            capacity=self.db.settings('cache', 'ENV_CAPACITY')
         )
         self.user_root = user_root
         self.users_env = None

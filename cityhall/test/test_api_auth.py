@@ -21,7 +21,7 @@ class TestApiLogin(ApiTestCase):
         result = self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
         self.check_result(result)
         content = self.result_to_dict(result)
-        self.assertEqual(settings.API_VERSION, content['version'])
+        self.assertEqual(settings.CITY_HALL_OPTIONS['version'], content['version'])
 
     def test_incomplete_login(self):
         result = self.client.post('/api/v1/auth/', {})

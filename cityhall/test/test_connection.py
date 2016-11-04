@@ -15,6 +15,10 @@
 from django.test import TestCase
 from api.db.connection import Connection
 from api.db.memory.db_factory import CityHallDbFactory
+from django.conf import settings
+
+
+cityhall_settings = settings.CITY_HALL_OPTIONS
 
 
 class TestConnection(TestCase):
@@ -24,7 +28,7 @@ class TestConnection(TestCase):
         self.conn = None
 
     def setUp(self):
-        self.conn = Connection(CityHallDbFactory())
+        self.conn = Connection(CityHallDbFactory(cityhall_settings))
         self.db_conn = self.conn.db_connection
 
     def test_create_env(self):

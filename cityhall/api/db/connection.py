@@ -14,33 +14,13 @@
 
 from api.db.auth import Auth
 import cityhall.settings as settings
+from api.db.django.db_factory import Factory
+from api.db.memory.db_factory import CityHallDbFactory
 
 
 class Connection(object):
     def __init__(self, db):
         self.db_connection = db
-
-    _instance = None
-
-    @classmethod
-    def instance(cls):
-        if cls._instance is not None:
-            return cls._instance
-
-        if settings.DATABASE_TYPE == 'django':
-            from api.db.django.db_factory import Factory
-            cls._instance = Connection(Factory())
-        elif settings.DATABASE_TYPE == 'memory':
-            from api.db.memory.db_factory import CityHallDbFactory
-            cls._instance = Connection(CityHallDbFactory())
-        else:
-            raise KeyError(
-                'Attempting to get db of type {}, which is not implemented'.\
-                format(settings.DATABASE_TYPE)
-            )
-
-        cls._instance.connect()
-        return cls._instance
 
     def connect(self):
         self.db_connection.open()
@@ -58,8 +38,26 @@ class Connection(object):
             self.db_connection.create_default_tables()
 
     def get_auth(self, user, passhash):
-        open = self._ensure_open()
+        opened = self._ensure_open()
         authenticated = self.db_connection.authenticate(user, passhash)
-        if open and authenticated:
+        if opened and authenticated:
             return Auth(self.db_connection.get_db(), user, authenticated)
         return None
+
+
+def get_new_db():
+    if 'db_type' not in settings.CITY_HALL_OPTIONS:
+        raise KeyError('Expected CITY_HALL_OPTIONS to contain "db_type"')
+
+    if settings.CITY_HALL_OPTIONS['db_type'] == 'django':
+        return Factory(settings.CITY_HALL_OPTIONS)
+    elif settings.CITY_HALL_OPTIONS['db_type'] == 'memory':
+        return CityHallDbFactory(settings.CITY_HALL_OPTIONS)
+
+    raise KeyError(
+        'Attempting to get db of type {}, which is not implemented'.
+        format(settings.CITY_HALL_OPTIONS['db_type'])
+    )
+
+Instance = Connection(get_new_db())
+Instance.connect()

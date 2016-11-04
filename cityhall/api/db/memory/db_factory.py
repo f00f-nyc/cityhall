@@ -18,7 +18,8 @@ from api.db.memory.db import CityHallDb
 
 
 class CityHallDbFactory(DbFactory):
-    def __init__(self):
+    def __init__(self, settings):
+        super(CityHallDbFactory, self).__init__(settings)
         self.state = DbState.Closed
         self.authTable = None
         self.valsTable = None

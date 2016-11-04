@@ -15,7 +15,9 @@
 from api.db.django.environments import Environments
 from api.db.django.users import Users
 from api.db.django.values import Values
+from api.db import Db as AbstractDb
 
 
-class Db(Environments, Users, Values):
-    pass
+class Db(Environments, Users, Values, AbstractDb):
+    def __init__(self, parent):
+        AbstractDb.__init__(self, parent)
