@@ -118,6 +118,14 @@ STATICFILES_DIRS = [
 ]
 
 
+################################################################
+# These are City Hall specific options
+#
+# To avoid circular dependency problems, they're imported directly from here
+# and not from django.conf.settings.
+################################################################
+
+
 CACHE_OPTIONS = {
     # As a user looks at an environment, the index of paths is stored
     # in the user session.  This value stores how many paths to store
@@ -132,7 +140,7 @@ CACHE_OPTIONS = {
     'ENV_CAPACITY': 10,
 }
 
-# The type of database connection. This is honored by api.views.get_new_db()
+# Type of database connection. This is honored by api.db.Connection.instance()
 # Current possible options are: 'django' or 'memory'
 DATABASE_TYPE = 'django'
 

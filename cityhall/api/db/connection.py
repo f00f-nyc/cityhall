@@ -13,6 +13,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from api.db.auth import Auth
+import cityhall.settings as settings
 
 
 class Connection(object):
@@ -25,8 +26,6 @@ class Connection(object):
     def instance(cls):
         if cls._instance is not None:
             return cls._instance
-
-        import cityhall.settings as settings
 
         if settings.DATABASE_TYPE == 'django':
             from api.db.django.db_factory import Factory
