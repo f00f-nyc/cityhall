@@ -14,12 +14,12 @@
 
 from copy import copy
 from django.db import transaction
-from api.models import User, EnvUsers
+from api.models import User
 
 
 class Users(object):
     def get_users(self, env):
-        ret = EnvUsers.get_users(env)
+        ret = User.objects.get_users_for_env(env)
         return {u.name: u.entry for u in ret}
 
     def create_user(self, author, user, passhash, user_root):
