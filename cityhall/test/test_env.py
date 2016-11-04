@@ -14,7 +14,8 @@
 
 from django.test import TestCase
 from api.db.memory.db_factory import CityHallDbFactory
-from api.db import Rights, Connection
+from api.db import Rights
+from api.db.connection import Connection
 
 
 class TestEnvironment(TestCase):

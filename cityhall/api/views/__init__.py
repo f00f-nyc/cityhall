@@ -14,22 +14,8 @@
 
 from restless.views import Endpoint
 from django.conf import settings
-from api.db import Connection, Rights
-
-
-def get_new_db():
-    if settings.DATABASE_TYPE == 'django':
-        from api.db.django.db_factory import Factory
-        return Factory()
-    elif settings.DATABASE_TYPE == 'memory':
-        from api.db.memory.db_factory import CityHallDbFactory
-        return CityHallDbFactory()
-
-    raise KeyError('Attempting to get database of type {}, which is not implemented'.format(settings.DATABASE_TYPE))
-CONN = Connection(get_new_db())
-
-CONN.connect()
-
+from api.db import Rights
+from api.db.connection import Connection
 
 class Info(Endpoint):
     def get(self, request):
@@ -38,11 +24,11 @@ class Info(Endpoint):
 
 class Create(Endpoint):
     def get(self, request):
-        CONN.create_default_env()
+        Connection.instance().create_default_env()
         self._create_guest()
         return {'Response': 'Ok'}
 
     def _create_guest(self):
-        auth = CONN.get_auth('cityhall', '')
+        auth = Connection.instance().get_auth('cityhall', '')
         auth.create_user('guest', '')
         auth.grant('auto', 'guest', Rights.Read)

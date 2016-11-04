@@ -14,7 +14,7 @@
 
 from restless.views import Endpoint, HttpResponse
 from django.conf import settings
-from api.views import CONN
+from api.db.connection import Connection
 from api.session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
     end_request, NOT_AUTHENTICATED, SESSION_AUTH, clean_data
@@ -38,7 +38,7 @@ class Authenticate(Endpoint):
                 'passhash' in request.data:
             user = request.data['username']
             passhash = request.data['passhash']
-            auth = CONN.get_auth(user, passhash)
+            auth = Connection.instance().get_auth(user, passhash)
 
             if auth is None:
                 return {

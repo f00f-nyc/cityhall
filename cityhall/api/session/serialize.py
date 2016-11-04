@@ -15,7 +15,7 @@
 import simplejson as json
 from api.db.auth import Auth
 from api.db.env import Env
-from api.views import CONN
+from api.db.connection import Connection
 
 
 def serialize_env(env):
@@ -32,7 +32,7 @@ def serialize_env(env):
 def deserialize_env(env_json):
     env_dict = json.loads(env_json)
     ret = Env(
-        db=CONN.db_connection.get_db(),
+        db=Connection.instance().db_connection.get_db(),
         env=env_dict['env'],
         permissions=env_dict['permissions'],
         name=env_dict['name'],
@@ -61,7 +61,7 @@ def serialize_auth(auth):
 def deserialize_auth(auth_json):
     auth_dict = json.loads(auth_json)
     ret = Auth(
-        db=CONN.db_connection.get_db(),
+        db=Connection.instance().db_connection.get_db(),
         name=auth_dict['name'],
         user_root=auth_dict['user_root']
     )

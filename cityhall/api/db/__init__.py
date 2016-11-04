@@ -13,7 +13,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from abc import abstractmethod
-from api.db.auth import Auth
 
 
 class DbState(object):
@@ -126,30 +125,3 @@ class Db(object):
     @abstractmethod
     def get_child(self, parent, name, override=''):
         pass
-
-
-class Connection(object):
-    def __init__(self, db):
-        self.db_connection = db
-
-    def connect(self):
-        self.db_connection.open()
-
-    def _ensure_open(self):
-        return self.db_connection.is_open()
-
-    def authenticate(self, user, passhash):
-        if self._ensure_open():
-            return self.db_connection.authenticate(user, passhash)
-        return None
-
-    def create_default_env(self):
-        if self._ensure_open():
-            self.db_connection.create_default_tables()
-
-    def get_auth(self, user, passhash):
-        open = self._ensure_open()
-        authenticated = self.db_connection.authenticate(user, passhash)
-        if open and authenticated:
-            return Auth(self.db_connection.get_db(), user, authenticated)
-        return None

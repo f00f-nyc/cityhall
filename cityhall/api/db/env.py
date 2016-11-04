@@ -12,10 +12,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# >>>>>>>>>>>>>>
-# from django.conf import settings
+import cityhall.settings as settings
 from api.cache import CacheDict
-from api.db.constants import Rights
+from api.db import Rights
 
 
 def sanitize_path(path):
@@ -38,7 +37,7 @@ class Env(object):
     def __init__(self, db, env, permissions, name, root_id):
         self.db = db
         self.cache = CacheDict(
-            capacity=30 # settings.CACHE_OPTIONS['PATH_CAPACITY'],
+            capacity=settings.CACHE_OPTIONS['PATH_CAPACITY'],
         )
         self.env = env
         self.root_id = root_id

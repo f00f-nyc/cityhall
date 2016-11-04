@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from api.db.constants import DbFactory, DbState
+from api.db import DbFactory, DbState
 from datetime import datetime
 from api.db.memory.db import CityHallDb
 
