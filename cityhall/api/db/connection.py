@@ -12,12 +12,35 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .auth import Auth
+from api.db.auth import Auth
+import cityhall.settings as settings
 
 
 class Connection(object):
     def __init__(self, db):
         self.db_connection = db
+
+    _instance = None
+
+    @classmethod
+    def instance(cls):
+        if cls._instance is not None:
+            return cls._instance
+
+        if settings.DATABASE_TYPE == 'django':
+            from api.db.django.db_factory import Factory
+            cls._instance = Connection(Factory())
+        elif settings.DATABASE_TYPE == 'memory':
+            from api.db.memory.db_factory import CityHallDbFactory
+            cls._instance = Connection(CityHallDbFactory())
+        else:
+            raise KeyError(
+                'Attempting to get db of type {}, which is not implemented'.\
+                format(settings.DATABASE_TYPE)
+            )
+
+        cls._instance.connect()
+        return cls._instance
 
     def connect(self):
         self.db_connection.open()

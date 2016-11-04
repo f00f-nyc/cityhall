@@ -13,9 +13,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.test import TestCase
-from lib.db.memory.cityhall_db_factory import CityHallDbFactory
-from lib.db.db import Rights
-from lib.db.connection import Connection
+from api.db.memory.db_factory import CityHallDbFactory
+from api.db import Rights
+from api.db.connection import Connection
 
 
 class TestEnvironment(TestCase):
@@ -31,7 +31,9 @@ class TestEnvironment(TestCase):
         self.conn.connect()
         self.conn.create_default_env()
         self.auth = self.conn.get_auth('cityhall', '')
-        self.env = self.auth.get_env('auto')
+
+        self.auth.create_env('test_env')
+        self.env = self.auth.get_env('test_env')
 
     def test_can_get_auth_from_env(self):
         auth = self.env.get_auth()
@@ -149,9 +151,9 @@ class TestEnvironment(TestCase):
 
         auth = self.env.get_auth()
         auth.create_user('test', '')
-        auth.grant('auto', 'test', Rights.Read)
+        auth.grant('test_env', 'test', Rights.Read)
         test_auth = self.conn.get_auth('test', '')
-        test_env = test_auth.get_env('auto')
+        test_env = test_auth.get_env('test_env')
         self.assertEqual(('abc', False), test_env.get('/value'))
 
     def children_match_value1_value2_value3(self, children):
@@ -202,17 +204,17 @@ class TestEnvironment(TestCase):
 
         auth = self.env.get_auth()
         auth.create_user('test_read', '')
-        auth.grant('auto', 'test_read', Rights.Read)
+        auth.grant('test_env', 'test_read', Rights.Read)
         auth.create_user('test_read_protect', '')
-        auth.grant('auto', 'test_read_protect', Rights.ReadProtected)
+        auth.grant('test_env', 'test_read_protect', Rights.ReadProtected)
 
         read_auth = self.conn.get_auth('test_read', '')
-        env = read_auth.get_env('auto')
+        env = read_auth.get_env('test_env')
         hist = env.get_history('/value1')
         self.assertEqual(0, len(hist))
 
         read_protected_auth = self.conn.get_auth('test_read_protect', '')
-        env = read_protected_auth.get_env('auto')
+        env = read_protected_auth.get_env('test_env')
         hist = env.get_history('/value1')
         self.assertEqual(1, len(hist))
 
@@ -261,7 +263,7 @@ class TestEnvironment(TestCase):
         self.env.set('/value1', 'def', 'cityhall')
         self.env.delete('/value1', '')
         get = self.env.get_explicit('/value1', 'cityhall')
-        self.assertIsNone(get)
+        self.assertEqual((None, None), get)
 
     def test_deleted_values_no_longer_returned(self):
         self.env.set('/value1', 'abc')

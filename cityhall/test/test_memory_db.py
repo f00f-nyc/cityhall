@@ -13,8 +13,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.test import TestCase
-from lib.db.db import DbState, Rights
-from lib.db.memory.cityhall_db_factory import CityHallDbFactory
+from api.db import DbState, Rights
+from api.db.memory.db_factory import CityHallDbFactory
 
 
 class TestMemoryDb(TestCase):

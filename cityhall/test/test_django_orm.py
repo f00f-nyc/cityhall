@@ -15,9 +15,9 @@
 from django.test import TestCase
 
 from api.models import User, Value
-from api.cityhall.environments import Environments
-from api.cityhall.users import Users
-from api.cityhall.values import Values
+from api.db.django.environments import Environments
+from api.db.django.users import Users
+from api.db.django.values import Values
 
 
 class TestEnvironments(TestCase):

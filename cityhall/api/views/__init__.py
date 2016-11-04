@@ -14,27 +14,21 @@
 
 from restless.views import Endpoint
 from django.conf import settings
-from lib.db.connection import Connection
-from lib.db.db import Rights
-
-
-DB = settings.CITY_HALL_DATABASE
-CONN = Connection(DB)
-CONN.connect()
-
+from api.db import Rights
+from api.db.connection import Connection
 
 class Info(Endpoint):
     def get(self, request):
-        return {'Database': str(DB), 'Status': 'Alive'}
+        return {'Database': settings.DATABASE_TYPE, 'Status': 'Alive'}
 
 
 class Create(Endpoint):
     def get(self, request):
-        CONN.create_default_env()
+        Connection.instance().create_default_env()
         self._create_guest()
         return {'Response': 'Ok'}
 
     def _create_guest(self):
-        auth = CONN.get_auth('cityhall', '')
+        auth = Connection.instance().get_auth('cityhall', '')
         auth.create_user('guest', '')
         auth.grant('auto', 'guest', Rights.Read)

@@ -12,9 +12,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf import settings
+import cityhall.settings as settings
 from api.cache import CacheDict
-from .db import Rights
+from api.db import Rights
 
 
 def sanitize_path(path):
