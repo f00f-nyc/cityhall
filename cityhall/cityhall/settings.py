@@ -132,7 +132,8 @@ CACHE_OPTIONS = {
     'ENV_CAPACITY': 10,
 }
 
-from api.db.django.db_factory import Factory
-CITY_HALL_DATABASE = Factory()
+# The type of database connection. This is honored by api.views.get_new_db()
+# Current possible options are: 'django' or 'memory'
+DATABASE_TYPE = 'django'
 
 API_VERSION = 1

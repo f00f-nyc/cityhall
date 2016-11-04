@@ -15,10 +15,9 @@
 import simplejson as json
 from simplejson.decoder import JSONDecodeError
 from django.test import TestCase, override_settings
-from api.db.memory.db_factory import CityHallDbFactory
 
 
-@override_settings(CITY_HALL_DATABASE=CityHallDbFactory())
+@override_settings(DATABASE_TYPE='memory')
 class ApiTestCase(TestCase):
     def result_to_dict(self, result):
         try:

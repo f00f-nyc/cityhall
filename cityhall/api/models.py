@@ -101,3 +101,23 @@ class User(models.Model):
         index_together = [
             ['name', 'password', 'active'],
         ]
+
+
+class EnvUsers(models.Model):
+    class Meta:
+        abstract = True
+
+    name = models.TextField(max_length=64)
+    entry = models.TextField(max_length=2048)
+
+    @staticmethod
+    def get_users(env):
+        return User.objects.raw(
+            'SELECT u.id, u.name, v.entry '
+            'FROM api_user u, api_value v '
+            'WHERE u.user_root = v.parent '
+            '      and u.active = %s '
+            '      and v.active = %s '
+            '      and v.name = %s ',
+            [True, True, env]
+        )

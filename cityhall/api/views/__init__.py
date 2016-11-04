@@ -14,18 +14,26 @@
 
 from restless.views import Endpoint
 from django.conf import settings
-from api.db.connection import Connection
-from api.db.constants import Rights
+from api.db import Connection, Rights
 
 
-DB = settings.CITY_HALL_DATABASE
-CONN = Connection(DB)
+def get_new_db():
+    if settings.DATABASE_TYPE == 'django':
+        from api.db.django.db_factory import Factory
+        return Factory()
+    elif settings.DATABASE_TYPE == 'memory':
+        from api.db.memory.db_factory import CityHallDbFactory
+        return CityHallDbFactory()
+
+    raise KeyError('Attempting to get database of type {}, which is not implemented'.format(settings.DATABASE_TYPE))
+CONN = Connection(get_new_db())
+
 CONN.connect()
 
 
 class Info(Endpoint):
     def get(self, request):
-        return {'Database': str(DB), 'Status': 'Alive'}
+        return {'Database': settings.DATABASE_TYPE, 'Status': 'Alive'}
 
 
 class Create(Endpoint):

@@ -14,7 +14,7 @@
 
 from restless.views import Endpoint
 from api.session import is_valid, get_auth_from_request, end_request
-from api.db.constants import Rights
+from api.db import Rights
 
 
 class EnvView(Endpoint):

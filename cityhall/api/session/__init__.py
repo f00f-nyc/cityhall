@@ -16,7 +16,7 @@ import simplejson as json
 from restless.views import HttpResponse
 from api.views import CONN
 from api.session.serialize import serialize_auth, deserialize_auth
-from api.db.constants import Rights
+from api.db import Rights
 from six import text_type
 
 
