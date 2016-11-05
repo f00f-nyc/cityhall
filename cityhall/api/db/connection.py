@@ -12,8 +12,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 from api.db.auth import Auth
-import cityhall.settings as settings
 from api.db.django.db_factory import Factory
 from api.db.memory.db_factory import CityHallDbFactory
 
@@ -46,6 +46,8 @@ class Connection(object):
 
 
 def get_new_db():
+    settings = sys.modules['django.conf'].settings
+
     if 'db_type' not in settings.CITY_HALL_OPTIONS:
         raise KeyError('Expected CITY_HALL_OPTIONS to contain "db_type"')
 
