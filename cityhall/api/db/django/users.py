@@ -15,26 +15,11 @@
 from copy import copy
 from django.db import transaction
 from api.models import User
-from django.db import models
-
-
-class EnvUsers(models.Model):
-    name = models.TextField(max_length=64)
-    entry = models.TextField(max_length=2048)
 
 
 class Users(object):
     def get_users(self, env):
-        ret = EnvUsers.objects.raw(
-            'SELECT u.id, u.name, v.entry '
-            'FROM api_user u, api_value v '
-            'WHERE u.user_root = v.parent '
-            '      and u.active = %s '
-            '      and v.active = %s '
-            '      and v.name = %s ',
-            [True, True, env]
-        )
-
+        ret = User.objects.get_users_for_env(env)
         return {u.name: u.entry for u in ret}
 
     def create_user(self, author, user, passhash, user_root):

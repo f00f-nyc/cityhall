@@ -13,24 +13,28 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.test import TestCase
-from lib.db.db import DbState, Rights
-from lib.db.memory.cityhall_db_factory import CityHallDbFactory
+from api.db import DbState, Rights
+from api.db.memory.db_factory import CityHallDbFactory
+from django.conf import settings
+
+
+cityhall_settings = settings.CITY_HALL_OPTIONS
 
 
 class TestMemoryDb(TestCase):
     def test_open(self):
-        db = CityHallDbFactory()
+        db = CityHallDbFactory(cityhall_settings)
         db.open()
         self.assertEqual(DbState.Open, db.state)
 
     def test_cannot_open_twice(self):
-        db = CityHallDbFactory()
+        db = CityHallDbFactory(cityhall_settings)
         db.open()
         with self.assertRaises(Exception):
             db.open()
 
     def test_can_create_default_env(self):
-        db = CityHallDbFactory()
+        db = CityHallDbFactory(cityhall_settings)
         db.open()
         db.create_default_tables()
         self.assertIsInstance(db.authTable, list)
@@ -41,7 +45,7 @@ class TestMemoryDb(TestCase):
         self.assertIsInstance(db.valsTable[0], dict)
 
     def test_is_open(self):
-        db = CityHallDbFactory()
+        db = CityHallDbFactory(cityhall_settings)
         self.assertFalse(db.is_open())
         db.open()
         self.assertTrue(db.is_open())
@@ -53,7 +57,7 @@ class TestMemoryDbWithEnv(TestCase):
         self.conn = None
 
     def setUp(self):
-        self.conn = CityHallDbFactory()
+        self.conn = CityHallDbFactory(cityhall_settings)
         self.conn.open()
         self.conn.create_default_tables()
 
@@ -153,7 +157,7 @@ class TestMemoryDbWithEnvAndUser(TestCase):
         self.db = None
 
     def setUp(self):
-        self.conn = CityHallDbFactory()
+        self.conn = CityHallDbFactory(cityhall_settings)
         self.conn.open()
         self.conn.create_default_tables()
         self.db = self.conn.get_db()

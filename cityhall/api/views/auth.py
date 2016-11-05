@@ -14,8 +14,8 @@
 
 from restless.views import Endpoint, HttpResponse
 from django.conf import settings
-from .views import CONN
-from session import (
+from api.db.connection import Instance
+from api.session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
     end_request, NOT_AUTHENTICATED, SESSION_AUTH, clean_data
 )
@@ -38,7 +38,7 @@ class Authenticate(Endpoint):
                 'passhash' in request.data:
             user = request.data['username']
             passhash = request.data['passhash']
-            auth = CONN.get_auth(user, passhash)
+            auth = Instance.get_auth(user, passhash)
 
             if auth is None:
                 return {
@@ -47,7 +47,10 @@ class Authenticate(Endpoint):
                 }
 
             end_request(request, auth)
-            return {'Response': 'Ok', 'version': settings.API_VERSION}
+            return {
+                'Response': 'Ok',
+                'version': Instance.db_connection.get_db().settings('version'),
+            }
 
         return {
             'Response': 'Failure',
@@ -114,6 +117,7 @@ class Environments(Endpoint):
 
 class Users(Endpoint):
     NO_USER = {'Response': 'Failure', 'Message': 'Expected a user to retrieve'}
+    INVALID_USER = {'Response': 'Failure', 'Message': 'Given user was incorrect or missing'}
 
     def authenticate(self, request):
         return is_valid(request)
@@ -161,6 +165,13 @@ class Users(Endpoint):
     def put(self, request, *args, **kwargs):
         user = kwargs.get('user', None)
         passhash = request.data.get('passhash', None)
+
+        if passhash is None:
+            return {
+                'Response': 'Failure',
+                'Message': 'Incomplete update, expected passhash'
+            }
+
         auth = get_auth_or_create_guest(request)
 
         if not auth:
@@ -222,13 +233,18 @@ class UserDefaultEnv(Endpoint):
         user = kwargs.get('user')
         if not user:
             return Users.NO_USER
-        auth = get_auth_or_create_guest(request)
         default_env = request.data.get('env', None)
         if not default_env:
             return {
                 'Response': 'Failure',
                 'Message': 'Expected an "env" value to set.'
             }
+
+        auth = get_auth_or_create_guest(request)
+
+        if auth.name == 'guest' or auth.name != user:
+            return Users.INVALID_USER
+
         auth.set_default_env(default_env)
         return {'Response': 'Ok', 'Message': 'Default set to: ' + default_env}
 

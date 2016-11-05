@@ -12,7 +12,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .auth import Auth
+import sys
+from api.db.auth import Auth
+from api.db.django.db_factory import Factory
+from api.db.memory.db_factory import CityHallDbFactory
 
 
 class Connection(object):
@@ -35,8 +38,28 @@ class Connection(object):
             self.db_connection.create_default_tables()
 
     def get_auth(self, user, passhash):
-        open = self._ensure_open()
+        opened = self._ensure_open()
         authenticated = self.db_connection.authenticate(user, passhash)
-        if open and authenticated:
+        if opened and authenticated:
             return Auth(self.db_connection.get_db(), user, authenticated)
         return None
+
+
+def get_new_db():
+    settings = sys.modules['django.conf'].settings
+
+    if 'db_type' not in settings.CITY_HALL_OPTIONS:
+        raise KeyError('Expected CITY_HALL_OPTIONS to contain "db_type"')
+
+    if settings.CITY_HALL_OPTIONS['db_type'] == 'django':
+        return Factory(settings.CITY_HALL_OPTIONS)
+    elif settings.CITY_HALL_OPTIONS['db_type'] == 'memory':
+        return CityHallDbFactory(settings.CITY_HALL_OPTIONS)
+
+    raise KeyError(
+        'Attempting to get db of type {}, which is not implemented'.
+        format(settings.CITY_HALL_OPTIONS['db_type'])
+    )
+
+Instance = Connection(get_new_db())
+Instance.connect()

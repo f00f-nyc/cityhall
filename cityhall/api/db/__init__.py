@@ -35,6 +35,10 @@ class DbFactory(object):
     This class is the factory which will create light-weight Db classes which
     will be used to actually do the work of City Hall.
     """
+    def __init__(self, settings):
+        assert isinstance(settings, dict)
+        self.settings = settings
+
     @abstractmethod
     def open(self):
         pass
@@ -66,6 +70,14 @@ class Db(object):
     see lib/db/memory/cityhall_db.py and, for a slightly higher-level overview,
     see its corresponding tests: /test/tests_connection.py
     """
+    def __init__(self, parent):
+        self.parent = parent
+
+    def settings(self, key, subkey=None):
+        if subkey:
+            return self.parent.settings[key][subkey]
+        return self.parent.settings[key]
+
     @abstractmethod
     def create_root(self, author, env):
         pass

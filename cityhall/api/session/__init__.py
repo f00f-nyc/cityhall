@@ -14,23 +14,24 @@
 
 import simplejson as json
 from restless.views import HttpResponse
-from api.views import CONN
-from .serialize import serialize_auth, deserialize_auth
-from lib.db.db import Rights
+from api.session.serialize import serialize_auth, deserialize_auth
+from api.db import Rights
+from api.db.connection import Instance
 from six import text_type
 
 
 SESSION_AUTH = 'cityhall-auth'
 NOT_AUTHENTICATED = HttpResponse(
-    'Session is not authenticated, '
-    'and could not obtain get a guest credentials'
+    content='{"Response": "Failure",'
+    '"Message": "Session is not authenticated, and could not obtain get a guest credentials"}',
+    content_type='application/json',
 )
 
 
 def get_auth_or_create_guest(request):
     auth_json = request.session.get(SESSION_AUTH, None)
     if auth_json is None:
-        auth = CONN.get_auth('guest', '')
+        auth = Instance.get_auth('guest', '')
         if auth is not None:
             request.session[SESSION_AUTH] = serialize_auth(auth)
     else:

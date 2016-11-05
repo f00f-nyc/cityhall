@@ -13,11 +13,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls import patterns, url
-from .views import (Info, Create)
-from .views_auth import (
+from api.views import (Info, Create)
+from api.views.auth import (
     Authenticate, Environments, Users, GrantRights, UserDefaultEnv
 )
-from .views_env import EnvView
+from api.views.env import EnvView
 
 urlpatterns = patterns(
     "",
