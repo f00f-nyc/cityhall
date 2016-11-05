@@ -22,7 +22,7 @@ class Auth(object):
         self.db = db
         self.name = name
         self.roots_cache = CacheDict(
-            capacity=self.db.settings('cache', 'ENV_CAPACITY')
+            capacity=self.db.settings('cache', 'env_capacity')
         )
         self.user_root = user_root
         self.users_env = None

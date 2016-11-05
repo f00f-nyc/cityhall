@@ -119,9 +119,6 @@ STATICFILES_DIRS = [
 
 ################################################################
 # These are City Hall specific options
-#
-# To avoid circular dependency problems, they're imported directly from here
-# and not from django.conf.settings.
 ################################################################
 
 CITY_HALL_OPTIONS = {
@@ -129,14 +126,14 @@ CITY_HALL_OPTIONS = {
         # As a user looks at an environment, the index of paths is stored
         # in the user session.  This value stores how many paths to store
         # in session memory for a particular environment.
-        'PATH_CAPACITY': 50,
+        'path_capacity': 50,
 
         # As a user looks at an environment, information about that
         # environment is stored in the user session.  Things like the index
         # of the root, the permissions to it, as well as PATH_CAPACITY
         # number of indexes.  This value stores how the max number of
         # environments to store in a session.
-        'ENV_CAPACITY': 10,
+        'env_capacity': 10,
     },
 
     # Type of database connection.

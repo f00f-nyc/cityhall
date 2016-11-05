@@ -36,7 +36,7 @@ class Env(object):
     def __init__(self, db, env, permissions, name, root_id):
         self.db = db
         self.cache = CacheDict(
-            capacity=self.db.settings('cache', 'PATH_CAPACITY'),
+            capacity=self.db.settings('cache', 'path_capacity'),
         )
         self.env = env
         self.root_id = root_id
