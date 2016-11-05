@@ -14,7 +14,7 @@
 
 from restless.views import Endpoint, HttpResponse
 from django.conf import settings
-from api.db.connection import Connection
+from api.db.connection import Instance
 from api.session import (
     is_valid, get_auth_from_request, get_auth_or_create_guest,
     end_request, NOT_AUTHENTICATED, SESSION_AUTH, clean_data
@@ -38,7 +38,7 @@ class Authenticate(Endpoint):
                 'passhash' in request.data:
             user = request.data['username']
             passhash = request.data['passhash']
-            auth = Connection.instance().get_auth(user, passhash)
+            auth = Instance.get_auth(user, passhash)
 
             if auth is None:
                 return {
@@ -47,7 +47,10 @@ class Authenticate(Endpoint):
                 }
 
             end_request(request, auth)
-            return {'Response': 'Ok', 'version': settings.API_VERSION}
+            return {
+                'Response': 'Ok',
+                'version': Instance.db_connection.get_db().settings('version'),
+            }
 
         return {
             'Response': 'Failure',

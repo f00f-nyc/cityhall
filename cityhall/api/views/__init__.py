@@ -15,7 +15,7 @@
 from restless.views import Endpoint
 from django.conf import settings
 from api.db import Rights
-from api.db.connection import Connection
+from api.db.connection import Instance
 
 class Info(Endpoint):
     def get(self, request):
@@ -24,11 +24,11 @@ class Info(Endpoint):
 
 class Create(Endpoint):
     def get(self, request):
-        Connection.instance().create_default_env()
+        Instance.create_default_env()
         self._create_guest()
         return {'Response': 'Ok'}
 
     def _create_guest(self):
-        auth = Connection.instance().get_auth('cityhall', '')
+        auth = Instance.get_auth('cityhall', '')
         auth.create_user('guest', '')
         auth.grant('auto', 'guest', Rights.Read)

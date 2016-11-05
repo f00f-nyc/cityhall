@@ -16,7 +16,7 @@ import simplejson as json
 from restless.views import HttpResponse
 from api.session.serialize import serialize_auth, deserialize_auth
 from api.db import Rights
-from api.db.connection import Connection
+from api.db.connection import Instance
 from six import text_type
 
 
@@ -31,7 +31,7 @@ NOT_AUTHENTICATED = HttpResponse(
 def get_auth_or_create_guest(request):
     auth_json = request.session.get(SESSION_AUTH, None)
     if auth_json is None:
-        auth = Connection.instance().get_auth('guest', '')
+        auth = Instance.get_auth('guest', '')
         if auth is not None:
             request.session[SESSION_AUTH] = serialize_auth(auth)
     else:
