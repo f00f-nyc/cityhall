@@ -4,7 +4,7 @@ This is the v1 Python implementation of City Hall Enterprise Settings Server.
 
 ## ABOUT
 
-This project is written in Python 2.7, and uses Django 1.8
+This project is written in Python 3.8, and uses Django 3.0
 
 The intention is for this to be an Enterprise Settings Server, to allow users
 to use this instead of keeping such settings in files or purpose-made tables.
