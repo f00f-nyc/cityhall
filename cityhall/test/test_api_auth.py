@@ -18,21 +18,21 @@ from django.conf import settings
 
 class TestApiLogin(ApiTestCase):
     def test_login(self):
-        result = self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
+        result = self.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
         self.check_result(result)
         content = self.result_to_dict(result)
         self.assertEqual(settings.CITY_HALL_OPTIONS['version'], content['version'])
 
     def test_incomplete_login(self):
-        result = self.client.post('/api/v1/auth/', {})
+        result = self.post('/api/v1/auth/', {})
         self.check_failure(result)
 
     def test_incorrect_login(self):
-        result = self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': 'incorrect'})
+        result = self.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': 'incorrect'})
         self.check_failure(result)
 
     def test_logout(self):
-        self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
+        self.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
         result = self.client.delete('/api/v1/auth/')
         self.check_result(result)
 
@@ -43,7 +43,7 @@ class TestApiLogin(ApiTestCase):
 
 class TestApiAuthUsers(ApiTestCase):
     def setUp(self):
-        self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
+        self.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
 
     def test_get_user(self):
         result = self.client.get('/api/v1/auth/user/cityhall/')
@@ -58,28 +58,28 @@ class TestApiAuthUsers(ApiTestCase):
         self.check_failure(result)
 
     def test_create_user(self):
-        result = self.client.post('/api/v1/auth/user/new_user/', {'passhash': ''})
+        result = self.post('/api/v1/auth/user/new_user/', {'passhash': ''})
         self.check_result(result)
 
     def test_incomplete_create_user(self):
-        result = self.client.post('/api/v1/auth/user/new_user/', {})
+        result = self.post('/api/v1/auth/user/new_user/', {})
         self.check_failure(result)
 
     def test_update_password(self):
-        result = self.client.put('/api/v1/auth/user/cityhall/', '{"passhash": ""}')
+        result = self.put('/api/v1/auth/user/cityhall/', '{"passhash": ""}')
         self.check_result(result)
 
     def test_incomplete_update_password(self):
-        result = self.client.put('/api/v1/auth/user/cityhall/', {})
+        result = self.put('/api/v1/auth/user/cityhall/', {})
         self.check_failure(result)
 
     def test_updating_another_user_password(self):
-        self.client.post('/api/v1/auth/user/new_user/', {"passhash": ""})
-        result = self.client.put('/api/v1/auth/user/new_user/', '{"passhash": ""}')
+        self.post('/api/v1/auth/user/new_user/', {"passhash": ""})
+        result = self.put('/api/v1/auth/user/new_user/', '{"passhash": ""}')
         self.check_failure(result)
 
     def test_delete_user(self):
-        self.client.post('/api/v1/auth/user/new_user/', {"passhash": ""})
+        self.post('/api/v1/auth/user/new_user/', {"passhash": ""})
         result = self.client.delete('/api/v1/auth/user/new_user/')
         self.check_result(result)
 
@@ -90,54 +90,54 @@ class TestApiAuthUsers(ApiTestCase):
 
 class TestApiAuthUserDefaultEnv(ApiTestCase):
     def setUp(self):
-        self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
+        self.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
 
     def test_set_default_env(self):
-        result = self.client.post('/api/v1/auth/user/cityhall/default/', {'env': 'auto'})
+        result = self.post('/api/v1/auth/user/cityhall/default/', {'env': 'auto'})
         self.check_result(result)
 
     def test_set_defeault_on_another_user(self):
-        self.client.post('/api/v1/auth/user/new_user/', {"passhash": ""})
-        result = self.client.post('/api/v1/auth/user/new_user/default/', {'env': 'auto'})
+        self.post('/api/v1/auth/user/new_user/', {"passhash": ""})
+        result = self.post('/api/v1/auth/user/new_user/default/', {'env': 'auto'})
         self.check_failure(result)
 
     def test_incomplete_set_default_env(self):
-        result = self.client.post('/api/v1/auth/user/cityhall/default/', {})
+        result = self.post('/api/v1/auth/user/cityhall/default/', {})
         self.check_failure(result)
 
     def test_get_default_env(self):
         result = self.client.get('/api/v1/auth/user/cityhall/default/')
         self.check_value(result)
 
-        self.client.post('/api/v1/auth/user/cityhall/default/', {'env': 'auto'})
+        self.post('/api/v1/auth/user/cityhall/default/', {'env': 'auto'})
         result = self.client.get('/api/v1/auth/user/cityhall/default/')
         self.check_value(result, 'auto')
 
 
 class TestApiAuthGrant(ApiTestCase):
     def setUp(self):
-        self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
+        self.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
 
     def test_grant_permissions(self):
-        self.client.post('/api/v1/auth/user/new_user/', {"passhash": ""})
-        result = self.client.post('/api/v1/auth/grant/', {'env': 'auto', 'user': 'new_user', 'rights': '2'})
+        self.post('/api/v1/auth/user/new_user/', {"passhash": ""})
+        result = self.post('/api/v1/auth/grant/', {'env': 'auto', 'user': 'new_user', 'rights': '2'})
         self.check_result(result)
 
     def test_incomplete_grant_permissions(self):
-        self.client.post('/api/v1/auth/user/new_user/', {"passhash": ""})
+        self.post('/api/v1/auth/user/new_user/', {"passhash": ""})
 
-        result = self.client.post('/api/v1/auth/grant/', {'env': 'auto', 'user': 'new_user',})
+        result = self.post('/api/v1/auth/grant/', {'env': 'auto', 'user': 'new_user',})
         self.check_failure(result)
-        result = self.client.post('/api/v1/auth/grant/', {'env': 'auto', 'rights': '2'})
+        result = self.post('/api/v1/auth/grant/', {'env': 'auto', 'rights': '2'})
         self.check_failure(result)
-        result = self.client.post('/api/v1/auth/grant/', {'user': 'new_user', 'rights': '2'})
+        result = self.post('/api/v1/auth/grant/', {'user': 'new_user', 'rights': '2'})
         self.check_failure(result)
 
     def test_invalid_grant_permissions(self):
-        self.client.post('/api/v1/auth/user/new_user/', {"passhash": ""})
+        self.post('/api/v1/auth/user/new_user/', {"passhash": ""})
 
-        result = self.client.post('/api/v1/auth/grant/', {'env': 'auto', 'user': 'invalid_user', 'rights': '1'})
+        result = self.post('/api/v1/auth/grant/', {'env': 'auto', 'user': 'invalid_user', 'rights': '1'})
         self.check_failure(result)
 
-        result = self.client.post('/api/v1/auth/grant/', {'env': 'invalid_env', 'user': 'new_user', 'rights': '1'})
+        result = self.post('/api/v1/auth/grant/', {'env': 'invalid_env', 'user': 'new_user', 'rights': '1'})
         self.check_failure(result)

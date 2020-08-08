@@ -677,6 +677,31 @@ app.controller('CityHallCtrl', ['$scope', 'settings',
             });
         };
 
+        $scope.CopyNode = function() {
+            var node = $scope.selected_node;
+            if (node.valid && node.complete)
+            {
+                var url = settings.url + 'env/' + node.env + node.real_path;
+                if (node.override)
+                {
+                    url = url + '?override=' + node.override;
+                }
+                $scope.CopyToClipboard(url);
+            }
+        };
+
+        $scope.CopyToClipboard = function (value) {
+            var copyElement = document.createElement("textarea");
+            copyElement.style.position = 'fixed';
+            copyElement.style.opacity = '0';
+            copyElement.textContent = value;
+            var body = document.getElementsByTagName('body')[0];
+            body.appendChild(copyElement);
+            copyElement.select();
+            document.execCommand('copy');
+            body.removeChild(copyElement);
+        }
+
         $scope.ReloadNode = function () {
             var node = $scope.selected_node;
             node.name =  node_to_user_friendly_name(node, false);

@@ -19,18 +19,24 @@ from django.test import TestCase, override_settings
 
 @override_settings(DATABASE_TYPE='memory')
 class ApiTestCase(TestCase):
+    def post(self, *args, **kwargs):
+        return self.client.post(*args, content_type="application/json", **kwargs)
+
+    def put(self, *args, **kwargs):
+        return self.client.put(*args, content_type="application/json", **kwargs)
+
     def result_to_dict(self, result):
         try:
             return json.loads(result.content)
         except JSONDecodeError as ex:
-            self.assertTrue(False, 'Caught an error decoding "{}": {}'.format(result.content, ex.message))
+            self.assertTrue(False, f'Caught an error decoding "{result.content}": {ex.doc}')
 
     def check_result(self, result):
         self.assertEqual(200, result.status_code)
         self.assertGreater(len(result.content), 0)
         content = self.result_to_dict(result)
         self.assertIn('Response', content)
-        self.assertEquals('Ok', content['Response'])
+        self.assertEqual('Ok', content['Response'])
 
     def check_value(self, result, expected=None):
         self.check_result(result)

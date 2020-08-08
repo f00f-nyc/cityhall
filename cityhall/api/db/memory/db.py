@@ -31,10 +31,9 @@ class CityHallDb(Db):
     def __str__(self):
         from api.db.memory.db_factory import CityHallDbFactory
         assert isinstance(self.parent, CityHallDbFactory)
-        return "(In-Memory Db): Values: {}, Authorizations: {}".format(
-            len(self.parent.valsTable) if self.parent.valsTable else 'None',
-            len(self.parent.authTable) if self.parent.authTable else 'None'
-        )
+        valsCount = len(self.parent.valsTable) if self.parent.valsTable else 'None'
+        authCount = len(self.parent.authTable) if self.parent.authTable else 'None'
+        return f"(In-Memory Db): Values: {valsCount}, Authorizations: {authCount}"
 
     def create_user(self, author, user, passhash, user_root):
         for auth in self.parent.authTable:

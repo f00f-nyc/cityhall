@@ -121,7 +121,7 @@ class Auth(object):
             if user_folder is None:
                 return (
                     'Failure',
-                    "Specified user `{}` doesn't exist, or has no user folder".format(user)
+                    f"Specified user `{user}` doesn't exist, or has no user folder",
                 )
 
             existing = self.db.get_child(user_folder['id'], env)
@@ -130,24 +130,24 @@ class Auth(object):
                 self.db.create(self.name, user_folder['id'], env, rights)
                 return (
                     'Ok',
-                    "Rights for '{}' created".format(user),
+                    f"Rights for '{user}' created",
                 )
 
             if int(existing['value']) == int(rights):
                 return (
                     'Ok',
-                    "Rights for '{}' already at set level".format(user),
+                    f"Rights for '{user}' already at set level",
                 )
             else:
                 self.db.update(self.name, existing['id'], rights)
                 return (
                     'Ok',
-                    "Rights for '{}' updated".format(user),
+                    f"Rights for '{user}' updated",
                 )
         else:
             return (
                 "Failure",
-                "Insufficient rights to grant to environment '{}'".format(env),
+                f"Insufficient rights to grant to environment '{env}'",
             )
 
     def get_users(self, env_name):

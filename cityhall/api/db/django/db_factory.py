@@ -19,11 +19,7 @@ from api.models import User, Value
 
 class Factory(DbFactory):
     def __str__(self):
-        return "cityhall.Factory (users: {}, active values: {})"\
-            .format(
-                User.objects.count(),
-                Value.objects.filter(active=True).count(),
-            )
+        return f"cityhall.Factory (users: {User.objects.count()}, active values: {Value.objects.filter(active=True).count()})"
 
     def __init__(self, settings):
         super(Factory, self).__init__(settings)

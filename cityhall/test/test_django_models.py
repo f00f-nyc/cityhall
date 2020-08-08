@@ -14,26 +14,26 @@
 
 from django.test import TestCase
 from api.models import User, Value
-from model_mommy import mommy
+from model_bakery import baker
 from functools import partial
 
 
 class TestModelsGet(TestCase):
     def test_user_is_valid(self):
-        mommy.make(User, active=True, name='test', password='')
+        baker.make(User, active=True, name='test', password='')
         self.assertIsNone(User.objects.is_valid('test', 'abc'))
         self.assertTrue(User.objects.is_valid('test', ''))
 
     def test_value_by_id(self):
-        mommy.make(Value, entry='inactive', active=False, id=1000)
-        mommy.make(Value, entry='active', active=True, id=1000)
+        baker.make(Value, entry='inactive', active=False, id=1000)
+        baker.make(Value, entry='active', active=True, id=1000)
         self.assertEqual(Value.objects.by_id(1000).entry, 'active')
 
     def test_get_children(self):
-        mommy.make(Value, entry='parent', active=True, id=1000)
-        mommy.make(Value, name='child 1a', active=False, id=1001, parent=1000)
-        mommy.make(Value, name='child 1b', active=True, id=1001, parent=1000)
-        mommy.make(Value, name='child 2', active=True, id=1002, parent=1000)
+        baker.make(Value, entry='parent', active=True, id=1000)
+        baker.make(Value, name='child 1a', active=False, id=1001, parent=1000)
+        baker.make(Value, name='child 1b', active=True, id=1001, parent=1000)
+        baker.make(Value, name='child 2', active=True, id=1002, parent=1000)
 
         children = Value.objects.children_of(1000)
         names = set([val.name for val in children])
@@ -41,7 +41,7 @@ class TestModelsGet(TestCase):
         self.assertEqual(set(['child 1b', 'child 2']), names)
 
     def test_get_child(self):
-        make = partial(mommy.make, Value, override='')
+        make = partial(baker.make, Value, override='')
         make(entry='parent', active=True, id=1000)
         make(name='child 1', active=False, id=1001, parent=1000)
         make(name='child 1', active=True, id=1001, parent=1000)

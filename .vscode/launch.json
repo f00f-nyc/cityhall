@@ -1,0 +1,51 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Run server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cityhall/manage.py",
+            "args": [
+                "runserver",
+                "--noreload"
+            ],
+            "django": true
+        },
+        {
+            "name": "Run tests",
+            "type":"python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cityhall/manage.py",
+            "args": [
+                "test",
+                "cityhall/test"
+            ],
+            "django": true
+        },
+        {
+            "name": "Run migrations",
+            "type":"python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cityhall/manage.py",
+            "args": [
+                "migrate"
+            ],
+            "django": true
+        },
+        {
+            "name": "Db Shell",
+            "type":"python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cityhall/manage.py",
+            "args": [
+                "dbshell"
+            ],
+            "django": true
+        },
+    ]
+}

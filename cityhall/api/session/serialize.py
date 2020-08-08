@@ -24,7 +24,7 @@ def serialize_env(env):
         'permissions': env.permissions,
         'name': env.name,
         'root_id': env.root_id,
-        'cache': {name: value for name, value in env.cache.values.iteritems()}
+        'cache': {name: value for name, value in env.cache.values.items()}
     }
     return json.dumps(env_dict)
 
@@ -39,7 +39,7 @@ def deserialize_env(env_json):
         root_id=env_dict['root_id']
     )
 
-    for k, v in env_dict['cache'].iteritems():
+    for k, v in env_dict['cache'].items():
         ret.cache[k] = v
 
     return ret
@@ -52,7 +52,7 @@ def serialize_auth(auth):
         'users_env': auth.users_env,
         'roots_cache': {
             name: serialize_env(value)
-            for name, value in auth.roots_cache.values.iteritems()
+            for name, value in auth.roots_cache.values.items()
         }
     }
     return json.dumps(auth_dict)
@@ -66,6 +66,7 @@ def deserialize_auth(auth_json):
         user_root=auth_dict['user_root']
     )
     ret.users_env = auth_dict['users_env']
-    for name, value in auth_dict['roots_cache'].iteritems():
+    for name, value in auth_dict['roots_cache'].items():
         ret.roots_cache[name] = deserialize_env(value)
     return ret
+

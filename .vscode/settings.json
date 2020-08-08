@@ -1,0 +1,12 @@
+{
+    "git.ignoreLimitWarning": true,
+    "python.pythonPath": "venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "cityhall/test"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.jediEnabled": false,
+    "python.languageServer": "Microsoft"
+}

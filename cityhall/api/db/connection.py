@@ -51,15 +51,14 @@ def get_new_db():
     if 'db_type' not in settings.CITY_HALL_OPTIONS:
         raise KeyError('Expected CITY_HALL_OPTIONS to contain "db_type"')
 
-    if settings.CITY_HALL_OPTIONS['db_type'] == 'django':
+    db_type = settings.CITY_HALL_OPTIONS['db_type']
+
+    if db_type == 'django':
         return Factory(settings.CITY_HALL_OPTIONS)
-    elif settings.CITY_HALL_OPTIONS['db_type'] == 'memory':
+    elif db_type == 'memory':
         return CityHallDbFactory(settings.CITY_HALL_OPTIONS)
 
-    raise KeyError(
-        'Attempting to get db of type {}, which is not implemented'.
-        format(settings.CITY_HALL_OPTIONS['db_type'])
-    )
+    raise KeyError(f'Attempting to get db of type {db_type}, which is not implemented')
 
 Instance = Connection(get_new_db())
 Instance.connect()

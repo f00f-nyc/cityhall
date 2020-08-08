@@ -17,7 +17,7 @@ from test.test_api import ApiTestCase
 
 class TestApiEnv(ApiTestCase):
     def setUp(self):
-        self.client.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
+        self.post('/api/v1/auth/', {'username': 'cityhall', 'passhash': ''})
 
     def test_get_value(self):
         result = self.client.get('/api/v1/env/auto/')
@@ -28,7 +28,7 @@ class TestApiEnv(ApiTestCase):
         self.check_failure(result)
 
     def test_set_value(self):
-        result = self.client.post('/api/v1/env/auto/value/', {'value': 'some_value'})
+        result = self.post('/api/v1/env/auto/value/', {'value': 'some_value'})
         self.check_result(result)
 
         check_result = self.client.get('/api/v1/env/auto/value')
@@ -36,7 +36,7 @@ class TestApiEnv(ApiTestCase):
         self.assertEqual('some_value', check_dict['value'])
 
     def test_set_protect(self):
-        result = self.client.post('/api/v1/env/auto/value/', {'protect': 'true'})
+        result = self.post('/api/v1/env/auto/value/', {'protect': 'true'})
         self.check_result(result)
 
         check_result = self.client.get('/api/v1/env/auto/value')
@@ -44,7 +44,7 @@ class TestApiEnv(ApiTestCase):
         self.assertEqual(True, check_dict['protect'])
 
     def test_set_protect_and_value(self):
-        result = self.client.post('/api/v1/env/auto/value/', {'protect': 'true', 'value': 'some_value'})
+        result = self.post('/api/v1/env/auto/value/', {'protect': 'true', 'value': 'some_value'})
         self.check_result(result)
 
         check_result = self.client.get('/api/v1/env/auto/value/')
@@ -53,7 +53,7 @@ class TestApiEnv(ApiTestCase):
         self.assertEqual(True, check_dict['protect'])
 
     def test_set_value_override(self):
-        result = self.client.post('/api/v1/env/auto/value/?override=cityhall', {'value': 'some_value'})
+        result = self.post('/api/v1/env/auto/value/?override=cityhall', {'value': 'some_value'})
         self.check_result(result)
 
         result = self.client.get('/api/v1/env/auto/value/?override=cityhall')
@@ -68,15 +68,15 @@ class TestApiEnv(ApiTestCase):
         self.assertIsNone(check_dict['value'])
 
     def test_get_value_no_permissions(self):
-        self.client.post('/api/v1/env/auto/value', {'value': 'some_value'})
-        self.client.post('/api/v1/auth/user/new_user/', {'passhash': ''})
+        self.post('/api/v1/env/auto/value', {'value': 'some_value'})
+        self.post('/api/v1/auth/user/new_user/', {'passhash': ''})
         self.client.delete('/api/v1/auth/')
-        self.client.post('/api/v1/auth/', {'username': 'new_user', 'passhash': ''})
+        self.post('/api/v1/auth/', {'username': 'new_user', 'passhash': ''})
         result = self.client.get('/api/v1/env/auto/value')
         self.check_failure(result)
 
     def test_delete_value(self):
-        self.client.post('/api/v1/env/auto/value', {'value': 'some_value'})
+        self.post('/api/v1/env/auto/value', {'value': 'some_value'})
         result = self.client.delete('/api/v1/env/auto/value')
         self.check_result(result)
 
@@ -85,7 +85,7 @@ class TestApiEnv(ApiTestCase):
         self.assertIsNone(result_dict['value'])
 
     def test_delete_value_override(self):
-        self.client.post('/api/v1/env/auto/value?override=cityhall', {'value': 'some_value'})
+        self.post('/api/v1/env/auto/value?override=cityhall', {'value': 'some_value'})
         result = self.client.delete('/api/v1/env/auto/value/?override=cityhall')
         self.check_result(result)
 
@@ -98,7 +98,7 @@ class TestApiEnv(ApiTestCase):
         self.assertLess(0, len(result_dict['History']))
 
     def test_children(self):
-        self.client.post('/api/v1/env/auto/value/?override=cityhall', {'value': 'some_value'})
+        self.post('/api/v1/env/auto/value/?override=cityhall', {'value': 'some_value'})
         result = self.client.get('/api/v1/env/auto/?viewchildren=true')
         self.check_result(result)
 

@@ -137,9 +137,9 @@ class Users(Endpoint):
         except Exception as ex:
             return {
                 'Response': 'Failure',
-                'Message': "Retrieval failed. Most likely, that user doesn't "
+                'Message': ("Retrieval failed. Most likely, that user doesn't "
                            "exist, please check users environment.  Failure: "
-                           + ex.message,
+                           + str(ex)),
             }
 
     def post(self, request, *args, **kwargs):
@@ -160,7 +160,7 @@ class Users(Endpoint):
             end_request(request, auth)
             return {'Response': 'Ok'}
         except Exception as ex:
-            return {'Response': 'Failure', 'Message': ex.message}
+            return {'Response': 'Failure', 'Message': str(ex)}
 
     def put(self, request, *args, **kwargs):
         user = kwargs.get('user', None)
@@ -212,7 +212,7 @@ class Users(Endpoint):
                                "environments of that user."
                 }
         except Exception as ex:
-            return {'Response': 'Failure', 'Message': ex.message}
+            return {'Response': 'Failure', 'Message': str(ex)}
 
 
 class UserDefaultEnv(Endpoint):

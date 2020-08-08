@@ -66,7 +66,7 @@ class EnvView(Endpoint):
             end_request(request, info.auth)
             return {'Response': 'Ok'}
         except Exception as e:
-            return {'Response': 'Failure', 'Message': e.message}
+            return {'Response': 'Failure', 'Message': str(e)}
 
     def post(self, request, *args, **kwargs):
         info = EnvView.RequestInfo(request, *args, **kwargs)
@@ -92,7 +92,7 @@ class EnvView(Endpoint):
         if int(env.permissions) < Rights.Write:
             return {
                 'Response': 'Failure',
-                'Message': 'Do not have write permissions to {}'.format(info.env)
+                'Message': f'Do not have write permissions to {info.env}'
             }
 
         try:
@@ -109,7 +109,7 @@ class EnvView(Endpoint):
             end_request(request, info.auth)
             return {'Response': 'Ok'}
         except Exception as e:
-            return {'Response': 'Failure', 'Message': e.message}
+            return {'Response': 'Failure', 'Message': str(e)}
 
     def get(self, request, *args, **kwargs):
         info = EnvView.RequestInfo(request, *args, **kwargs)

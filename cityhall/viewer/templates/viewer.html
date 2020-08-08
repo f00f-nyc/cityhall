@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load staticfiles %}
+{% load static %}
 
 {% block before_head %}
     <script type="text/javascript" src="{% static "js/src/jquery/jquery.min.2.1.4.js" %}"></script>
@@ -96,6 +96,7 @@
                                 <button ng-click="selected_protected = !selected_protected" style="width: 125px;">{{ protect_button }}</button>
                                 <p><form ng-submit="Save()"><input type="submit" value="Save" style="width: 125px;"></form></p>
                                 <br>
+                                <p><form ng-submit="CopyNode()"><input type="submit" value="Copy Node Uri" style="width: 125px;"></form></p>
                                 <p><form ng-submit="ReloadNode()"><input type="submit" value="Reload Node" style="width: 125px;"></form></p>
                             </div>
                         </div>
@@ -287,3 +288,4 @@
     </div>
     {% endverbatim %}
 {% endblock %}
+
