@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from lib.db.db import Db
+from api.db import Db
 from datetime import datetime
 
 
@@ -25,24 +25,23 @@ def get_next_id(table):
 
 class CityHallDb(Db):
     def __init__(self, db):
-        self.db = db
+        super(CityHallDb, self).__init__(db)
 
     @property
     def __str__(self):
-        from lib.db.memory.cityhall_db_factory import CityHallDbFactory
-        assert isinstance(self.db, CityHallDbFactory)
-        return "(In-Memory Db): Values: {}, Authorizations: {}".format(
-            len(self.db.valsTable) if self.db.valsTable else 'None',
-            len(self.db.authTable) if self.db.authTable else 'None'
-        )
+        from api.db.memory.db_factory import CityHallDbFactory
+        assert isinstance(self.parent, CityHallDbFactory)
+        valsCount = len(self.parent.valsTable) if self.parent.valsTable else 'None'
+        authCount = len(self.parent.authTable) if self.parent.authTable else 'None'
+        return f"(In-Memory Db): Values: {valsCount}, Authorizations: {authCount}"
 
     def create_user(self, author, user, passhash, user_root):
-        for auth in self.db.authTable:
+        for auth in self.parent.authTable:
             if auth['active'] and auth['user'] == user:
                 return
 
-        self.db.authTable.append({
-            'id': len(self.db.authTable),
+        self.parent.authTable.append({
+            'id': len(self.parent.authTable),
             'active': True,
             'datetime': datetime.now(),
             'user_root': user_root,
@@ -53,8 +52,8 @@ class CityHallDb(Db):
 
     def create_root(self, author, env):
         if self.get_env_root(env) < 0:
-            val_id = get_next_id(self.db.valsTable)
-            self.db.valsTable.append({
+            val_id = get_next_id(self.parent.valsTable)
+            self.parent.valsTable.append({
                 'id': val_id,
                 'parent': val_id,
                 'active': True,
@@ -71,21 +70,21 @@ class CityHallDb(Db):
 
     def get_env_root(self, env):
         return next(
-            (val['id'] for val in self.db.valsTable
+            (val['id'] for val in self.parent.valsTable
                 if val['id'] == val['parent'] and val['name'] == env),
             -1
         )
 
     def get_children_of(self, index):
         return [
-            child for child in self.db.valsTable
+            child for child in self.parent.valsTable
             if child['active'] and child['parent'] == index
             and child['id'] != index        # do not return roots
         ]
 
     def create(self, user, parent, name, value, override=''):
-        created_id = get_next_id(self.db.valsTable)
-        self.db.valsTable.append({
+        created_id = get_next_id(self.parent.valsTable)
+        self.parent.valsTable.append({
             'id': created_id,
             'parent': parent,
             'active': True,
@@ -100,11 +99,11 @@ class CityHallDb(Db):
         return created_id
 
     def update_user(self, author, user, passhash):
-        for auth in self.db.authTable:
+        for auth in self.parent.authTable:
             if auth['active'] and auth['user'] == user:
                 auth['active'] = False
-                self.db.authTable.append({
-                    'id': len(self.db.authTable),
+                self.parent.authTable.append({
+                    'id': len(self.parent.authTable),
                     'active': True,
                     'datetime': datetime.now(),
                     'author': author,
@@ -117,14 +116,14 @@ class CityHallDb(Db):
 
     def update(self, user, index, value):
         original = next((
-            val for val in self.db.valsTable
+            val for val in self.parent.valsTable
             if val['active'] and val['id'] == index),
             None
         )
 
         if original:
             original['active'] = False
-            self.db.valsTable.append({
+            self.parent.valsTable.append({
                 'id': index,
                 'parent': original['parent'],
                 'active': True,
@@ -134,19 +133,19 @@ class CityHallDb(Db):
                 'datetime': datetime.now(),
                 'value': value,
                 'first_last': False,
-                'protect': False,
+                'protect': original['protect'],
             })
 
     def delete(self, user, index):
         original = next((
-            val for val in self.db.valsTable
+            val for val in self.parent.valsTable
             if val['active'] and val['id'] == index),
             None
         )
 
         if original:
             original['active'] = False
-            self.db.valsTable.append({
+            self.parent.valsTable.append({
                 'id': index,
                 'parent': original['parent'],
                 'active': False,
@@ -161,7 +160,7 @@ class CityHallDb(Db):
 
     def get_value(self, index):
         return next((
-            (val['value'], val['protect']) for val in self.db.valsTable
+            (val['value'], val['protect']) for val in self.parent.valsTable
             if val['active'] and val['id'] == index),
             (None, None)
         )
@@ -169,7 +168,7 @@ class CityHallDb(Db):
     def get_history(self, index):
         return [
             value
-            for value in self.db.valsTable
+            for value in self.parent.valsTable
             if ((value['id'] == index) or
                 (value['parent'] == index and value['first_last']))
         ]
@@ -177,7 +176,7 @@ class CityHallDb(Db):
     def get_value_for(self, parent_index, name, override):
         value_with_no_override = None, None
 
-        for val in self.db.valsTable:
+        for val in self.parent.valsTable:
             if val['parent'] == parent_index and val['name'] == name and \
                     val['active']:
                 if val['override'] == override:
@@ -189,7 +188,7 @@ class CityHallDb(Db):
 
     def set_protect_status(self, user, index, status):
         original = next((
-            val for val in self.db.valsTable
+            val for val in self.parent.valsTable
             if (val['active']
                 and val['id'] == index
                 and val['protect'] != status)),
@@ -198,7 +197,7 @@ class CityHallDb(Db):
 
         if original:
             original['active'] = False
-            self.db.valsTable.append({
+            self.parent.valsTable.append({
                 'id': index,
                 'parent': original['parent'],
                 'active': True,
@@ -212,11 +211,11 @@ class CityHallDb(Db):
             })
 
     def delete_user(self, author, user):
-        for auth in self.db.authTable:
+        for auth in self.parent.authTable:
             if auth['active'] and auth['user'] == user:
                 auth['active'] = False
-                self.db.authTable.append({
-                    'id': len(self.db.authTable),
+                self.parent.authTable.append({
+                    'id': len(self.parent.authTable),
                     'active': False,
                     'datetime': datetime.now(),
                     'author': author,

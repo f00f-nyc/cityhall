@@ -1,8 +1,10 @@
-This is the initial Python implementation of City Hall.
+# CITYHALL [![Build Status](https://travis-ci.org/f00f-nyc/cityhall.svg?branch=master)](https://travis-ci.org/f00f-nyc/cityhall)
 
-# ABOUT
+This is the v1 Python implementation of City Hall Enterprise Settings Server.
 
-This project is written in Python 2.7, and uses Django 1.8
+## ABOUT
+
+This project is written in Python 3.8, and uses Django 3.0
 
 You are currently on the Heroku branch of City Hall.  This branch is specially
 made so that you can easily deploy to Heroku, for more information on that,
@@ -21,7 +23,7 @@ clients.
 
 
 
-# WHAT IS CITY HALL
+## WHAT IS CITY HALL
 
 City Hall is a stack-agnostic, light weight, settings server. The data is 
 organized into environments, and then within those environments into a 
@@ -38,7 +40,7 @@ MIT-license libraries in many major languages/repos (pypi, nuget, npm, etc).
 For more information, please checkout our [homepage](http://digitalborderlands.com/cityhall/)
 
 
-# WHAT CITY HALL IS NOT
+## WHAT CITY HALL IS NOT
 
 City Hall is not a key-value store and it is not distributed. The idea behind 
 City Hall is have a product to centralize settings which will face business 
@@ -46,7 +48,7 @@ City Hall is have a product to centralize settings which will face business
 
 
 
-# USING CITY HALL
+## USING CITY HALL
 
 For the purpose of this section, suppose we are working on an internal 
 application, which needs to store the number of concurrent users. Usually, 
@@ -83,6 +85,6 @@ For more, please see GETTING.STARTED.txt
 
 
 
-# LICENSE
+## LICENSE
 
   City Hall source files are made available under the terms of the GNU Affero General Public License (AGPL).

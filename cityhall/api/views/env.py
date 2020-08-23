@@ -13,8 +13,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from restless.views import Endpoint
-from session import is_valid, get_auth_from_request, end_request
-from lib.db.db import Rights
+from api.session import is_valid, get_auth_from_request, end_request
+from api.db import Rights
 
 
 class EnvView(Endpoint):
@@ -66,7 +66,7 @@ class EnvView(Endpoint):
             end_request(request, info.auth)
             return {'Response': 'Ok'}
         except Exception as e:
-            return {'Response': 'Failure', 'Message': e.message}
+            return {'Response': 'Failure', 'Message': str(e)}
 
     def post(self, request, *args, **kwargs):
         info = EnvView.RequestInfo(request, *args, **kwargs)
@@ -92,7 +92,7 @@ class EnvView(Endpoint):
         if int(env.permissions) < Rights.Write:
             return {
                 'Response': 'Failure',
-                'Message': 'Do not have write permissions to ' + info.env
+                'Message': f'Do not have write permissions to {info.env}'
             }
 
         try:
@@ -109,7 +109,7 @@ class EnvView(Endpoint):
             end_request(request, info.auth)
             return {'Response': 'Ok'}
         except Exception as e:
-            return {'Response': 'Failure', 'Message': e.message}
+            return {'Response': 'Failure', 'Message': str(e)}
 
     def get(self, request, *args, **kwargs):
         info = EnvView.RequestInfo(request, *args, **kwargs)
@@ -137,7 +137,7 @@ class EnvView(Endpoint):
     def get_value_for(auth, env, path, override):
         env = auth.get_env(env)
 
-        if override is  None:
+        if override is None:
             value = env.get(path)
         else:
             value = env.get_explicit(path, override)

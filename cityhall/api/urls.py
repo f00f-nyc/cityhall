@@ -12,39 +12,39 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls import patterns, url
-from .views import (Info, Create)
-from .views_auth import (
+from django.conf.urls import url
+from api.views import (Info, Create)
+from api.views.auth import (
     Authenticate, Environments, Users, GrantRights, UserDefaultEnv
 )
-from .views_env import EnvView
+from api.views.env import EnvView
 
-urlpatterns = patterns(
-    "",
-    url(r"^info/$", Info.as_view(), name="info_home"),
-    url(r"^create_default/$", Create.as_view(), name="create_def"),
+urlpatterns = [
+    url(r"^info/?$", Info.as_view(), name="info_home"),
+    url(r"^create_default/?$", Create.as_view(), name="create_def"),
 
-    url(r"^auth/$", Authenticate.as_view(), name="authenticate"),
+    url(r"^auth/?$", Authenticate.as_view(), name="authenticate"),
     url(
-        r"^auth/env/(?P<env>[0-9a-zA-Z\-_.$]+)/$",
+        r"^auth/env/(?P<env>[0-9a-zA-Z\-_.$]+)/?$",
         Environments.as_view(),
         name="create_env"
     ),
     url(
-        r"^auth/user/(?P<user>[0-9a-zA-Z\-_.$]+)/default/$",
+        r"^auth/user/(?P<user>[0-9a-zA-Z\-_.$]+)/default/?$",
         UserDefaultEnv.as_view(),
         name="user_default_env"
     ),
     url(
-        r"^auth/user/(?P<user>[0-9a-zA-Z\-_.$]+)/$",
+        r"^auth/user/(?P<user>[0-9a-zA-Z\-_.$]+)/?$",
         Users.as_view(),
         name="view_user"
     ),
-    url(r"^auth/grant/$", GrantRights.as_view(), name="grant_rights"),
+    url(r"^auth/grant/?$", GrantRights.as_view(), name="grant_rights"),
 
     url(
         r"^env/(?P<env_path>.*)$",
         EnvView.as_view(),
         name="values"
     ),
-)
+]
+

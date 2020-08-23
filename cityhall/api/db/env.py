@@ -12,9 +12,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf import settings
 from api.cache import CacheDict
-from .db import Rights
+from api.db import Rights
 
 
 def sanitize_path(path):
@@ -37,7 +36,7 @@ class Env(object):
     def __init__(self, db, env, permissions, name, root_id):
         self.db = db
         self.cache = CacheDict(
-            capacity=settings.CACHE_OPTIONS['PATH_CAPACITY'],
+            capacity=self.db.settings('cache', 'path_capacity'),
         )
         self.env = env
         self.root_id = root_id
@@ -95,12 +94,12 @@ class Env(object):
         """
         override = '' if override is None else override
 
-        if isinstance(path, basestring):
+        if isinstance(path, str):
             if path == '/':
                 return self.root_id
 
             path = sanitize_path(path)
-            cache_key = "{}:{}".format(path, override)
+            cache_key = f"{path}:{override}"
             index = self._index_from_cache(cache_key)
 
             if index is None:
@@ -123,9 +122,7 @@ class Env(object):
         first_item_id = -1
 
         for child in children:
-            cache_key = "{}{}/:{}".format(
-                parent_path, child['name'], child['override']
-            )
+            cache_key = f"{parent_path}{ child['name']}/:{child['override']}"
             self.cache[cache_key] = child['id']
 
             if child['name'] == path[0] and child['override'] == seek_override:
@@ -139,7 +136,7 @@ class Env(object):
 
         return self._get_index_of(
             path[1:], override, first_item_id,
-            "{}{}/".format(parent_path, path[0])
+            f"{parent_path}{path[0]}/"
         )
 
     def _honor_permissions(self, val_pair):
@@ -164,7 +161,7 @@ class Env(object):
             return False    # Cannot create overrides for root
 
         path = sanitize_path(path)
-        cache_key = "{}:{}".format(path, override)
+        cache_key = f"{path}:{override}"
         cached = self._index_from_cache(cache_key)
 
         if cached is not None:

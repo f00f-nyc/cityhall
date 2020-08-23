@@ -11,3 +11,13 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from api.db.django.environments import Environments
+from api.db.django.users import Users
+from api.db.django.values import Values
+from api.db import Db as AbstractDb
+
+
+class Db(Environments, Users, Values, AbstractDb):
+    def __init__(self, parent):
+        AbstractDb.__init__(self, parent)

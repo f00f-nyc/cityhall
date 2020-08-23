@@ -13,9 +13,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.test import TestCase
-from lib.db.memory.cityhall_db_factory import CityHallDbFactory
-from lib.db.connection import Connection
-from lib.db.db import Rights
+from api.db import Rights
+from api.db.connection import Connection
+from api.db.memory.db_factory import CityHallDbFactory
+from django.conf import settings
+
+
+cityhall_settings = settings.CITY_HALL_OPTIONS
 
 
 class TestAuthentication(TestCase):
@@ -26,7 +30,7 @@ class TestAuthentication(TestCase):
         self.env = None
 
     def setUp(self):
-        self.conn = Connection(CityHallDbFactory())
+        self.conn = Connection(CityHallDbFactory(cityhall_settings))
         self.db = self.conn.db_connection
         self.conn.connect()
         self.conn.create_default_env()

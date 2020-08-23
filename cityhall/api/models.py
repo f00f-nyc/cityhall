@@ -86,6 +86,17 @@ class UserManager(models.Manager):
         except models.ObjectDoesNotExist:
             return None
 
+    def get_users_for_env(self, env):
+        return self.raw(
+            'SELECT u.id, u.name, v.entry '
+            'FROM api_user u, api_value v '
+            'WHERE u.user_root = v.parent '
+            '      and u.active = %s '
+            '      and v.active = %s '
+            '      and v.name = %s ',
+            [True, True, env]
+        )
+
 
 class User(models.Model):
     active = models.BooleanField()

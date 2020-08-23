@@ -12,14 +12,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from lib.db import db
-from lib.db.db import DbState
+from api.db import DbFactory, DbState
 from datetime import datetime
-from .cityhall_db import CityHallDb
+from api.db.memory.db import CityHallDb
 
 
-class CityHallDbFactory(db.DbFactory):
-    def __init__(self):
+class CityHallDbFactory(DbFactory):
+    def __init__(self, settings):
+        super(CityHallDbFactory, self).__init__(settings)
         self.state = DbState.Closed
         self.authTable = None
         self.valsTable = None
@@ -42,6 +42,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '',
                 'protect': False,
+                'first_last': True,
             },
             {
                 'id': 2,
@@ -53,6 +54,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '',
                 'protect': False,
+                'first_last': True,
             },
             {
                 'id': 3,
@@ -64,6 +66,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '',
                 'protect': False,
+                'first_last': True,
             },
             {
                 'id': 4,
@@ -75,7 +78,7 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '4',
                 'protect': False,
-
+                'first_last': True,
             },
             {
                 'id': 5,
@@ -87,8 +90,21 @@ class CityHallDbFactory(db.DbFactory):
                 'datetime': datetime.now(),
                 'value': '4',
                 'protect': False,
-
-            }]
+                'first_last': True,
+            },
+            {
+                'id': 6,
+                'parent': 1,
+                'active': True,
+                'name': 'connect',
+                'override': '',
+                'author': 'cityhall',
+                'datetime': datetime.now(),
+                'value': '4',
+                'protect': False,
+                'first_last': True,
+            },
+        ]
         self.authTable = [{
             'id': 0,
             'active': True,

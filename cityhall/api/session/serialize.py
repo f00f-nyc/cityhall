@@ -13,9 +13,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import simplejson as json
-from lib.db.auth import Auth
-from lib.db.env import Env
-from api.views import CONN
+from api.db.auth import Auth
+from api.db.env import Env
+from api.db.connection import Instance
 
 
 def serialize_env(env):
@@ -24,7 +24,7 @@ def serialize_env(env):
         'permissions': env.permissions,
         'name': env.name,
         'root_id': env.root_id,
-        'cache': {name: value for name, value in env.cache.values.iteritems()}
+        'cache': {name: value for name, value in env.cache.values.items()}
     }
     return json.dumps(env_dict)
 
@@ -32,14 +32,14 @@ def serialize_env(env):
 def deserialize_env(env_json):
     env_dict = json.loads(env_json)
     ret = Env(
-        db=CONN.db_connection.get_db(),
+        db=Instance.db_connection.get_db(),
         env=env_dict['env'],
         permissions=env_dict['permissions'],
         name=env_dict['name'],
         root_id=env_dict['root_id']
     )
 
-    for k, v in env_dict['cache'].iteritems():
+    for k, v in env_dict['cache'].items():
         ret.cache[k] = v
 
     return ret
@@ -52,7 +52,7 @@ def serialize_auth(auth):
         'users_env': auth.users_env,
         'roots_cache': {
             name: serialize_env(value)
-            for name, value in auth.roots_cache.values.iteritems()
+            for name, value in auth.roots_cache.values.items()
         }
     }
     return json.dumps(auth_dict)
@@ -61,11 +61,12 @@ def serialize_auth(auth):
 def deserialize_auth(auth_json):
     auth_dict = json.loads(auth_json)
     ret = Auth(
-        db=CONN.db_connection.get_db(),
+        db=Instance.db_connection.get_db(),
         name=auth_dict['name'],
         user_root=auth_dict['user_root']
     )
     ret.users_env = auth_dict['users_env']
-    for name, value in auth_dict['roots_cache'].iteritems():
+    for name, value in auth_dict['roots_cache'].items():
         ret.roots_cache[name] = deserialize_env(value)
     return ret
+
