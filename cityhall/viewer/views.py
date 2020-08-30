@@ -21,5 +21,5 @@ class CityHallViewer(generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(CityHallViewer, self).get_context_data(**kwargs)
-        context['cityhall_url'] = f"http://{self.request.META['HTTP_HOST']}/api/v1/"
+        context['cityhall_url'] = f"{self.request.scheme}://{self.request.META['HTTP_HOST']}/api/v1/"
         return context
