@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from api.cache import CacheDict
+from api.cache import CacheFactory
 from api.db.env import Env
 from api.db import Rights
 
@@ -21,9 +21,7 @@ class Auth(object):
     def __init__(self, db, name, user_root):
         self.db = db
         self.name = name
-        self.roots_cache = CacheDict(
-            capacity=self.db.settings('cache', 'env_capacity')
-        )
+        self.roots_cache = CacheFactory.GetCache(db, prefix=f"Auth(name={name},user_root={user_root})")
         self.user_root = user_root
         self.users_env = None
 

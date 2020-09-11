@@ -52,7 +52,7 @@ def serialize_auth(auth):
         'users_env': auth.users_env,
         'roots_cache': {
             name: serialize_env(value)
-            for name, value in auth.roots_cache.values.items()
+            for name, value in auth.roots_cache.items()
         }
     }
     return json.dumps(auth_dict)

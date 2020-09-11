@@ -12,6 +12,17 @@ City Hall is meant to be entirely behind the firewall and speaks REST to its
 clients.
 
 
+## GETTING STARTED WITH DOCKER
+
+This branch runs on Docker. It uses Postgres as a database, nginx as a webserver, 
+gunicorn as a proces manager, and redis as a central cache.
+
+From this directory, simply run
+    $ docker-compose build && docker-compose up -d
+First time running it might take a while. Y ou should see City Hall by visiting
+it at [http://localhost/](localhost).
+
+
 
 ## WHAT IS CITY HALL
 

@@ -1,0 +1,53 @@
+version: '3.7'
+
+services:
+  cityhall-redis:
+    container_name: cityhall-redis
+    image: redis:5.0.7-alpine
+  cityhall-db:
+    container_name: cityhall-db
+    image: kartoza/postgis:12.0
+    environment:
+      - POSTGRES_USER=cityhall_user
+      - POSTGRES_PASS=cityhall_pass
+      - POSTGRES_DBNAME=cityhall
+    ports:
+      - "5432:5432"
+    volumes:
+      - cityhall-db-volume:/var/lib/postgresql/data
+    
+  cityhall-api:
+    container_name: cityhall-api
+    build:
+      context: .
+    volumes:
+      - static:/usr/src/app/static
+    command: >
+      bash -c "python3 manage.py wait_for_database && 
+      python3 manage.py migrate && 
+      gunicorn -b 0.0.0.0:8000 -w 4 -k uvicorn.workers.UvicornWorker cityhall.asgi:application"
+    # python3 manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - cityhall-db
+      - cityhall-redis
+    environment:
+      - POSTGRES_USER=cityhall_user
+      - POSTGRES_PASS=cityhall_pass
+      - POSTGRES_DBNAME=cityhall          
+    ports:
+      - 8000:8000
+
+  nginx:
+    container_name: cityhall-nginx
+    build: ./nginx
+    ports:
+      - "80:80"
+    restart: always                             
+    depends_on:
+      - cityhall-api 
+    volumes:
+      - static:/usr/src/app/static
+              
+volumes:
+  cityhall-db-volume: 
+  static:

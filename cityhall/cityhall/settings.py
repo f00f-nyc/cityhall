@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '!ggs-f&a09lno$ikl)okp^s-ylw2gbomq3n^xh-ft@fh#zv9k6'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["cityhall-nginx", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -67,18 +67,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'cityhall.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
+ASGI_APPLICATION = 'cityhall.asgi.application'
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
@@ -97,10 +86,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
-STATIC_ROOT = ''
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
-STATICFILES_DIRS = ( os.path.join(BASE_DIR, 'static'), )
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 
 ################################################################
 # These are City Hall specific options
@@ -108,17 +99,17 @@ STATICFILES_DIRS = ( os.path.join(BASE_DIR, 'static'), )
 
 CITY_HALL_OPTIONS = {
     'cache': {
-        # As a user looks at an environment, the index of paths is stored
-        # in the user session.  This value stores how many paths to store
-        # in session memory for a particular environment.
         'path_capacity': 50,
-
-        # As a user looks at an environment, information about that
-        # environment is stored in the user session.  Things like the index
-        # of the root, the permissions to it, as well as PATH_CAPACITY
-        # number of indexes.  This value stores how the max number of
-        # environments to store in a session.
         'env_capacity': 10,
+    },
+
+    'redis_cache': {
+        # how long things should live in the cache in seconds
+        # things like indexes of paths or environment roots
+        'lifetime_seconds': '3600',
+
+        # where this redis is located
+        'host': 'cityhall-redis',
     },
 
     # Type of database connection.
@@ -126,5 +117,32 @@ CITY_HALL_OPTIONS = {
     # Current possible options are: 'django' or 'memory'
     'db_type': 'django',
 
+    # What type of cache to use
+    'cache_type': 'redis',
+
     'version': 1,
 }
+
+# Database
+# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+
+try:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': os.environ['POSTGRES_DBNAME'],
+            'USER': os.environ['POSTGRES_USER'],
+            'PASSWORD': os.environ['POSTGRES_PASS'],
+            'HOST': 'cityhall-db',
+            'PORT': '5432'
+        }
+    }
+except:
+    # in case we're not running this inside docker, default to available stuff
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
+    CITY_HALL_OPTIONS['cache_type'] = 'local'
