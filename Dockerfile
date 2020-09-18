@@ -22,3 +22,5 @@ COPY . /usr/src/app
 # get ready to run project
 WORKDIR /usr/src/app/cityhall
 RUN python3 manage.py collectstatic --noinput
+
+CMD bash -c "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000 --insecure"

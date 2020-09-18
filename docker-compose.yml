@@ -21,12 +21,11 @@ services:
     build:
       context: .
     volumes:
-      - static:/usr/src/app/static
+      - static:/usr/src/app/cityhall/static
     command: >
       bash -c "python3 manage.py wait_for_database && 
       python3 manage.py migrate && 
       gunicorn -b 0.0.0.0:8000 -w 4 -k uvicorn.workers.UvicornWorker cityhall.asgi:application"
-    # python3 manage.py runserver 0.0.0.0:8000"
     depends_on:
       - cityhall-db
       - cityhall-redis

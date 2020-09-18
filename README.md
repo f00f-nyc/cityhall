@@ -1,4 +1,4 @@
-# CITYHALL [![Build Status](https://travis-ci.org/f00f-nyc/cityhall.svg?branch=master)](https://travis-ci.org/f00f-nyc/cityhall)
+# CITYHALL [![Build Status](https://api.travis-ci.org/f00f-nyc/cityhall.svg?branch=runon/docker)](https://travis-ci.org/f00f-nyc/cityhall)
 
 This is the v1 Python implementation of City Hall Enterprise Settings Server.
 
@@ -19,8 +19,12 @@ gunicorn as a proces manager, and redis as a central cache.
 
 From this directory, simply run
     $ docker-compose build && docker-compose up -d
-First time running it might take a while. Y ou should see City Hall by visiting
-it at [http://localhost/](localhost).
+First time running it might take a while. You should see City Hall by visiting
+it at [http://localhost/](localhost). Use user name `cityhall` with no password
+to log in.
+
+Don't forget that in order to use this in a production environment, SECRET_KEY in
+cityhall/settings.py should be changed.
 
 
 
