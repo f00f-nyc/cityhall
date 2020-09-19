@@ -18,7 +18,9 @@ This branch runs on Docker. It uses Postgres as a database, nginx as a webserver
 gunicorn as a proces manager, and redis as a central cache.
 
 From this directory, simply run
+
     $ docker-compose build && docker-compose up -d
+    
 First time running it might take a while. You should see City Hall by visiting
 it at [http://localhost/](localhost). Use user name `cityhall` with no password
 to log in.
@@ -42,7 +44,7 @@ The main benefit here is offloading settings management to teams other than
 development.  City Hall can be easily run on a dedicated server and has 
 MIT-license libraries in many major languages/repos (pypi, nuget, npm, etc).
 
-For more information, please checkout our [homepage](http://digitalborderlands.com/cityhall/)
+For more information, please checkout our [homepage](https://digitalborderlands.com/cityhall/)
 
 
 ## WHAT CITY HALL IS NOT
