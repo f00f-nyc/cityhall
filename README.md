@@ -74,6 +74,24 @@ the settings in production are, when they were changed, and by whom.
 For more, please see GETTING.STARTED.txt
 
 
+## DOCKER
+
+You can run City Hall on docker, and there's a default image you can use:
+
+    $ docker pull digitalborderlands/cityhall
+    $ docker run -dp 8000:8000 digitalborderlands/cityhall
+
+This will run it as a basic python server on port 8000. For a more robust
+implementation, you can check out the [runon/docker](https://github.com/f00f-nyc/cityhall/tree/runon/docker) branch.
+Using that branch, you will be able to run:
+
+    $ docker-compose build && docker-compose up -d
+    
+And that will put up a nginx webserver, a Python 3.8 app server, a Postgres
+database, and a Redis cache.
+
+For either one of these, upon start up, use username cityhall with no 
+password to check it out.
 
 ## LICENSE
 
